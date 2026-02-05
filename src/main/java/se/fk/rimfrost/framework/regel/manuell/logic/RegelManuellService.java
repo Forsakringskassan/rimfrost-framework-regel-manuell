@@ -4,6 +4,9 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
+import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
+import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
+import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
 import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProviderYaml;
 import se.fk.rimfrost.framework.regel.integration.kafka.RegelKafkaProducer;
 import se.fk.rimfrost.framework.regel.integration.kundbehovsflode.KundbehovsflodeAdapter;
@@ -21,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public class RegelManuellService implements RegelRequestHandlerInterface
+public class RegelManuellService implements RegelRequestHandlerInterface, OulHandlerInterface
 {
 
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
@@ -32,6 +35,9 @@ public class RegelManuellService implements RegelRequestHandlerInterface
 
    @Inject
    protected RegelMapper regelMapper;
+
+   @Inject
+   protected RegelManuellMapper regelManuellMapper;
 
    @Inject
    protected KundbehovsflodeAdapter kundbehovsflodeAdapter;
@@ -98,6 +104,35 @@ public class RegelManuellService implements RegelRequestHandlerInterface
             .url(regelConfig.getUppgift().getPath())
             .build();
       oulKafkaProducer.sendOulRequest(oulMessageRequest);
+   }
+
+   @Override
+   public void handleOulResponse(OulResponse oulResponse)
+   {
+      var bekraftaBeslutData = regelDatas.get(oulResponse.kundbehovsflodeId());
+      var updatedRegelData = ImmutableRegelData.builder()
+            .from(bekraftaBeslutData)
+            .uppgiftId(oulResponse.uppgiftId())
+            .build();
+      regelDatas.put(updatedRegelData.kundbehovsflodeId(), updatedRegelData);
+      updateKundbehovsflodeInfo(updatedRegelData);
+   }
+
+   @Override
+   public void handleOulStatus(OulStatus oulStatus)
+   {
+      RegelData regelData = regelDatas.values()
+            .stream()
+            .filter(r -> r.uppgiftId().equals(oulStatus.uppgiftId()))
+            .findFirst()
+            .orElse(regelDatas.get(oulStatus.kundbehovsflodeId()));
+      updateKundbehovsflodeInfo(regelData);
+   }
+
+   public void updateKundbehovsflodeInfo(RegelData regelData)
+   {
+      var request = regelManuellMapper.toUpdateKundbehovsflodeRequest(regelData, regelConfigProvider.getConfig());
+      kundbehovsflodeAdapter.updateKundbehovsflodeInfo(request);
    }
 
 }
