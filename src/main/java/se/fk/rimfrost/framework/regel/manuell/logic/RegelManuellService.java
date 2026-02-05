@@ -3,6 +3,8 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import se.fk.rimfrost.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
@@ -30,6 +32,7 @@ import java.util.UUID;
 @SuppressWarnings("unused")
 public class RegelManuellService implements RegelRequestHandlerInterface, OulHandlerInterface, OulUppgiftDoneHandler
 {
+   private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellService.class);
 
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
    String responseTopic;
@@ -130,7 +133,30 @@ public class RegelManuellService implements RegelRequestHandlerInterface, OulHan
             .filter(r -> r.uppgiftId().equals(oulStatus.uppgiftId()))
             .findFirst()
             .orElse(regelDatas.get(oulStatus.kundbehovsflodeId()));
-      updateKundbehovsflodeInfo(regelData);
+
+      if (regelData == null)
+      {
+         /* This may happen if regelData was cleaned up during handleUppgiftDone
+          * and a notification was sent to OUL that the task was finished.
+          */
+         if (oulStatus.uppgiftStatus() != se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD)
+         {
+            LOGGER.error(
+                  "RegelData for kundbehovsflodeId {} was not found during OUL status update for uppgift {} with uppgiftStatus {}",
+                  oulStatus.kundbehovsflodeId(), oulStatus.uppgiftId(), oulStatus.uppgiftStatus());
+         }
+
+         return;
+      }
+
+      var updatedRegelData = ImmutableRegelData.builder()
+            .from(regelData)
+            .utforarId(oulStatus.utforarId())
+            .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
+            .build();
+
+      regelDatas.put(regelData.kundbehovsflodeId(), updatedRegelData);
+      updateKundbehovsflodeInfo(updatedRegelData);
    }
 
    public void updateKundbehovsflodeInfo(RegelData regelData)
@@ -160,5 +186,15 @@ public class RegelManuellService implements RegelRequestHandlerInterface, OulHan
       regelKafkaProducer.sendRegelResponse(regelResponse);
 
       updateKundbehovsflodeInfo(updatedRegelData);
+   }
+
+   private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus)
+   {
+      return switch (uppgiftStatus) {
+         case NY -> UppgiftStatus.PLANERAD;
+         case TILLDELAD -> UppgiftStatus.TILLDELAD;
+         case AVSLUTAD ->  UppgiftStatus.AVSLUTAD;
+         default -> throw new IllegalStateException("Unexpected value: " + uppgiftStatus);
+      };
    }
 }
