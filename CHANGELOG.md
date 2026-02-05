@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.0.3 (2026-02-05)
+
+### Bug Fixes
+
+-  handleUppgiftDone ([875e7](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/875e72f583b5bf9) Ulf Slunga)  
+
 ## 0.0.2 (2026-02-05)
 
 ### Bug Fixes
