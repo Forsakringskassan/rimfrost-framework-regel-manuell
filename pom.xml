@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>se.fk.maven</groupId>
+    <artifactId>fk-maven-parent</artifactId>
+    <version>1.11.1</version>
+  </parent>
+  <groupId>se.fk.rimfrost.framework.regel.manuell</groupId>
+  <artifactId>rimfrost-framework-regel-manuell</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>Rimfrost Framework regel manuell</name>
+
+  <distributionManagement>
+    <repository>
+      <id>github--Forsakringskassan--repository</id>
+      <url>https://maven.pkg.github.com/Forsakringskassan/repository</url>
+    </repository>
+  </distributionManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
+      <version>3.20.3</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+      <version>3.15.7</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.regel</groupId>
+      <artifactId>rimfrost-framework-regel-asyncapi</artifactId>
+      <version>0.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost</groupId>
+      <artifactId>rimfrost-service-kundbehovsflode-openapi-jaxrs-spec</artifactId>
+      <version>1.3.5</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.github.jaxrsclientfactory</groupId>
+      <artifactId>jaxrs-client-factory</artifactId>
+      <version>1.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.immutables</groupId>
+      <artifactId>value</artifactId>
+      <version>2.11.6</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.github.logging</groupId>
+      <artifactId>fk-logging</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>2.5</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.oul</groupId>
+      <artifactId>rimfrost-framework-oul</artifactId>
+      <version>0.0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.regel</groupId>
+      <artifactId>rimfrost-framework-regel</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository>
+      <id>github--Forsakringskassan--repository</id>
+      <url>https://maven.pkg.github.com/Forsakringskassan/repository</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.14.1</version>
+        <configuration>
+          <compilerArgs>
+            <arg>-parameters</arg>
+          </compilerArgs>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.immutables</groupId>
+              <artifactId>value-processor</artifactId>
+              <version>2.10.0</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
