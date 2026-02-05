@@ -1,0 +1,35 @@
+.idea
+*.ipr
+*.iml
+*.iws
+.gradle
+
+# NetBeans
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+.factorypath
+
+# OSX
+.DS_Store
+
+# Vim
+*.swp
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Local environment
+.env
+
+/build/
+/target/
+src/generated-source
+
+# Plugin directory
+/.quarkus/cli/plugins/
+# TLS Certificates
+.certs/
