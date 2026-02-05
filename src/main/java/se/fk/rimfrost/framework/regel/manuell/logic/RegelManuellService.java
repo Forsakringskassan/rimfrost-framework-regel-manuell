@@ -4,9 +4,11 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
-import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
+import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProviderYaml;
+import se.fk.rimfrost.framework.regel.integration.kafka.RegelKafkaProducer;
 import se.fk.rimfrost.framework.regel.integration.kundbehovsflode.KundbehovsflodeAdapter;
 import se.fk.rimfrost.framework.regel.integration.kundbehovsflode.dto.ImmutableKundbehovsflodeRequest;
+import se.fk.rimfrost.framework.regel.logic.RegelMapper;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.dto.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
@@ -29,13 +31,19 @@ public class RegelManuellService implements RegelRequestHandlerInterface
    String kafkaSource;
 
    @Inject
-   KundbehovsflodeAdapter kundbehovsflodeAdapter;
+   protected RegelMapper regelMapper;
 
    @Inject
-   RegelConfigProvider regelConfigProvider;
+   protected KundbehovsflodeAdapter kundbehovsflodeAdapter;
 
    @Inject
-   OulKafkaProducer oulKafkaProducer;
+   protected RegelConfigProviderYaml regelConfigProvider;
+
+   @Inject
+   protected RegelKafkaProducer regelKafkaProducer;
+
+   @Inject
+   protected OulKafkaProducer oulKafkaProducer;
 
    protected final Map<UUID, CloudEventData> cloudevents = new HashMap<>();
    protected final Map<UUID, RegelData> regelDatas = new HashMap<>();
