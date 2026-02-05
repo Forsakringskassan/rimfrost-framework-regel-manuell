@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.0.2 (2026-02-05)
+
+### Bug Fixes
+
+-  lägger till handleOulResponse ([f9088](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/f90887c2c3202c0) Ulf Slunga)  
+
 ## 0.0.1 (2026-02-05)
 
 ### Bug Fixes
