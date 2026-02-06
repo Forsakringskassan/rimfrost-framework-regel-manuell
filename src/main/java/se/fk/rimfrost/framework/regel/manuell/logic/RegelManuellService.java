@@ -40,6 +40,9 @@ public class RegelManuellService implements RegelRequestHandlerInterface, OulHan
    @ConfigProperty(name = "kafka.source")
    String kafkaSource;
 
+   @ConfigProperty(name = "kafka.subtopic")
+   String oulReplyToSubTopic;
+
    @Inject
    protected RegelMapper regelMapper;
 
@@ -109,6 +112,7 @@ public class RegelManuellService implements RegelRequestHandlerInterface, OulHan
             .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
             .roll(regelConfig.getSpecifikation().getRoll())
             .url(regelConfig.getUppgift().getPath())
+            .replyToTopic(oulReplyToSubTopic)
             .build();
       oulKafkaProducer.sendOulRequest(oulMessageRequest);
    }
