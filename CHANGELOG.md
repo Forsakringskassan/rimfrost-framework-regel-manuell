@@ -2,6 +2,17 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.0 (2026-02-06)
+
+### Features
+
+-  send replyToTopic header in OUL message ([bb650](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/bb650cacd0f7bb1) Nils Elveros)  
+
+### Bug Fixes
+
+-  uppdaterar README ([a6815](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a68157ba05c64fe) Ulf Slunga)  
+-  Update task status and utforarId on OUL status update ([611c8](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/611c8c477c9c881) Lars Persson)  
+
 ## 0.0.3 (2026-02-05)
 
 ### Bug Fixes
