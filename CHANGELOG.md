@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.1 (2026-02-09)
+
+### Bug Fixes
+
+-  Decide Utfall value in a separate (abstract) method call ([4efdf](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/4efdf5bbfebc68a) Lars Persson)  
+
 ## 0.1.0 (2026-02-06)
 
 ### Features
