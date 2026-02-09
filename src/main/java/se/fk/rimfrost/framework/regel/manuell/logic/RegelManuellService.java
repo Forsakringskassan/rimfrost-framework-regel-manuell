@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public class RegelManuellService implements RegelRequestHandlerInterface, OulHandlerInterface, OulUppgiftDoneHandler
+public abstract class RegelManuellService implements RegelRequestHandlerInterface, OulHandlerInterface, OulUppgiftDoneHandler
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellService.class);
 
@@ -182,8 +182,7 @@ public class RegelManuellService implements RegelRequestHandlerInterface, OulHan
       var updatedRegelData = updatedRegelDataBuilder.build();
       regelDatas.put(kundbehovsflodeId, updatedRegelData);
 
-      var utfall = regelData.ersattningar().stream().allMatch(e -> e.beslutsutfall() == Beslutsutfall.JA) ? Utfall.JA
-            : Utfall.NEJ;
+      var utfall = decideUtfall(regelData);
       var cloudevent = cloudevents.get(updatedRegelData.cloudeventId());
       var regelResponse = regelMapper.toRegelResponse(kundbehovsflodeId, cloudevent, utfall);
       oulKafkaProducer.sendOulStatusUpdate(updatedRegelData.uppgiftId(), Status.AVSLUTAD);
@@ -191,6 +190,8 @@ public class RegelManuellService implements RegelRequestHandlerInterface, OulHan
 
       updateKundbehovsflodeInfo(updatedRegelData);
    }
+
+   protected abstract Utfall decideUtfall(RegelData regelData);
 
    private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus)
    {
