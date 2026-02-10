@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.3 (2026-02-10)
+
+### Bug Fixes
+
+-  kundbehovsflodeMapper ist för RegelManuellMapper ([a3bb5](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a3bb5c4fdb0501d) Ulf Slunga)  
+
 ## 0.1.2 (2026-02-10)
 
 ### Bug Fixes
