@@ -1,6 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import se.fk.rimfrost.framework.regel.integration.kundbehovsflode.dto.*;
+import se.fk.rimfrost.framework.regel.logic.RegelMapper;
 import se.fk.rimfrost.framework.regel.logic.config.RegelConfig;
 import se.fk.rimfrost.framework.regel.logic.dto.Beslutsutfall;
 import se.fk.rimfrost.framework.regel.logic.entity.ErsattningData;
@@ -11,7 +12,7 @@ import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.Verksamhetslog
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 
-public class RegelManuellMapper
+public class RegelManuellMapper extends RegelMapper
 {
 
    public UpdateKundbehovsflodeRequest toUpdateKundbehovsflodeRequest(RegelData regelData,

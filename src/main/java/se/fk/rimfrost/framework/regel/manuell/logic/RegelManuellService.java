@@ -2,9 +2,9 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import se.fk.rimfrost.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
@@ -12,16 +12,11 @@ import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
 import se.fk.rimfrost.framework.oul.presentation.rest.OulUppgiftDoneHandler;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProviderYaml;
-import se.fk.rimfrost.framework.regel.integration.kafka.RegelKafkaProducer;
-import se.fk.rimfrost.framework.regel.integration.kundbehovsflode.KundbehovsflodeAdapter;
 import se.fk.rimfrost.framework.regel.integration.kundbehovsflode.dto.ImmutableKundbehovsflodeRequest;
-import se.fk.rimfrost.framework.regel.logic.RegelMapper;
-import se.fk.rimfrost.framework.regel.logic.dto.Beslutsutfall;
+import se.fk.rimfrost.framework.regel.logic.RegelService;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.dto.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
-import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
 import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.FSSAinformation;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -30,33 +25,15 @@ import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public abstract class RegelManuellService implements RegelRequestHandlerInterface, OulHandlerInterface, OulUppgiftDoneHandler
+public abstract class RegelManuellService extends RegelService implements OulHandlerInterface, OulUppgiftDoneHandler
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellService.class);
-
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
-   @ConfigProperty(name = "kafka.source")
-   String kafkaSource;
 
    @ConfigProperty(name = "kafka.subtopic")
    String oulReplyToSubTopic;
 
    @Inject
-   protected RegelMapper regelMapper;
-
-   @Inject
    protected RegelManuellMapper regelManuellMapper;
-
-   @Inject
-   protected KundbehovsflodeAdapter kundbehovsflodeAdapter;
-
-   @Inject
-   protected RegelConfigProviderYaml regelConfigProvider;
-
-   @Inject
-   protected RegelKafkaProducer regelKafkaProducer;
 
    @Inject
    protected OulKafkaProducer oulKafkaProducer;
