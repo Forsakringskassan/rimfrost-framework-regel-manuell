@@ -10,7 +10,7 @@ import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageReq
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
-import se.fk.rimfrost.framework.oul.presentation.rest.OulUppgiftDoneHandler;
+import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellUppgiftDoneHandler;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.integration.kundbehovsflode.dto.ImmutableKundbehovsflodeRequest;
 import se.fk.rimfrost.framework.regel.logic.RegelService;
@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public abstract class RegelManuellService extends RegelService implements OulHandlerInterface, OulUppgiftDoneHandler
+public abstract class RegelManuellService extends RegelService implements OulHandlerInterface, RegelManuellUppgiftDoneHandler
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellService.class);
 
