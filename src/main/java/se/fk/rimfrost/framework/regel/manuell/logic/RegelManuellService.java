@@ -33,7 +33,7 @@ public abstract class RegelManuellService extends RegelService implements OulHan
    String oulReplyToSubTopic;
 
    @Inject
-   protected RegelManuellMapper regelManuellMapper;
+   protected KundbehovsflodeMapper kundbehovsflodeMapper;
 
    @Inject
    protected OulKafkaProducer oulKafkaProducer;
@@ -142,7 +142,7 @@ public abstract class RegelManuellService extends RegelService implements OulHan
 
    public void updateKundbehovsflodeInfo(RegelData regelData)
    {
-      var request = regelManuellMapper.toUpdateKundbehovsflodeRequest(regelData, regelConfigProvider.getConfig());
+      var request = kundbehovsflodeMapper.toUpdateKundbehovsflodeRequest(regelData, regelConfigProvider.getConfig());
       kundbehovsflodeAdapter.updateKundbehovsflodeInfo(request);
    }
 
