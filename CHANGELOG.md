@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.5 (2026-02-11)
+
+### Bug Fixes
+
+-  kundbehovsflode adapter ([3942f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3942fdb89cee830) Ulf Slunga)  
+
 ## 0.1.4 (2026-02-11)
 
 ### Bug Fixes
