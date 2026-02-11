@@ -64,6 +64,11 @@
       <version>2.5</version>
     </dependency>
     <dependency>
+      <groupId>se.fk.rimfrost.framework.regel.manuell</groupId>
+      <artifactId>rimfrost-framework-regel-manuell-openapi-jaxrs-spec</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+    <dependency>
       <groupId>se.fk.rimfrost.framework.oul</groupId>
       <artifactId>rimfrost-framework-oul</artifactId>
       <version>0.1.1</version>
