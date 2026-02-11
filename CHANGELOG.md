@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.4 (2026-02-11)
+
+### Bug Fixes
+
+-  Add GET endpoint for extended task description ([799a0](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/799a075c1608d42) Lars Persson)  
+-  Move RegelManuellController from rimfrost-framework-oul ([908df](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/908dfc49f5878ad) Lars Persson)  
+
 ## 0.1.3 (2026-02-10)
 
 ### Bug Fixes
