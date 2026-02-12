@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.9 (2026-02-12)
+
+### Bug Fixes
+
+-  bumping rimfrost-framework-oul version ([7a05c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7a05ccfecbef669) Ulf Slunga)  
+
 ## 0.1.8 (2026-02-12)
 
 ### Bug Fixes
