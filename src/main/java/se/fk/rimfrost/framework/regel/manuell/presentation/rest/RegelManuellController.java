@@ -29,7 +29,7 @@ public class RegelManuellController implements RegelManuellControllerApi
       var regelConfig = regelConfigProvider.getConfig();
 
       GetUtokadUppgiftsbeskrivningResponse response = new GetUtokadUppgiftsbeskrivningResponse();
-      response.setBeskrivning(regelConfig.getUtokadUppgiftBeskrivning().getBeskrivning());
+      response.setBeskrivning(regelConfig.getUtokadUppgiftsbeskrivning().getBeskrivning());
 
       return response;
    }
