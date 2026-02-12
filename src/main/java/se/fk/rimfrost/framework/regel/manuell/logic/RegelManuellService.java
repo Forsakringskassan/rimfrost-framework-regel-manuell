@@ -14,10 +14,10 @@ import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
 import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellUppgiftDoneHandler;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.RegelService;
+import se.fk.rimfrost.framework.regel.logic.dto.FSSAinformation;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.dto.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
-import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.FSSAinformation;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -139,7 +139,7 @@ public abstract class RegelManuellService extends RegelService implements OulHan
 
    public void updateKundbehovsflodeInfo(RegelData regelData)
    {
-      var request = kundbehovsflodeMapper.toUpdateKundbehovsflodeRequest(regelData, regelConfigProvider.getConfig());
+      var request = regelMapper.toUpdateKundbehovsflodeRequest(regelData, regelConfigProvider.getConfig());
       kundbehovsflodeAdapter.updateKundbehovsflodeInfo(request);
    }
 
