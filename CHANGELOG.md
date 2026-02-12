@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.7 (2026-02-12)
+
+### Bug Fixes
+
+-  Bump rimfrost-framework-regel version ([5aed8](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5aed835952be889) Lars Persson)  
+
 ## 0.1.6 (2026-02-12)
 
 ### Bug Fixes
