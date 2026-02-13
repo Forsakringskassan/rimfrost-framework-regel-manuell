@@ -11,6 +11,7 @@ import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageReq
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
+import se.fk.rimfrost.framework.regel.logic.dto.Beslutsutfall;
 import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellUppgiftDoneHandler;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.RegelService;
@@ -18,6 +19,7 @@ import se.fk.rimfrost.framework.regel.logic.dto.FSSAinformation;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.dto.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
+
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +63,7 @@ public abstract class RegelManuellService extends RegelService implements OulHan
       {
          var ersattningData = ImmutableErsattningData.builder()
                .id(ersattning.ersattningsId())
+               .beslutsutfall(Beslutsutfall.valueOf(ersattning.beslutsutfall()))
                .build();
          ersattninglist.add(ersattningData);
       }
@@ -167,13 +170,12 @@ public abstract class RegelManuellService extends RegelService implements OulHan
 
    protected abstract Utfall decideUtfall(RegelData regelData);
 
-   private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus)
-   {
-      return switch (uppgiftStatus) {
-         case NY -> UppgiftStatus.PLANERAD;
-         case TILLDELAD -> UppgiftStatus.TILLDELAD;
-         case AVSLUTAD ->  UppgiftStatus.AVSLUTAD;
-         default -> throw new IllegalStateException("Unexpected value: " + uppgiftStatus);
-      };
-   }
+   private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus) {
+        return switch (uppgiftStatus) {
+            case NY -> UppgiftStatus.PLANERAD;
+            case TILLDELAD -> UppgiftStatus.TILLDELAD;
+            case AVSLUTAD -> UppgiftStatus.AVSLUTAD;
+            default -> throw new IllegalStateException("Unexpected value: " + uppgiftStatus);
+        };
+    }
 }
