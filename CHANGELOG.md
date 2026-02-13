@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.10 (2026-02-13)
+
+### Bug Fixes
+
+-  beslutsutfall null ([0477e](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/0477ecdb61677fc) Ulf Slunga)  
+
 ## 0.1.9 (2026-02-12)
 
 ### Bug Fixes
