@@ -6,20 +6,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.kundbehovsflode.adapter.dto.ImmutableKundbehovsflodeRequest;
+import se.fk.rimfrost.framework.kundbehovsflode.adapter.dto.KundbehovsflodeResponse;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
+import se.fk.rimfrost.framework.regel.logic.ImmutableProcessRegelResponse;
+import se.fk.rimfrost.framework.regel.logic.ProcessRegelResponse;
+import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
+import se.fk.rimfrost.framework.regel.logic.RegelServiceInterface;
 import se.fk.rimfrost.framework.regel.logic.dto.Beslutsutfall;
 import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellUppgiftDoneHandler;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.logic.RegelService;
 import se.fk.rimfrost.framework.regel.logic.dto.FSSAinformation;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.dto.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
-
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +30,8 @@ import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public abstract class RegelManuellService extends RegelService implements OulHandlerInterface, RegelManuellUppgiftDoneHandler
+public abstract class RegelManuellService extends RegelRequestHandlerBase
+      implements OulHandlerInterface, RegelManuellUppgiftDoneHandler, RegelServiceInterface
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellService.class);
 
@@ -40,26 +44,12 @@ public abstract class RegelManuellService extends RegelService implements OulHan
    protected final Map<UUID, CloudEventData> cloudevents = new HashMap<>();
    protected final Map<UUID, RegelData> regelDatas = new HashMap<>();
 
-   public void handleRegelRequest(RegelDataRequest request)
+   @Override
+   public ProcessRegelResponse processRegel(KundbehovsflodeResponse kundbehovsflodeResponse)
    {
-      var kundbehovsflodeRequest = ImmutableKundbehovsflodeRequest.builder()
-            .kundbehovsflodeId(request.kundbehovsflodeId())
-            .build();
-      var kundbehovflodesResponse = kundbehovsflodeAdapter.getKundbehovsflodeInfo(kundbehovsflodeRequest);
-      var cloudeventData = ImmutableCloudEventData.builder()
-            .id(request.id())
-            .kogitoparentprociid(request.kogitoparentprociid())
-            .kogitoprocid(request.kogitoprocid())
-            .kogitoprocinstanceid(request.kogitoprocinstanceid())
-            .kogitoprocist(request.kogitoprocist())
-            .kogitoprocversion(request.kogitoprocversion())
-            .kogitorootprocid(request.kogitorootprocid())
-            .kogitorootprociid(request.kogitorootprociid())
-            .type(responseTopic)
-            .source(kafkaSource)
-            .build();
+
       var ersattninglist = new ArrayList<ErsattningData>();
-      for (var ersattning : kundbehovflodesResponse.ersattning())
+      for (var ersattning : kundbehovsflodeResponse.ersattning())
       {
          var ersattningData = ImmutableErsattningData.builder()
                .id(ersattning.ersattningsId())
@@ -67,23 +57,43 @@ public abstract class RegelManuellService extends RegelService implements OulHan
                .build();
          ersattninglist.add(ersattningData);
       }
+
+      return ImmutableProcessRegelResponse.builder()
+            .ersattningar(ersattninglist)
+            .underlag(new ArrayList<>())
+            .build();
+
+   }
+
+   @Override
+   public void handleRegelRequest(RegelDataRequest request)
+   {
+      var kundbehovsflodeResponse = kundbehovsflodeAdapter.getKundbehovsflodeInfo(
+            ImmutableKundbehovsflodeRequest.builder()
+                  .kundbehovsflodeId(request.kundbehovsflodeId())
+                  .build());
+
+      var processRegelResponse = processRegel(kundbehovsflodeResponse);
+
+      var cloudevent = createCloudEvent(request);
+
       var regelData = ImmutableRegelData.builder()
             .kundbehovsflodeId(request.kundbehovsflodeId())
-            .cloudeventId(cloudeventData.id())
-            .ersattningar(ersattninglist)
             .skapadTs(OffsetDateTime.now())
             .planeradTs(OffsetDateTime.now())
             .uppgiftStatus(UppgiftStatus.PLANERAD)
             .fssaInformation(FSSAinformation.HANDLAGGNING_PAGAR)
-            .underlag(new ArrayList<>())
+            .ersattningar(processRegelResponse.ersattningar())
+            .underlag(processRegelResponse.underlag())
             .build();
-      cloudevents.put(cloudeventData.id(), cloudeventData);
+
+      cloudevents.put(regelData.kundbehovsflodeId(), cloudevent);
       regelDatas.put(regelData.kundbehovsflodeId(), regelData);
 
       var regelConfig = regelConfigProvider.getConfig();
       var oulMessageRequest = ImmutableOulMessageRequest.builder()
             .kundbehovsflodeId(request.kundbehovsflodeId())
-            .kundbehov(kundbehovflodesResponse.formanstyp())
+            .kundbehov(kundbehovsflodeResponse.formanstyp())
             .regel(regelConfig.getSpecifikation().getNamn())
             .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
             .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
@@ -103,7 +113,7 @@ public abstract class RegelManuellService extends RegelService implements OulHan
             .uppgiftId(oulResponse.uppgiftId())
             .build();
       regelDatas.put(updatedRegelData.kundbehovsflodeId(), updatedRegelData);
-      updateKundbehovsflodeInfo(updatedRegelData);
+      updateKundbehovsFlode(updatedRegelData);
    }
 
    @Override
@@ -137,13 +147,7 @@ public abstract class RegelManuellService extends RegelService implements OulHan
             .build();
 
       regelDatas.put(regelData.kundbehovsflodeId(), updatedRegelData);
-      updateKundbehovsflodeInfo(updatedRegelData);
-   }
-
-   public void updateKundbehovsflodeInfo(RegelData regelData)
-   {
-      var request = regelMapper.toUpdateKundbehovsflodeRequest(regelData, regelConfigProvider.getConfig());
-      kundbehovsflodeAdapter.updateKundbehovsflodeInfo(request);
+      updateKundbehovsFlode(updatedRegelData);
    }
 
    @Override
@@ -157,15 +161,15 @@ public abstract class RegelManuellService extends RegelService implements OulHan
       updatedRegelDataBuilder.uppgiftStatus(UppgiftStatus.AVSLUTAD);
 
       var updatedRegelData = updatedRegelDataBuilder.build();
-      regelDatas.put(kundbehovsflodeId, updatedRegelData);
 
-      var utfall = decideUtfall(regelData);
-      var cloudevent = cloudevents.get(updatedRegelData.cloudeventId());
-      var regelResponse = regelMapper.toRegelResponse(kundbehovsflodeId, cloudevent, utfall);
       oulKafkaProducer.sendOulStatusUpdate(updatedRegelData.uppgiftId(), Status.AVSLUTAD);
-      regelKafkaProducer.sendRegelResponse(regelResponse);
 
-      updateKundbehovsflodeInfo(updatedRegelData);
+      regelDatas.put(kundbehovsflodeId, updatedRegelData);
+      var cloudevent = cloudevents.get(updatedRegelData.kundbehovsflodeId());
+
+      sendResponse(regelData, cloudevent, decideUtfall(updatedRegelData));
+
+      updateKundbehovsFlode(updatedRegelData);
    }
 
    protected abstract Utfall decideUtfall(RegelData regelData);
