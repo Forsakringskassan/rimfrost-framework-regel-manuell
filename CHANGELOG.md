@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.11 (2026-02-16)
+
+### Bug Fixes
+
+-  uppdatering för framework regel ([d1825](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d182524f449efe7) Ulf Slunga)  
+
 ## 0.1.10 (2026-02-13)
 
 ### Bug Fixes
