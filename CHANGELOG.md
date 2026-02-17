@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.13 (2026-02-17)
+
+### Bug Fixes
+
+-  Use rimfrost-framework-storage ([c523d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c523dd391888bce) Lars Persson)  
+
 ## 0.1.12 (2026-02-17)
 
 ### Bug Fixes
