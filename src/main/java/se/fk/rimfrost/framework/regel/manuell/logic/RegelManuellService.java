@@ -1,7 +1,12 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.fk.rimfrost.Status;
@@ -23,11 +28,10 @@ import se.fk.rimfrost.framework.regel.logic.dto.FSSAinformation;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.dto.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import se.fk.rimfrost.framework.regel.manuell.storage.entity.CommonRegelData;
+import se.fk.rimfrost.framework.regel.manuell.storage.entity.RegelManuellDataStorage;
+import se.fk.rimfrost.framework.storage.DataStorageProvider;
+import se.fk.rimfrost.framework.storage.StorageManagerProvider;
 
 @SuppressWarnings("unused")
 public abstract class RegelManuellService extends RegelRequestHandlerBase
@@ -41,13 +45,33 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
    @Inject
    protected OulKafkaProducer oulKafkaProducer;
 
-   protected final Map<UUID, CloudEventData> cloudevents = new HashMap<>();
-   protected final Map<UUID, RegelData> regelDatas = new HashMap<>();
+   @Inject
+   DataStorageProvider<? extends RegelManuellDataStorage> dataStorageProvider;
+
+   @Inject
+   StorageManagerProvider storageManagerProvider;
+
+   protected StorageManager storageManager;
+
+   protected CommonRegelData commonRegelData;
+
+   /*
+    * Note: The name of the @PostConstruct method should if
+    * possible be kept as init<classname> in order to avoid
+    * being shadowed by any @PostConstruct methods in any
+    * inheriting class that happens to have the same method
+    * name.
+    */
+   @PostConstruct
+   void initRegelManuellService()
+   {
+      this.storageManager = storageManagerProvider.getStorageManager();
+      this.commonRegelData = dataStorageProvider.getDataStorage().getCommonRegelData();
+   }
 
    @Override
    public ProcessRegelResponse processRegel(KundbehovsflodeResponse kundbehovsflodeResponse)
    {
-
       var ersattninglist = new ArrayList<ErsattningData>();
       for (var ersattning : kundbehovsflodeResponse.ersattning())
       {
@@ -87,8 +111,15 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
             .underlag(processRegelResponse.underlag())
             .build();
 
-      cloudevents.put(regelData.kundbehovsflodeId(), cloudevent);
-      regelDatas.put(regelData.kundbehovsflodeId(), regelData);
+      synchronized (commonRegelData.getLock())
+      {
+         var cloudevents = commonRegelData.getCloudEvents();
+         var regelDatas = commonRegelData.getRegelDatas();
+
+         cloudevents.put(regelData.kundbehovsflodeId(), cloudevent);
+         regelDatas.put(regelData.kundbehovsflodeId(), regelData);
+         storageManager.store(commonRegelData);
+      }
 
       var regelConfig = regelConfigProvider.getConfig();
       var oulMessageRequest = ImmutableOulMessageRequest.builder()
@@ -107,23 +138,44 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
    @Override
    public void handleOulResponse(OulResponse oulResponse)
    {
-      var bekraftaBeslutData = regelDatas.get(oulResponse.kundbehovsflodeId());
+      RegelData regelData;
+
+      synchronized (commonRegelData.getLock())
+      {
+         var regelDatas = commonRegelData.getRegelDatas();
+         regelData = regelDatas.get(oulResponse.kundbehovsflodeId());
+      }
+
       var updatedRegelData = ImmutableRegelData.builder()
-            .from(bekraftaBeslutData)
+            .from(regelData)
             .uppgiftId(oulResponse.uppgiftId())
             .build();
-      regelDatas.put(updatedRegelData.kundbehovsflodeId(), updatedRegelData);
+
+      synchronized (commonRegelData.getLock())
+      {
+         var regelDatas = commonRegelData.getRegelDatas();
+         regelDatas.put(updatedRegelData.kundbehovsflodeId(), updatedRegelData);
+         storageManager.store(regelDatas);
+      }
+
       updateKundbehovsFlode(updatedRegelData);
    }
 
    @Override
    public void handleOulStatus(OulStatus oulStatus)
    {
-      RegelData regelData = regelDatas.values()
-            .stream()
-            .filter(r -> r.uppgiftId().equals(oulStatus.uppgiftId()))
-            .findFirst()
-            .orElse(regelDatas.get(oulStatus.kundbehovsflodeId()));
+      RegelData regelData;
+
+      synchronized (commonRegelData.getLock())
+      {
+         var regelDatas = dataStorageProvider.getDataStorage().getCommonRegelData().getRegelDatas();
+
+         regelData = regelDatas.values()
+               .stream()
+               .filter(r -> r.uppgiftId().equals(oulStatus.uppgiftId()))
+               .findFirst()
+               .orElse(regelDatas.get(oulStatus.kundbehovsflodeId()));
+      }
 
       if (regelData == null)
       {
@@ -146,14 +198,29 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
             .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
             .build();
 
-      regelDatas.put(regelData.kundbehovsflodeId(), updatedRegelData);
+      synchronized (commonRegelData.getLock())
+      {
+         var regelDatas = dataStorageProvider.getDataStorage().getCommonRegelData().getRegelDatas();
+         regelDatas.put(regelData.kundbehovsflodeId(), updatedRegelData);
+         storageManager.store(regelDatas);
+      }
+
       updateKundbehovsFlode(updatedRegelData);
    }
 
    @Override
    public void handleUppgiftDone(UUID kundbehovsflodeId)
    {
-      var regelData = regelDatas.get(kundbehovsflodeId);
+      RegelData regelData;
+      CloudEventData cloudevent;
+
+      synchronized (commonRegelData.getLock())
+      {
+         var regelDatas = commonRegelData.getRegelDatas();
+         var cloudevents = commonRegelData.getCloudEvents();
+         regelData = regelDatas.get(kundbehovsflodeId);
+         cloudevent = cloudevents.get(kundbehovsflodeId);
+      }
 
       var updatedRegelDataBuilder = ImmutableRegelData.builder()
             .from(regelData);
@@ -164,12 +231,18 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
 
       oulKafkaProducer.sendOulStatusUpdate(updatedRegelData.uppgiftId(), Status.AVSLUTAD);
 
-      regelDatas.put(kundbehovsflodeId, updatedRegelData);
-      var cloudevent = cloudevents.get(updatedRegelData.kundbehovsflodeId());
-
       sendResponse(regelData, cloudevent, decideUtfall(updatedRegelData));
 
       updateKundbehovsFlode(updatedRegelData);
+
+      synchronized (commonRegelData.getLock())
+      {
+         var regelDatas = commonRegelData.getRegelDatas();
+         var cloudevents = commonRegelData.getCloudEvents();
+         cloudevents.remove(kundbehovsflodeId);
+         regelDatas.remove(kundbehovsflodeId);
+         storageManager.store(commonRegelData);
+      }
    }
 
    protected abstract Utfall decideUtfall(RegelData regelData);
