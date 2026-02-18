@@ -26,6 +26,22 @@ public class CommonRegelData
       return regelDatas;
    }
 
+   public RegelData getRegelData(UUID id)
+   {
+      synchronized (lock)
+      {
+         return regelDatas.get(id);
+      }
+   }
+
+   public CloudEventData getCloudEventData(UUID id)
+   {
+      synchronized (lock)
+      {
+         return cloudevents.get(id);
+      }
+   }
+
    @SuppressWarnings("EI_EXPOSE_REP")
    public Object getLock()
    {

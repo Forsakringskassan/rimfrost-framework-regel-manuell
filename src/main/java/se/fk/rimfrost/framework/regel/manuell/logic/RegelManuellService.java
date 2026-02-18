@@ -138,13 +138,7 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
    @Override
    public void handleOulResponse(OulResponse oulResponse)
    {
-      RegelData regelData;
-
-      synchronized (commonRegelData.getLock())
-      {
-         var regelDatas = commonRegelData.getRegelDatas();
-         regelData = regelDatas.get(oulResponse.kundbehovsflodeId());
-      }
+      var regelData = commonRegelData.getRegelData(oulResponse.kundbehovsflodeId());
 
       var updatedRegelData = ImmutableRegelData.builder()
             .from(regelData)
@@ -211,16 +205,8 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
    @Override
    public void handleUppgiftDone(UUID kundbehovsflodeId)
    {
-      RegelData regelData;
-      CloudEventData cloudevent;
-
-      synchronized (commonRegelData.getLock())
-      {
-         var regelDatas = commonRegelData.getRegelDatas();
-         var cloudevents = commonRegelData.getCloudEvents();
-         regelData = regelDatas.get(kundbehovsflodeId);
-         cloudevent = cloudevents.get(kundbehovsflodeId);
-      }
+      RegelData regelData = commonRegelData.getRegelData(kundbehovsflodeId);
+      CloudEventData cloudevent = commonRegelData.getCloudEventData(kundbehovsflodeId);
 
       var updatedRegelDataBuilder = ImmutableRegelData.builder()
             .from(regelData);
@@ -229,14 +215,16 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
 
       var updatedRegelData = updatedRegelDataBuilder.build();
 
-      oulKafkaProducer.sendOulStatusUpdate(updatedRegelData.uppgiftId(), Status.AVSLUTAD);
+      updateKundbehovsFlode(updatedRegelData);
 
       sendResponse(regelData, cloudevent, decideUtfall(updatedRegelData));
 
-      updateKundbehovsFlode(updatedRegelData);
-
       synchronized (commonRegelData.getLock())
       {
+         // Send update request within lock scope to guarantee that OUL status update
+         // doesn't accidentally restore regelData.
+         oulKafkaProducer.sendOulStatusUpdate(updatedRegelData.uppgiftId(), Status.AVSLUTAD);
+
          var regelDatas = commonRegelData.getRegelDatas();
          var cloudevents = commonRegelData.getCloudEvents();
          cloudevents.remove(kundbehovsflodeId);
