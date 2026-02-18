@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.14 (2026-02-18)
+
+### Bug Fixes
+
+-  Add getRegelData and getCloudEventData convenience methods ([c5c9c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c5c9c710e2ff6e8) Lars Persson)  
+
 ## 0.1.13 (2026-02-17)
 
 ### Bug Fixes
