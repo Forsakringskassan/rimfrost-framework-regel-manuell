@@ -1,6 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -22,7 +23,6 @@ import se.fk.rimfrost.framework.regel.logic.dto.Beslutsutfall;
 import se.fk.rimfrost.framework.regel.manuell.logic.entity.ImmutableRegelData;
 import se.fk.rimfrost.framework.regel.manuell.logic.entity.RegelData;
 import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellUppgiftDoneHandler;
-import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.dto.FSSAinformation;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.dto.UppgiftStatus;
@@ -34,10 +34,11 @@ import se.fk.rimfrost.framework.storage.DataStorageProvider;
 import se.fk.rimfrost.framework.storage.StorageManagerProvider;
 
 @SuppressWarnings("unused")
-public abstract class RegelManuellService extends RegelRequestHandlerBase
+@ApplicationScoped
+public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       implements OulHandlerInterface, RegelManuellUppgiftDoneHandler, RegelRequestHandlerInterface
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellService.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellRequestHandler.class);
 
    @ConfigProperty(name = "kafka.subtopic")
    String oulReplyToSubTopic;
@@ -50,6 +51,9 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
 
    @Inject
    StorageManagerProvider storageManagerProvider;
+
+   @Inject
+   RegelManuellServiceInterface regelService;
 
    protected StorageManager storageManager;
 
@@ -226,7 +230,7 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
 
       putKundbehovsflode(kundbehovsflodeId, updatedUppgiftData, regelData.underlag());
 
-      sendResponse(kundbehovsflodeId, cloudevent, decideUtfall(updatedRegelData));
+      sendResponse(kundbehovsflodeId, cloudevent, regelService.decideUtfall(updatedRegelData));
 
       DelayedException delayedException = new DelayedException();
       // We do this before cleaning up CloudEvent and RegelData instances
@@ -234,7 +238,7 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
       // callback execution.
       try
       {
-         handleRegelDone();
+         regelService.handleRegelDone(kundbehovsflodeId);
       }
       catch (Exception e)
       {
@@ -273,10 +277,6 @@ public abstract class RegelManuellService extends RegelRequestHandlerBase
          throw delayedException;
       }
    }
-
-   protected abstract Utfall decideUtfall(RegelData regelData);
-
-   protected abstract void handleRegelDone();
 
    private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus) {
         return switch (uppgiftStatus) {
