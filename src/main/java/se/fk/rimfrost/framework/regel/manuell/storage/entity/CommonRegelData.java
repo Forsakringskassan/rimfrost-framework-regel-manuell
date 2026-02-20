@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
-import se.fk.rimfrost.framework.regel.logic.entity.RegelData;
+import se.fk.rimfrost.framework.regel.manuell.logic.entity.RegelData;
 
 public class CommonRegelData
 {
