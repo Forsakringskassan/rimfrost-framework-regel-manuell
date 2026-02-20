@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.16 (2026-02-20)
+
+### Bug Fixes
+
+-  Use rule as a service instead of extending RegelManuellService ([3c9c8](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3c9c80d62ab25b0) Lars Persson)  
+
 ## 0.1.15 (2026-02-20)
 
 ### Bug Fixes
