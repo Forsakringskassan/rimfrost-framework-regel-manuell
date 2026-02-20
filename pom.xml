@@ -74,11 +74,6 @@
       <version>0.3.1</version>
     </dependency>
     <dependency>
-      <groupId>se.fk.rimfrost.framework.kundbehovsflode</groupId>
-      <artifactId>rimfrost-framework-kundbehovsflode-adapter</artifactId>
-      <version>0.0.4</version>
-    </dependency>
-    <dependency>
       <groupId>se.fk.rimfrost.framework.storage</groupId>
       <artifactId>rimfrost-framework-storage</artifactId>
       <version>0.0.1</version>
