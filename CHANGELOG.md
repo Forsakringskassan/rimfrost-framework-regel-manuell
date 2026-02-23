@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.17 (2026-02-23)
+
+### Bug Fixes
+
+-  Bump rimfrost-framework-regel version to include utforarId ([2105c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2105ce94419fb62) Lars Persson)  
+
 ## 0.1.16 (2026-02-20)
 
 ### Bug Fixes
