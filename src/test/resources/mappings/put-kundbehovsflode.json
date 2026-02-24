@@ -1,0 +1,52 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "/kundbehovsflode/.*"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "uppgift": {
+        "id": "e9b4110e-0bd6-4444-9a64-390e4de94f59",
+        "version": "1.0",
+        "skapadTs": "2025-12-17T11:11:08.384937493Z",
+        "utfordTs": "2025-12-17T11:11:08.384970949Z",
+        "planeradTs": null,
+        "utforarId": "6f26358f-5ac5-4bf0-b04b-376a88923628",
+        "kundbehovsflodeId": "482a43b7-c985-4f65-ae41-fb75de3a6a6f",
+        "uppgiftStatus": "AVSLUTAD",
+        "FSSAinformation": "HANDLAGGNING_PAGAR",
+        "uppgiftspecifikation": {
+          "id": "89a3becd-727e-4681-be95-bdbb796461ec",
+          "version": "1.0",
+          "namn": "Rätt till försäkring - manuell kontroll",
+          "uppgiftbeskrivning": "Kontrollera om personen varit på jobbet",
+          "verksamhetslogik": "A",
+          "roll": "ANSVARIG_HANDLAGGARE",
+          "applikationsId": "rtf-manuell",
+          "applikationsVersion": "1.0",
+          "regel": {
+            "id": "a11f3429-3a6b-4389-ba1c-c2747b0fb45b",
+            "version": "1.0",
+            "lagrum": {
+              "id": "f0c927a9-b995-4a12-b4fd-4bcbf4281b44",
+              "version": "1.0",
+              "giltigFrom": "2020-02-14T10:10:04.295846382Z",
+              "giltigTom": "2029-12-31T23:59:59.537461725Z",
+              "forfattning": "Husdjursbalken",
+              "kapitel": "3",
+              "paragraf": "5",
+              "stycke": "1",
+              "punkt": "4"
+            }
+          },
+          "uppgiftsGui": "rtf-manuell/482a43b7-c985-4f65-ae41-fb75de3a6a6f"
+        },
+        "underlag": []
+      }
+    }
+  }
+}

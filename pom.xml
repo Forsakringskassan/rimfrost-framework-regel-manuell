@@ -5,7 +5,7 @@
 
   <parent>
     <groupId>se.fk.maven</groupId>
-    <artifactId>fk-maven-parent</artifactId>
+    <artifactId>fk-maven-quarkus-parent</artifactId>
     <version>1.11.1</version>
   </parent>
   <groupId>se.fk.rimfrost.framework.regel.manuell</groupId>
@@ -22,11 +22,16 @@
     </repository>
   </distributionManagement>
 
+  <properties>
+    <violations.maxViolations>0</violations.maxViolations>
+    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+    <quarkus.build.skip>true</quarkus.build.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
-      <version>3.20.3</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
@@ -72,6 +77,12 @@
       <groupId>se.fk.rimfrost.framework.storage</groupId>
       <artifactId>rimfrost-framework-storage</artifactId>
       <version>0.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.regel</groupId>
+      <artifactId>rimfrost-framework-regel-test-base</artifactId>
+      <version>0.3.8</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
