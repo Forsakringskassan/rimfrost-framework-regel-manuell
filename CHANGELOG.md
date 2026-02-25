@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.21 (2026-02-25)
+
+### Bug Fixes
+
+-  Bump rimfrost-framework-regel version to fix upstream issue ([a53b0](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a53b06faa38eac9) Lars Persson)  
+-  Add test for manuell framework ([3b7d0](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3b7d00e05e4741e) Lars Persson)  
+
 ## 0.1.20 (2026-02-24)
 
 ### Bug Fixes
