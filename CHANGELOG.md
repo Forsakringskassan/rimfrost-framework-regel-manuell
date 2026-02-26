@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.22 (2026-02-26)
+
+### Bug Fixes
+
+-  Bump rimfrost-framework-regel version to include upstream bugfix ([421b1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/421b17b68328996) Lars Persson)  
+-  Add "NEJ" result test case ([a95c7](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a95c7d5d1eaec47) Lars Persson)  
+
 ## 0.1.21 (2026-02-25)
 
 ### Bug Fixes
