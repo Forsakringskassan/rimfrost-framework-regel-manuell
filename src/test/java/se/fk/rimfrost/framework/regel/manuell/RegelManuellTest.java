@@ -1,22 +1,23 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
 import com.github.tomakehurst.wiremock.http.RequestMethod;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.common.QuarkusTestResource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
 import se.fk.rimfrost.OperativtUppgiftslagerRequestMessage;
 import se.fk.rimfrost.OperativtUppgiftslagerResponseMessage;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
+import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellServiceInterface;
 import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.*;
 import se.fk.rimfrost.framework.regel.RegelRequestMessagePayload;
 import se.fk.rimfrost.framework.regel.RegelRequestMessagePayloadData;
@@ -24,9 +25,7 @@ import se.fk.rimfrost.framework.regel.RegelResponseMessagePayload;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.test.RegelTest;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -40,6 +39,9 @@ public class RegelManuellTest extends RegelTest
    private static final String oulResponsesChannel = "operativt-uppgiftslager-responses";
    private static final String oulStatusNotificationChannel = "operativt-uppgiftslager-status-notification";
    private static final String oulStatusControlChannel = "operativt-uppgiftslager-status-control";
+
+   @InjectMock
+   RegelManuellServiceInterface regelManuellService;
 
    @BeforeAll
    static void setup()
@@ -100,10 +102,17 @@ public class RegelManuellTest extends RegelTest
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, JA",
+         "5367f6b8-cc4a-11f0-8de9-199901011234, NEJ"
    })
-   void TestRegelManuell(String kundbehovsflodeId) throws Exception
+   void TestRegelManuell(String kundbehovsflodeId, Utfall expectedUtfall) throws Exception
    {
+      Mockito.reset(regelManuellService);
+      wiremockServer.resetRequests();
+      this.inMemoryConnector.sink(oulRequestsChannel).clear();
+      this.inMemoryConnector.sink(oulStatusControlChannel).clear();
+      this.inMemoryConnector.sink(regelResponsesChannel).clear();
+
       System.out.printf("Starting TestRegelManuell. %S%n", kundbehovsflodeId);
 
       // Send regel request to start workflow
@@ -207,6 +216,12 @@ public class RegelManuellTest extends RegelTest
       wiremockServer.resetRequests();
 
       //
+      // Configure regelManuellService methods with expected values
+      //
+      Mockito.when(regelManuellService.decideUtfall(Mockito.any())).thenReturn(expectedUtfall);
+      Mockito.doNothing().when(regelManuellService).handleRegelDone(UUID.fromString(kundbehovsflodeId));
+
+      //
       // mock POST operation from portal FE
       //
       sendPostRegelManuell(kundbehovsflodeId);
@@ -248,6 +263,12 @@ public class RegelManuellTest extends RegelTest
 
       var regelManuellResponseMessagePayload = (RegelResponseMessagePayload) message;
       assertEquals(kundbehovsflodeId, regelManuellResponseMessagePayload.getData().getKundbehovsflodeId());
-      assertEquals(Utfall.JA, regelManuellResponseMessagePayload.getData().getUtfall());
+      assertEquals(expectedUtfall, regelManuellResponseMessagePayload.getData().getUtfall());
+
+      //
+      // verify expected mock call counts
+      //
+      Mockito.verify(regelManuellService, Mockito.times(1)).decideUtfall(Mockito.any());
+      Mockito.verify(regelManuellService, Mockito.times(1)).handleRegelDone(UUID.fromString(kundbehovsflodeId));
    }
 }
