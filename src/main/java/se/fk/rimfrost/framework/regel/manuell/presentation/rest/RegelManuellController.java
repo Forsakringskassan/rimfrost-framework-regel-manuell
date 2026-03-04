@@ -35,11 +35,11 @@ public class RegelManuellController implements RegelManuellControllerApi
    }
 
    @POST
-   @Path("/{kundbehovsflodeId}/done")
+   @Path("/{handlaggningId}/done")
    @Override
    public void markDone(
-         @PathParam("kundbehovsflodeId") UUID kundbehovsflodeId)
+         @PathParam("handlaggningId") UUID handlaggningId)
    {
-      regelManuellUppgiftDoneHandler.get().handleUppgiftDone(kundbehovsflodeId);
+      regelManuellUppgiftDoneHandler.get().handleUppgiftDone(handlaggningId);
    }
 }

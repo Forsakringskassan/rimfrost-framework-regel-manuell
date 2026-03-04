@@ -11,8 +11,8 @@ import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.fk.rimfrost.Status;
-import se.fk.rimfrost.framework.kundbehovsflode.adapter.dto.ImmutableKundbehovsflodeRequest;
-import se.fk.rimfrost.framework.kundbehovsflode.adapter.dto.KundbehovsflodeResponse;
+import se.fk.rimfrost.framework.handlaggning.adapter.dto.ImmutableHandlaggningRequest;
+import se.fk.rimfrost.framework.handlaggning.adapter.dto.HandlaggningResponse;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
@@ -73,7 +73,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       this.commonRegelData = dataStorageProvider.getDataStorage().getCommonRegelData();
    }
 
-   public RegelData createRegelData(KundbehovsflodeResponse kundbehovsflodeResponse)
+   public RegelData createRegelData(HandlaggningResponse handlaggningResponse)
    {
       var uppgiftData = ImmutableUppgiftData.builder()
             .skapadTs(OffsetDateTime.now())
@@ -83,7 +83,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .build();
 
       var ersattninglist = new ArrayList<ErsattningData>();
-      for (var ersattning : kundbehovsflodeResponse.ersattning())
+      for (var ersattning : handlaggningResponse.ersattning())
       {
          var ersattningData = ImmutableErsattningData.builder()
                .id(ersattning.ersattningsId())
@@ -103,12 +103,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
-      var kundbehovsflodeResponse = kundbehovsflodeAdapter.getKundbehovsflodeInfo(
-            ImmutableKundbehovsflodeRequest.builder()
-                  .kundbehovsflodeId(request.kundbehovsflodeId())
+      var handlaggningResponse = handlaggningAdapter.getHandlaggningInfo(
+            ImmutableHandlaggningRequest.builder()
+                  .handlaggningId(request.handlaggningId())
                   .build());
 
-      var regelData = createRegelData(kundbehovsflodeResponse);
+      var regelData = createRegelData(handlaggningResponse);
 
       var cloudevent = createCloudEvent(request);
 
@@ -117,14 +117,14 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var cloudevents = commonRegelData.getCloudEvents();
          var regelDatas = commonRegelData.getRegelDatas();
 
-         cloudevents.put(request.kundbehovsflodeId(), cloudevent);
-         regelDatas.put(request.kundbehovsflodeId(), regelData);
+         cloudevents.put(request.handlaggningId(), cloudevent);
+         regelDatas.put(request.handlaggningId(), regelData);
          storageManager.store(commonRegelData);
       }
 
       var oulMessageRequest = ImmutableOulMessageRequest.builder()
-            .kundbehovsflodeId(request.kundbehovsflodeId())
-            .kundbehov(kundbehovsflodeResponse.formanstyp())
+            .handlaggningId(request.handlaggningId())
+            .yrkande(handlaggningResponse.formanstyp())
             .regel(regelConfig.getSpecifikation().getNamn())
             .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
             .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
@@ -138,7 +138,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Override
    public void handleOulResponse(OulResponse oulResponse)
    {
-      var regelData = commonRegelData.getRegelData(oulResponse.kundbehovsflodeId());
+      var regelData = commonRegelData.getRegelData(oulResponse.handlaggningId());
 
       var updatedUppgiftData = ImmutableUppgiftData.builder()
             .from(regelData.uppgiftData())
@@ -153,11 +153,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       synchronized (commonRegelData.getLock())
       {
          var regelDatas = commonRegelData.getRegelDatas();
-         regelDatas.put(oulResponse.kundbehovsflodeId(), updatedRegelData);
+         regelDatas.put(oulResponse.handlaggningId(), updatedRegelData);
          storageManager.store(regelDatas);
       }
 
-      putKundbehovsflode(oulResponse.kundbehovsflodeId(), updatedUppgiftData, regelData.underlag());
+      putHandlaggning(oulResponse.handlaggningId(), updatedUppgiftData, regelData.underlag());
    }
 
    @Override
@@ -173,7 +173,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .stream()
                .filter(r -> r.uppgiftData().uppgiftId() != null && r.uppgiftData().uppgiftId().equals(oulStatus.uppgiftId()))
                .findFirst()
-               .orElse(regelDatas.get(oulStatus.kundbehovsflodeId()));
+               .orElse(regelDatas.get(oulStatus.handlaggningId()));
       }
 
       if (regelData == null)
@@ -184,8 +184,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          if (oulStatus.uppgiftStatus() != se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD)
          {
             LOGGER.error(
-                  "RegelData for kundbehovsflodeId {} was not found during OUL status update for uppgift {} with uppgiftStatus {}",
-                  oulStatus.kundbehovsflodeId(), oulStatus.uppgiftId(), oulStatus.uppgiftStatus());
+                  "RegelData for handlaggningId {} was not found during OUL status update for uppgift {} with uppgiftStatus {}",
+                  oulStatus.handlaggningId(), oulStatus.uppgiftId(), oulStatus.uppgiftStatus());
          }
 
          return;
@@ -205,18 +205,18 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       synchronized (commonRegelData.getLock())
       {
          var regelDatas = dataStorageProvider.getDataStorage().getCommonRegelData().getRegelDatas();
-         regelDatas.put(oulStatus.kundbehovsflodeId(), updatedRegelData);
+         regelDatas.put(oulStatus.handlaggningId(), updatedRegelData);
          storageManager.store(regelDatas);
       }
 
-      putKundbehovsflode(oulStatus.kundbehovsflodeId(), updatedUppgiftData, regelData.underlag());
+      putHandlaggning(oulStatus.handlaggningId(), updatedUppgiftData, regelData.underlag());
    }
 
    @Override
-   public void handleUppgiftDone(UUID kundbehovsflodeId)
+   public void handleUppgiftDone(UUID handlaggningId)
    {
-      RegelData regelData = commonRegelData.getRegelData(kundbehovsflodeId);
-      CloudEventData cloudevent = commonRegelData.getCloudEventData(kundbehovsflodeId);
+      RegelData regelData = commonRegelData.getRegelData(handlaggningId);
+      CloudEventData cloudevent = commonRegelData.getCloudEventData(handlaggningId);
 
       var updatedUppgiftData = ImmutableUppgiftData.builder()
             .from(regelData.uppgiftData())
@@ -228,9 +228,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .uppgiftData(updatedUppgiftData)
             .build();
 
-      putKundbehovsflode(kundbehovsflodeId, updatedUppgiftData, regelData.underlag());
+      putHandlaggning(handlaggningId, updatedUppgiftData, regelData.underlag());
 
-      sendResponse(kundbehovsflodeId, cloudevent, regelService.decideUtfall(updatedRegelData));
+      sendResponse(handlaggningId, cloudevent, regelService.decideUtfall(updatedRegelData));
 
       DelayedException delayedException = new DelayedException();
       // We do this before cleaning up CloudEvent and RegelData instances
@@ -238,7 +238,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       // callback execution.
       try
       {
-         regelService.handleRegelDone(kundbehovsflodeId);
+         regelService.handleRegelDone(handlaggningId);
       }
       catch (Exception e)
       {
@@ -262,8 +262,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          {
             var regelDatas = commonRegelData.getRegelDatas();
             var cloudevents = commonRegelData.getCloudEvents();
-            cloudevents.remove(kundbehovsflodeId);
-            regelDatas.remove(kundbehovsflodeId);
+            cloudevents.remove(handlaggningId);
+            regelDatas.remove(handlaggningId);
             storageManager.store(commonRegelData);
          }
          catch (Exception e)

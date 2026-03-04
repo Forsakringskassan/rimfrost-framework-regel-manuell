@@ -19,7 +19,7 @@ public class RegelManuellTestService implements RegelManuellServiceInterface
    }
 
    @Override
-   public void handleRegelDone(UUID kundbehovsflodeId)
+   public void handleRegelDone(UUID handlaggningId)
    {
       // noop
    }

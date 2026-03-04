@@ -9,5 +9,5 @@ public interface RegelManuellServiceInterface
 {
    Utfall decideUtfall(RegelData regelData);
 
-   void handleRegelDone(UUID kundbehovsflodeId);
+   void handleRegelDone(UUID handlaggningId);
 }
