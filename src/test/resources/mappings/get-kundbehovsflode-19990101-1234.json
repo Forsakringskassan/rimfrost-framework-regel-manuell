@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/kundbehovsflode/.+1234$"
+    "urlPathPattern": "/handlaggning/.+1234$"
   },
   "response": {
     "status": 200,
@@ -9,21 +9,21 @@
       "Content-Type": "application/json"
     },
     "jsonBody": {
-      "kundbehovsflode": {
+      "handlaggning": {
         "id": "5367f6b8-cc4a-11f0-8de9-199901011234",
-        "kundbehov": {
+        "yrkande": {
           "id": "81234d56-7890-4abc-1234-56789abcdef0",
           "formanstyp": "VAH",
           "version": "1.0",
-          "kundbehovsdatum": "2026-01-22T13:30:11.155427+01:00",
-          "kundbehovsstatus": "FASTSTALLT",
+          "yrkandedatum": "2026-01-22T13:30:11.155427+01:00",
+          "yrkandestatus": "FASTSTALLT",
           "period": {
             "start": "2025-01-10T16:15:50Z",
             "slut": "2025-01-10T16:15:50Z"
           },
           "avsikt": "NY",
           "andringsorsak": "",
-          "kundbehovsroll": [
+          "yrkanderoll": [
             {
               "id": "91234567-89ab-4cde-9012-3456789abcde",
               "individ": {
@@ -60,7 +60,7 @@
         "version": "1.0",
         "skapadTS": "2026-01-22T13:31:00.8742683+01:00",
         "avslutadTS": null,
-        "kundbehovsspecifikation": {
+        "handlaggningspecifikation": {
           "id": "71234567-89ab-4cde-9012-3456789abcde",
           "version": "1.0",
           "bpmn": "VAH",

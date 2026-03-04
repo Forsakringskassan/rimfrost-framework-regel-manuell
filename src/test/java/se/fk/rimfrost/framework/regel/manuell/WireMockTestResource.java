@@ -16,6 +16,6 @@ public class WireMockTestResource extends AbstractWireMockTestResource
       var server = getWireMockServer();
 
       return Map.of(
-            "kundbehovsflode.api.base-url", server.baseUrl());
+            "handlaggning.api.base-url", server.baseUrl());
    }
 }

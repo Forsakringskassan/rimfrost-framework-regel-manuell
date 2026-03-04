@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public interface RegelManuellUppgiftDoneHandler
 {
-   void handleUppgiftDone(UUID kundbehovsflodeId);
+   void handleUppgiftDone(UUID handlaggningId);
 }

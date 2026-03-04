@@ -72,16 +72,16 @@ public class RegelManuellTest extends RegelTest
             .as(GetUtokadUppgiftsbeskrivningResponse.class);
    }
 
-   private void sendPostRegelManuell(String kundbehovsflodeId)
+   private void sendPostRegelManuell(String handlaggningId)
    {
-      given().when().post("/regel/manuell/{kundbehovsflodeId}/done", kundbehovsflodeId).then().statusCode(204);
+      given().when().post("/regel/manuell/{handlaggningId}/done", handlaggningId).then().statusCode(204);
    }
 
-   private void sendRegelRequest(String kundbehovsflodeId) throws Exception
+   private void sendRegelRequest(String handlaggningId) throws Exception
    {
       RegelRequestMessagePayload payload = new RegelRequestMessagePayload();
       RegelRequestMessagePayloadData data = new RegelRequestMessagePayloadData();
-      data.setKundbehovsflodeId(kundbehovsflodeId);
+      data.setHandlaggningId(handlaggningId);
       payload.setSpecversion(se.fk.rimfrost.framework.regel.SpecVersion.NUMBER_1_DOT_0);
       payload.setId("99994567-89ab-4cde-9012-3456789abcde");
       payload.setSource("TestSource-001");
@@ -105,7 +105,7 @@ public class RegelManuellTest extends RegelTest
          "5367f6b8-cc4a-11f0-8de9-199901011234, JA",
          "5367f6b8-cc4a-11f0-8de9-199901011234, NEJ"
    })
-   void TestRegelManuell(String kundbehovsflodeId, Utfall expectedUtfall) throws Exception
+   void TestRegelManuell(String handlaggningId, Utfall expectedUtfall) throws Exception
    {
       Mockito.reset(regelManuellService);
       wiremockServer.resetRequests();
@@ -113,17 +113,17 @@ public class RegelManuellTest extends RegelTest
       this.inMemoryConnector.sink(oulStatusControlChannel).clear();
       this.inMemoryConnector.sink(regelResponsesChannel).clear();
 
-      System.out.printf("Starting TestRegelManuell. %S%n", kundbehovsflodeId);
+      System.out.printf("Starting TestRegelManuell. %S%n", handlaggningId);
 
       // Send regel request to start workflow
-      sendRegelRequest(kundbehovsflodeId);
+      sendRegelRequest(handlaggningId);
 
       //
-      // Verify GET kundbehovsflöde requested
+      // Verify GET handläggning requested
       //
-      var kundbehovsflodeRequests = waitForWireMockRequest(wiremockServer,
-            kundbehovsflodeEndpoint + kundbehovsflodeId, 1);
-      assertEquals(1, kundbehovsflodeRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.GET)).count());
+      var handlaggningRequests = waitForWireMockRequest(wiremockServer,
+            handlaggningEndpoint + handlaggningId, 1);
+      assertEquals(1, handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.GET)).count());
 
       //
       // Verify oul message produced
@@ -135,8 +135,8 @@ public class RegelManuellTest extends RegelTest
       assertInstanceOf(OperativtUppgiftslagerRequestMessage.class, message);
 
       var oulRequestMessage = (OperativtUppgiftslagerRequestMessage) message;
-      assertEquals(kundbehovsflodeId, oulRequestMessage.getKundbehovsflodeId());
-      assertEquals("VAH", oulRequestMessage.getKundbehov());
+      assertEquals(handlaggningId, oulRequestMessage.getHandlaggningId());
+      assertEquals("VAH", oulRequestMessage.getYrkande());
       assertEquals("TestUppgiftBeskrivning", oulRequestMessage.getBeskrivning());
       assertEquals("TestUppgiftNamn", oulRequestMessage.getRegel());
       assertEquals("C", oulRequestMessage.getVerksamhetslogik());
@@ -150,25 +150,25 @@ public class RegelManuellTest extends RegelTest
       // Send mocked OUL response
       //
       OperativtUppgiftslagerResponseMessage oulResponseMessage = new OperativtUppgiftslagerResponseMessage();
-      oulResponseMessage.setKundbehovsflodeId(kundbehovsflodeId);
+      oulResponseMessage.setHandlaggningId(handlaggningId);
       oulResponseMessage.setUppgiftId("11e53b18-e9ac-4707-825b-a1cb80689c29");
       inMemoryConnector.source(oulResponsesChannel).send(oulResponseMessage);
 
       //
-      // Verify PUT kundbehovsflöde requested
+      // Verify PUT handläggning requested
       //
-      kundbehovsflodeRequests = waitForWireMockRequest(wiremockServer, kundbehovsflodeEndpoint + kundbehovsflodeId, 1);
-      var putRequests = kundbehovsflodeRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
+      handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
+      var putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
 
-      assertEquals(1, kundbehovsflodeRequests.size());
+      assertEquals(1, handlaggningRequests.size());
       assertEquals(1, putRequests.size());
 
       var sentJson = putRequests.getFirst().getBodyAsString();
-      var sentPutKundbehovsflodeRequest = mapper.readValue(sentJson, PutKundbehovsflodeRequest.class);
-      assertEquals(UUID.fromString(kundbehovsflodeId), sentPutKundbehovsflodeRequest.getUppgift().getKundbehovsflodeId());
-      assertEquals(UppgiftStatus.PLANERAD, sentPutKundbehovsflodeRequest.getUppgift().getUppgiftStatus());
-      assertNull(sentPutKundbehovsflodeRequest.getUppgift().getUtforarId());
-      // TODO: Add more checks of sentPutKundbehovsflodeRequest content
+      var sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
+      assertEquals(UUID.fromString(handlaggningId), sentPutHandlaggningRequest.getUppgift().getHandlaggningId());
+      assertEquals(UppgiftStatus.PLANERAD, sentPutHandlaggningRequest.getUppgift().getUppgiftStatus());
+      assertNull(sentPutHandlaggningRequest.getUppgift().getUtforarId());
+      // TODO: Add more checks of sentPutHandlaggningRequest content
 
       // Clear previous requests
       wiremockServer.resetRequests();
@@ -179,25 +179,25 @@ public class RegelManuellTest extends RegelTest
       OperativtUppgiftslagerStatusMessage oulStatusMessage = new OperativtUppgiftslagerStatusMessage();
       oulStatusMessage.setStatus(Status.NY);
       oulStatusMessage.setUppgiftId(oulResponseMessage.getUppgiftId());
-      oulStatusMessage.setKundbehovsflodeId(kundbehovsflodeId);
+      oulStatusMessage.setHandlaggningId(handlaggningId);
       oulStatusMessage.setUtforarId("383cc515-4c55-479b-a96b-244734ef1336");
       inMemoryConnector.source(oulStatusNotificationChannel).send(oulStatusMessage);
 
       //
       // verify expected actions from manual rule as result of new status reported
       //
-      kundbehovsflodeRequests = waitForWireMockRequest(wiremockServer, kundbehovsflodeEndpoint + kundbehovsflodeId, 1);
-      putRequests = kundbehovsflodeRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
+      handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
+      putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
 
-      assertEquals(1, kundbehovsflodeRequests.size());
+      assertEquals(1, handlaggningRequests.size());
       assertEquals(1, putRequests.size());
 
       sentJson = putRequests.getFirst().getBodyAsString();
-      sentPutKundbehovsflodeRequest = mapper.readValue(sentJson, PutKundbehovsflodeRequest.class);
-      assertEquals(UUID.fromString(kundbehovsflodeId), sentPutKundbehovsflodeRequest.getUppgift().getKundbehovsflodeId());
-      assertEquals(UppgiftStatus.PLANERAD, sentPutKundbehovsflodeRequest.getUppgift().getUppgiftStatus());
-      assertNotNull(sentPutKundbehovsflodeRequest.getUppgift().getUtforarId());
-      // TODO: Add more checks of sentPutKundbehovsflodeRequest content
+      sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
+      assertEquals(UUID.fromString(handlaggningId), sentPutHandlaggningRequest.getUppgift().getHandlaggningId());
+      assertEquals(UppgiftStatus.PLANERAD, sentPutHandlaggningRequest.getUppgift().getUppgiftStatus());
+      assertNotNull(sentPutHandlaggningRequest.getUppgift().getUtforarId());
+      // TODO: Add more checks of sentPutHandlaggningRequest content
 
       // Clear previous requests
       wiremockServer.resetRequests();
@@ -219,25 +219,25 @@ public class RegelManuellTest extends RegelTest
       // Configure regelManuellService methods with expected values
       //
       Mockito.when(regelManuellService.decideUtfall(Mockito.any())).thenReturn(expectedUtfall);
-      Mockito.doNothing().when(regelManuellService).handleRegelDone(UUID.fromString(kundbehovsflodeId));
+      Mockito.doNothing().when(regelManuellService).handleRegelDone(UUID.fromString(handlaggningId));
 
       //
       // mock POST operation from portal FE
       //
-      sendPostRegelManuell(kundbehovsflodeId);
+      sendPostRegelManuell(handlaggningId);
 
       //
-      // verify that rule performed requests to kundbehovsflode
+      // verify that rule performed requests to handlaggning
       //
-      kundbehovsflodeRequests = waitForWireMockRequest(wiremockServer, kundbehovsflodeEndpoint + kundbehovsflodeId, 1);
-      putRequests = kundbehovsflodeRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
+      handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
+      putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
 
-      assertEquals(1, kundbehovsflodeRequests.size());
+      assertEquals(1, handlaggningRequests.size());
       assertEquals(1, putRequests.size());
 
       sentJson = putRequests.getLast().getBodyAsString();
-      sentPutKundbehovsflodeRequest = mapper.readValue(sentJson, PutKundbehovsflodeRequest.class);
-      assertEquals(UppgiftStatus.AVSLUTAD, sentPutKundbehovsflodeRequest.getUppgift().getUppgiftStatus());
+      sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
+      assertEquals(UppgiftStatus.AVSLUTAD, sentPutHandlaggningRequest.getUppgift().getUppgiftStatus());
 
       //
       // verify kafka status message sent to oul
@@ -262,13 +262,13 @@ public class RegelManuellTest extends RegelTest
       assertInstanceOf(RegelResponseMessagePayload.class, message);
 
       var regelManuellResponseMessagePayload = (RegelResponseMessagePayload) message;
-      assertEquals(kundbehovsflodeId, regelManuellResponseMessagePayload.getData().getKundbehovsflodeId());
+      assertEquals(handlaggningId, regelManuellResponseMessagePayload.getData().getHandlaggningId());
       assertEquals(expectedUtfall, regelManuellResponseMessagePayload.getData().getUtfall());
 
       //
       // verify expected mock call counts
       //
       Mockito.verify(regelManuellService, Mockito.times(1)).decideUtfall(Mockito.any());
-      Mockito.verify(regelManuellService, Mockito.times(1)).handleRegelDone(UUID.fromString(kundbehovsflodeId));
+      Mockito.verify(regelManuellService, Mockito.times(1)).handleRegelDone(UUID.fromString(handlaggningId));
    }
 }

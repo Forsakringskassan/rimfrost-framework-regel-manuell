@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "PUT",
-    "urlPathPattern": "/kundbehovsflode/.*"
+    "urlPathPattern": "/handlaggning/.*"
   },
   "response": {
     "status": 200,
@@ -16,7 +16,7 @@
         "utfordTs": "2025-12-17T11:11:08.384970949Z",
         "planeradTs": null,
         "utforarId": "6f26358f-5ac5-4bf0-b04b-376a88923628",
-        "kundbehovsflodeId": "482a43b7-c985-4f65-ae41-fb75de3a6a6f",
+        "handlaggningId": "482a43b7-c985-4f65-ae41-fb75de3a6a6f",
         "uppgiftStatus": "AVSLUTAD",
         "FSSAinformation": "HANDLAGGNING_PAGAR",
         "uppgiftspecifikation": {
