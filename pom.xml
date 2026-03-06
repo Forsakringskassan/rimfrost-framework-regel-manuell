@@ -69,11 +69,6 @@
       <version>0.3.11</version>
     </dependency>
     <dependency>
-      <groupId>se.fk.rimfrost.framework.storage</groupId>
-      <artifactId>rimfrost-framework-storage</artifactId>
-      <version>0.0.1</version>
-    </dependency>
-    <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel-test-base</artifactId>
       <version>0.3.11</version>

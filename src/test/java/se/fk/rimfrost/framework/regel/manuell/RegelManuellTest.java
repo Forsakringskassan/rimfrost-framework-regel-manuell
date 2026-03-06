@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 @QuarkusTestResource.List(
 {
-      @QuarkusTestResource(WireMockTestResource.class),
-      @QuarkusTestResource(StorageDataTestResource.class)
+      @QuarkusTestResource(WireMockTestResource.class)
 })
 public class RegelManuellTest extends RegelTest
 {
