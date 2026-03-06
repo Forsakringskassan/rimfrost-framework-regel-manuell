@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.24 (2026-03-06)
+
+### Bug Fixes
+
+-  Use interface-based storage for common rule data ([356df](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/356df12d9c0b490) Lars Persson)  
+-  Rename mapping files to handlaggning ([555fe](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/555fe8dd9fff38c) Lars Persson)  
+
 ## 0.1.23 (2026-03-04)
 
 ### Bug Fixes
