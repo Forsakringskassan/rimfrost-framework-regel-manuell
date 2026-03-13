@@ -31,7 +31,10 @@
                 "fornamn": "Lisa",
                 "efternamn": "Tass"
               },
-              "roll": "AGARE",
+              "roll": {
+                "id": "d1b6721d-a3d8-4fd1-aae8-6ba11849e9bc",
+                "namn": "AGARE"
+              },
               "yrkande": true
             }
           ],
@@ -41,7 +44,10 @@
               "belopp": 40000,
               "berakningsgrund": "LON",
               "beloppstyp": "INKOMSTBASERAD",
-              "ersattningstyp": "HUNDBIDRAG",
+              "ersattningstyp": {
+                "id": "361779e2-cc93-471a-815b-50bad66cd427",
+                "namn": "HUNDBIDRAG"
+              },
               "periodisering": "DAG",
               "omfattning": 100,
               "beslutsutfall": "FU",
