@@ -7,10 +7,13 @@ import se.fk.rimfrost.framework.regel.logic.entity.Underlag;
 import se.fk.rimfrost.framework.regel.logic.entity.UppgiftData;
 
 import java.util.List;
+import java.util.UUID;
 
 @Value.Immutable
 public interface RegelData
 {
+   UUID aktivitetId();
+
    @NotNull
    UppgiftData uppgiftData();
 

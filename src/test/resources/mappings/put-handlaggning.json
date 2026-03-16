@@ -25,7 +25,10 @@
           "namn": "Rätt till försäkring - manuell kontroll",
           "uppgiftbeskrivning": "Kontrollera om personen varit på jobbet",
           "verksamhetslogik": "A",
-          "roll": "ANSVARIG_HANDLAGGARE",
+          "roll": {
+            "id": "93418b78-5a6b-4e25-a9e8-16c25cd722a0",
+            "namn": "ANSVARIG_HANDLAGGARE"
+          },
           "applikationsId": "rtf-manuell",
           "applikationsVersion": "1.0",
           "regel": {

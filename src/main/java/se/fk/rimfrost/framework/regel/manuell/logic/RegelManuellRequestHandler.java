@@ -48,7 +48,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Inject
    ManuellRegelCommonDataStorage dataStorage;
 
-   public RegelData createRegelData(HandlaggningResponse handlaggningResponse)
+   public RegelData createRegelData(HandlaggningResponse handlaggningResponse, UUID aktivitetId)
    {
       var uppgiftData = ImmutableUppgiftData.builder()
             .skapadTs(OffsetDateTime.now())
@@ -68,11 +68,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
 
       return ImmutableRegelData.builder()
+            .aktivitetId(aktivitetId)
             .uppgiftData(uppgiftData)
             .ersattningar(ersattninglist)
             .underlag(new ArrayList<>())
             .build();
-
    }
 
    @Override
@@ -83,7 +83,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                   .handlaggningId(request.handlaggningId())
                   .build());
 
-      var regelData = createRegelData(handlaggningResponse);
+      var regelData = createRegelData(handlaggningResponse, request.aktivitetId());
 
       var cloudevent = createCloudEvent(request);
 
