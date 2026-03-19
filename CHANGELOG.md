@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.27 (2026-03-19)
+
+### Bug Fixes
+
+-  Use kogitoprocInstanceId for handlaggning ([c1543](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c15437d70a3705a) Lars Persson)  
+
 ## 0.1.26 (2026-03-19)
 
 ### Bug Fixes
