@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.26 (2026-03-19)
+
+### Bug Fixes
+
+-  Bump rimfrost-framework-regel version ([2a603](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2a603249f1e8157) Lars Persson)  
+-  Add support for aktivitetId ([051f0](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/051f0cef841fa42) Lars Persson)  
+
 ## 0.1.25 (2026-03-09)
 
 ### Bug Fixes
