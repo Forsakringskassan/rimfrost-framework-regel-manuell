@@ -41,7 +41,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Inject
    ManuellRegelCommonDataStorage dataStorage;
 
-   public Handlaggning createHandlaggning(HandlaggningRead handlaggningRead, UUID aktivitetId)
+   public Handlaggning createHandlaggning(HandlaggningRead handlaggningRead, UUID aktivitetId, UUID kogitoprocInstanceId)
    {
       var uppgiftSpecifikation = ImmutableUppgiftSpecifikation.builder()
             .id(regelConfig.getSpecifikation().getId())
@@ -63,7 +63,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .id(handlaggningRead.id())
             .version(handlaggningRead.version())
             .yrkande(handlaggningRead.yrkande())
-            .processInstansId(handlaggningRead.processInstansId())
+            .processInstansId(kogitoprocInstanceId)
             .skapadTS(handlaggningRead.skapadTS())
             .avslutadTS(handlaggningRead.avslutadTS())
             .handlaggningspecifikationId(handlaggningRead.handlaggningspecifikationId())
@@ -76,7 +76,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    {
       var handlaggningRead = handlaggningAdapter.readHandlaggning(request.handlaggningId());
 
-      var handlaggning = createHandlaggning(handlaggningRead, request.aktivitetId());
+      var handlaggning = createHandlaggning(handlaggningRead, request.aktivitetId(), request.kogitoprocinstanceid());
 
       var cloudevent = createCloudEvent(request);
 
