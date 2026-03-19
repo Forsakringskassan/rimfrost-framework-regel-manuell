@@ -136,7 +136,7 @@ public class RegelManuellTest extends RegelTest
 
       var oulRequestMessage = (OperativtUppgiftslagerRequestMessage) message;
       assertEquals(handlaggningId, oulRequestMessage.getHandlaggningId());
-      assertEquals("VAH", oulRequestMessage.getYrkande());
+      assertEquals("f35c574d-e2a3-42ac-9ccb-835a24e692fe", oulRequestMessage.getYrkande());
       assertEquals("TestUppgiftBeskrivning", oulRequestMessage.getBeskrivning());
       assertEquals("TestUppgiftNamn", oulRequestMessage.getRegel());
       assertEquals("C", oulRequestMessage.getVerksamhetslogik());
@@ -155,25 +155,6 @@ public class RegelManuellTest extends RegelTest
       inMemoryConnector.source(oulResponsesChannel).send(oulResponseMessage);
 
       //
-      // Verify PUT handläggning requested
-      //
-      handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
-      var putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
-
-      assertEquals(1, handlaggningRequests.size());
-      assertEquals(1, putRequests.size());
-
-      var sentJson = putRequests.getFirst().getBodyAsString();
-      var sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
-      assertEquals(UUID.fromString(handlaggningId), sentPutHandlaggningRequest.getUppgift().getHandlaggningId());
-      assertEquals(UppgiftStatus.PLANERAD, sentPutHandlaggningRequest.getUppgift().getUppgiftStatus());
-      assertNull(sentPutHandlaggningRequest.getUppgift().getUtforarId());
-      // TODO: Add more checks of sentPutHandlaggningRequest content
-
-      // Clear previous requests
-      wiremockServer.resetRequests();
-
-      //
       // mock status update from OUL
       //
       OperativtUppgiftslagerStatusMessage oulStatusMessage = new OperativtUppgiftslagerStatusMessage();
@@ -182,25 +163,6 @@ public class RegelManuellTest extends RegelTest
       oulStatusMessage.setHandlaggningId(handlaggningId);
       oulStatusMessage.setUtforarId("383cc515-4c55-479b-a96b-244734ef1336");
       inMemoryConnector.source(oulStatusNotificationChannel).send(oulStatusMessage);
-
-      //
-      // verify expected actions from manual rule as result of new status reported
-      //
-      handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
-      putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
-
-      assertEquals(1, handlaggningRequests.size());
-      assertEquals(1, putRequests.size());
-
-      sentJson = putRequests.getFirst().getBodyAsString();
-      sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
-      assertEquals(UUID.fromString(handlaggningId), sentPutHandlaggningRequest.getUppgift().getHandlaggningId());
-      assertEquals(UppgiftStatus.PLANERAD, sentPutHandlaggningRequest.getUppgift().getUppgiftStatus());
-      assertNotNull(sentPutHandlaggningRequest.getUppgift().getUtforarId());
-      // TODO: Add more checks of sentPutHandlaggningRequest content
-
-      // Clear previous requests
-      wiremockServer.resetRequests();
 
       //
       // mock GET operation requested from portal FE
@@ -230,14 +192,18 @@ public class RegelManuellTest extends RegelTest
       // verify that rule performed requests to handlaggning
       //
       handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
-      putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
+      var putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
 
       assertEquals(1, handlaggningRequests.size());
       assertEquals(1, putRequests.size());
 
-      sentJson = putRequests.getLast().getBodyAsString();
-      sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
-      assertEquals(UppgiftStatus.AVSLUTAD, sentPutHandlaggningRequest.getUppgift().getUppgiftStatus());
+      var sentJson = putRequests.getLast().getBodyAsString();
+      var sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
+      var handlaggning = sentPutHandlaggningRequest.getHandlaggning();
+      assertNotNull(handlaggning.getUppgift().getId());
+      assertEquals(1, handlaggning.getUppgift().getVersion());
+      assertEquals(UUID.fromString("383cc515-4c55-479b-a96b-244734ef1336"), handlaggning.getUppgift().getUtforarId());
+      assertEquals(UppgiftStatus.AVSLUTAD, handlaggning.getUppgift().getUppgiftStatus());
 
       //
       // verify kafka status message sent to oul
