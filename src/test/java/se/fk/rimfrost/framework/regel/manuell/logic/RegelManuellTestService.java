@@ -2,9 +2,8 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
+import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellServiceInterface;
-import se.fk.rimfrost.framework.regel.manuell.logic.entity.RegelData;
 
 import java.util.UUID;
 
@@ -13,7 +12,7 @@ import java.util.UUID;
 public class RegelManuellTestService implements RegelManuellServiceInterface
 {
    @Override
-   public Utfall decideUtfall(RegelData regelData)
+   public Utfall decideUtfall(Handlaggning handlaggning)
    {
       return Utfall.JA;
    }
