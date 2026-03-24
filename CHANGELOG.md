@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.28 (2026-03-24)
+
+### Bug Fixes
+
+-  Add support for sending individuals with OUL request message ([247f2](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/247f2a8de10b524) Lars Persson)  
+
 ## 0.1.27 (2026-03-19)
 
 ### Bug Fixes
