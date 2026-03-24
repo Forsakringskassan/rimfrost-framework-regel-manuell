@@ -136,7 +136,10 @@ public class RegelManuellTest extends RegelTest
 
       var oulRequestMessage = (OperativtUppgiftslagerRequestMessage) message;
       assertEquals(handlaggningId, oulRequestMessage.getHandlaggningId());
-      assertEquals("f35c574d-e2a3-42ac-9ccb-835a24e692fe", oulRequestMessage.getYrkande());
+      assertArrayEquals(new String[]
+      {
+            "91234567-89ab-4cde-9012-3456789abcde"
+      }, oulRequestMessage.getIndivider());
       assertEquals("TestUppgiftBeskrivning", oulRequestMessage.getBeskrivning());
       assertEquals("TestUppgiftNamn", oulRequestMessage.getRegel());
       assertEquals("C", oulRequestMessage.getVerksamhetslogik());

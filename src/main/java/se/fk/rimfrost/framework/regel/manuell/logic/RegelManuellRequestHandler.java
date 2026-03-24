@@ -88,7 +88,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       var oulMessageRequest = ImmutableOulMessageRequest.builder()
             .handlaggningId(request.handlaggningId())
-            .yrkande(handlaggningRead.yrkande().erbjudandeId().toString())
+            .individer(
+                  handlaggningRead.yrkande().individYrkandeRoller().stream().map(Yrkande.IndividYrkandeRoll::individId).toList())
             .regel(regelConfig.getSpecifikation().getNamn())
             .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
             .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
