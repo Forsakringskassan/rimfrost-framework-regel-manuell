@@ -14,8 +14,8 @@ import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageReq
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
+import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
-import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellUppgiftDoneHandler;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
@@ -25,7 +25,7 @@ import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInte
 @SuppressWarnings("unused")
 @ApplicationScoped
 public class RegelManuellRequestHandler extends RegelRequestHandlerBase
-      implements OulHandlerInterface, RegelManuellUppgiftDoneHandler, RegelRequestHandlerInterface
+      implements OulHandlerInterface, RegelRequestHandlerInterface, RegelManuellUppgiftDoneHandler
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellRequestHandler.class);
 
@@ -154,7 +154,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    @Override
-   public void handleUppgiftDone(UUID handlaggningId)
+   public void handleUppgiftDone(UUID handlaggningId, Utfall utfall)
    {
       var commonRegelData = dataStorage.getManuellRegelCommonData(handlaggningId);
       HandlaggningUpdate handlaggningUpdate = commonRegelData.handlaggningUpdate();
@@ -173,7 +173,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       handlaggningAdapter.updateHandlaggning(updatedHandlaggning);
 
-      sendResponse(handlaggningId, cloudevent, regelService.decideUtfall(updatedHandlaggning));
+      sendResponse(handlaggningId, cloudevent, utfall);
 
       DelayedException delayedException = new DelayedException();
       // We do this before cleaning up CloudEvent and RegelData instances
