@@ -2,6 +2,14 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.1.29 (2026-03-25)
+
+### Bug Fixes
+
+-  createHandlaggning to createHandlaggningUpdate ([4a7a3](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/4a7a303a8ce77a3) Ulf Slunga)  
+-  refactoring av testfall ([fd264](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/fd2641e95309dab) Ulf Slunga)  
+-  lägger till notification vid status update ([6153b](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/6153bdf1763a26c) Ulf Slunga)  
+
 ## 0.1.28 (2026-03-24)
 
 ### Bug Fixes
