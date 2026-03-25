@@ -4,23 +4,27 @@ import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
-import se.fk.rimfrost.framework.regel.Utfall;
+import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 
 import java.util.UUID;
 
 @ApplicationScoped
 @DefaultBean
-public class RegelManuellTestService implements RegelManuellServiceInterface
+public class RegelManuellTestService implements RegelManuellServiceInterface<String, String>
 {
+
    @Override
-   public Utfall decideUtfall(HandlaggningUpdate handlaggningUpdate)
-   {
-      return Utfall.JA;
+   public String readData(Handlaggning handlaggning) {
+      return "";
    }
 
    @Override
-   public void handleRegelDone(UUID handlaggningId)
-   {
-      // noop
+   public HandlaggningUpdate updateData(Handlaggning handlaggning, String request) {
+      return ImmutableHandlaggningUpdate.builder().build();
+   }
+
+   @Override
+   public void done(UUID handlaggningId) {
+     //nope
    }
 }

@@ -5,7 +5,10 @@ import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonD
 
 import java.util.UUID;
 
+import io.quarkus.arc.DefaultBean;
+
 @ApplicationScoped
+@DefaultBean
 public class TestManuellRegelCommonDataStorage implements ManuellRegelCommonDataStorage
 {
    private ManuellRegelCommonData manuellRegelCommonData = null;

@@ -14,13 +14,14 @@ import jakarta.ws.rs.core.Response;
 import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.RegelManuellControllerApi;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
+import se.fk.rimfrost.framework.regel.manuell.logic.LoggingServiceInterface;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellServiceInterface;
 
 @SuppressWarnings("unused")
-public class RegelManuellController<T, Y> implements RegelManuellControllerApi
+public abstract class RegelManuellController<T, Y> implements RegelManuellControllerApi
 {
    @Inject
-   RegelManuellServiceInterface<T, Y> regelService;
+   LoggingServiceInterface<T, Y> loggingService;
 
    @Inject
    RegelConfigProvider regelConfigProvider;
@@ -40,24 +41,25 @@ public class RegelManuellController<T, Y> implements RegelManuellControllerApi
 
    @GET
    @Path("/{handlaggningId}")
-   public Response getData(UUID handlaggningId){
-      var result = regelService.get(handlaggningId);
+   public Response getData(UUID handlaggningId)
+   {
+      var result = loggingService.read(handlaggningId);
       return Response.ok(result).build();
    }
 
    @PATCH
    @Path("/{handlaggningId}")
-   public Response patch(Y request){ 
-      var result = regelService.patch(request);
-      return Response.ok(result).build();
+   public void patch(@PathParam("handlaggningId") UUID handlaggningId, Y request)
+   {
+      loggingService.update(handlaggningId, request);
    }
 
    @POST
    @Path("/{handlaggningId}/done")
    @Override
    public void markDone(
-   @PathParam("handlaggningId") UUID handlaggningId)
+         @PathParam("handlaggningId") UUID handlaggningId)
    {
-      regelService.handleRegelDone(handlaggningId);
+      loggingService.done(handlaggningId);
    }
 }

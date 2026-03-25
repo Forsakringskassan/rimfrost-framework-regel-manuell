@@ -10,20 +10,22 @@ import se.fk.rimfrost.framework.handlaggning.model.ImmutableUnderlag;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 import se.fk.rimfrost.framework.regel.Utfall;
 
-public abstract class RegelManuellServiceBase {
+public abstract class RegelManuellServiceBase
+{
 
-    @Inject 
-    RegelManuellUppgiftDoneHandler uppgiftDoneHandler; 
-    
-    @Inject
-    ObjectMapper objectMapper;
+   @Inject
+   RegelManuellUppgiftDoneHandler uppgiftDoneHandler;
 
-    protected void sendRegelResponse(UUID handlaggningId, Utfall utfall){
-        uppgiftDoneHandler.handleUppgiftDone(handlaggningId, utfall);
-    }
+   @Inject
+   protected ObjectMapper objectMapper;
 
-    protected Underlag createUnderlag(String typ, int version, Object object)
-    {
+   protected void sendRegelResponse(UUID handlaggningId, Utfall utfall)
+   {
+      uppgiftDoneHandler.handleUppgiftDone(handlaggningId, utfall);
+   }
+
+   protected Underlag createUnderlag(String typ, int version, Object object)
+   {
       try
       {
          return ImmutableUnderlag.builder()

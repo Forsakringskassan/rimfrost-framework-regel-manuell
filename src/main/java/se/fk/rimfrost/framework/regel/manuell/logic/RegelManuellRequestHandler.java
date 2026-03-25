@@ -36,9 +36,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    protected OulKafkaProducer oulKafkaProducer;
 
    @Inject
-   RegelManuellServiceInterface regelService;
-
-   @Inject
    ManuellRegelCommonDataStorage dataStorage;
 
    public HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, UUID aktivitetId, UUID kogitoprocInstanceId)
@@ -132,7 +129,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          return;
       }
 
-      HandlaggningUpdate handlaggningUpdate = commonRegelData.handlaggningUpdate();
+      var handlaggningUpdate = commonRegelData.handlaggning();
 
       var updatedUppgift = ImmutableUppgift.builder()
             .from(handlaggningUpdate.uppgift())
@@ -179,15 +176,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       // We do this before cleaning up CloudEvent and RegelData instances
       // since the rule could possibly have dependency on them during
       // callback execution.
-      try
-      {
-         regelService.handleRegelDone(handlaggningId);
-      }
-      catch (Exception e)
-      {
-         delayedException.addSuppressed(e);
-      }
-
       try
       {
          dataStorage.deleteManuellRegelCommonData(handlaggningId);

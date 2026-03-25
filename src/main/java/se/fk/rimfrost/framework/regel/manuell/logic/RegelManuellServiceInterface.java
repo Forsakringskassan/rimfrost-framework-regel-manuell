@@ -2,11 +2,14 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import java.util.UUID;
 
+import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
+import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
+
 public interface RegelManuellServiceInterface<T, Y>
 {
-   T get(UUID handlaggningId);
+   T readData(Handlaggning handlaggning);
 
-   T patch(Y request);
+   HandlaggningUpdate updateData(Handlaggning handlaggning, Y request);
 
-   void handleRegelDone(UUID handlaggningId);
+   void done(UUID handlaggningId);
 }
