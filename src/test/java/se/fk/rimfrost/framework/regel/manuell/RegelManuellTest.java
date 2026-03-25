@@ -1,13 +1,16 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
 import com.github.tomakehurst.wiremock.http.RequestMethod;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.common.QuarkusTestResource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -24,6 +27,7 @@ import se.fk.rimfrost.framework.regel.RegelRequestMessagePayloadData;
 import se.fk.rimfrost.framework.regel.RegelResponseMessagePayload;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.test.RegelTest;
+
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -71,7 +75,7 @@ public class RegelManuellTest extends RegelTest
             .as(GetUtokadUppgiftsbeskrivningResponse.class);
    }
 
-   private void sendPostRegelManuell(String handlaggningId)
+   private void sendPostRegelManuellHandlaggningDone(String handlaggningId)
    {
       given().when().post("/regel/manuell/{handlaggningId}/done", handlaggningId).then().statusCode(204);
    }
@@ -102,49 +106,21 @@ public class RegelManuellTest extends RegelTest
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, JA",
-         "5367f6b8-cc4a-11f0-8de9-199901011234, NEJ"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, JA, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29",
+         "5367f6b8-cc4a-11f0-8de9-199901011234, NEJ , 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
-   void TestRegelManuell(String handlaggningId, Utfall expectedUtfall) throws Exception
+   void TestRegelManuell(String handlaggningId, Utfall expectedUtfall, String utforarId, String uppgiftId) throws Exception
    {
-      Mockito.reset(regelManuellService);
-      wiremockServer.resetRequests();
-      this.inMemoryConnector.sink(oulRequestsChannel).clear();
-      this.inMemoryConnector.sink(oulStatusControlChannel).clear();
-      this.inMemoryConnector.sink(regelResponsesChannel).clear();
-
       System.out.printf("Starting TestRegelManuell. %S%n", handlaggningId);
 
-      // Send regel request to start workflow
+      resetState();
+
+      //
+      // Workflow start
+      //
       sendRegelRequest(handlaggningId);
-
-      //
-      // Verify GET handläggning requested
-      //
-      var handlaggningRequests = waitForWireMockRequest(wiremockServer,
-            handlaggningEndpoint + handlaggningId, 1);
-      assertEquals(1, handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.GET)).count());
-
-      //
-      // Verify oul message produced
-      //
-      var messages = waitForMessages(oulRequestsChannel);
-      assertEquals(1, messages.size());
-
-      var message = messages.getFirst().getPayload();
-      assertInstanceOf(OperativtUppgiftslagerRequestMessage.class, message);
-
-      var oulRequestMessage = (OperativtUppgiftslagerRequestMessage) message;
-      assertEquals(handlaggningId, oulRequestMessage.getHandlaggningId());
-      assertArrayEquals(new String[]
-      {
-            "91234567-89ab-4cde-9012-3456789abcde"
-      }, oulRequestMessage.getIndivider());
-      assertEquals("TestUppgiftBeskrivning", oulRequestMessage.getBeskrivning());
-      assertEquals("TestUppgiftNamn", oulRequestMessage.getRegel());
-      assertEquals("C", oulRequestMessage.getVerksamhetslogik());
-      assertEquals("ANSVARIG_HANDLAGGARE", oulRequestMessage.getRoll());
-      assertTrue(oulRequestMessage.getUrl().contains("/regel/manuell"));
+      verifyInitialHandlaggningGet(handlaggningId);
+      verifyOulRequestProduced(handlaggningId);
 
       // Clear previous requests
       wiremockServer.resetRequests();
@@ -152,92 +128,151 @@ public class RegelManuellTest extends RegelTest
       //
       // Send mocked OUL response
       //
-      OperativtUppgiftslagerResponseMessage oulResponseMessage = new OperativtUppgiftslagerResponseMessage();
-      oulResponseMessage.setHandlaggningId(handlaggningId);
-      oulResponseMessage.setUppgiftId("11e53b18-e9ac-4707-825b-a1cb80689c29");
-      inMemoryConnector.source(oulResponsesChannel).send(oulResponseMessage);
+      simulateOulResponse(handlaggningId, uppgiftId);
 
       //
-      // mock status update from OUL
+      // Status update from OUL:
+      // verify that rule updates uppgift status in new PUT handlaggning
       //
-      OperativtUppgiftslagerStatusMessage oulStatusMessage = new OperativtUppgiftslagerStatusMessage();
-      oulStatusMessage.setStatus(Status.NY);
-      oulStatusMessage.setUppgiftId(oulResponseMessage.getUppgiftId());
-      oulStatusMessage.setHandlaggningId(handlaggningId);
-      oulStatusMessage.setUtforarId("383cc515-4c55-479b-a96b-244734ef1336");
-      inMemoryConnector.source(oulStatusNotificationChannel).send(oulStatusMessage);
+      simulateOulStatus(handlaggningId, uppgiftId, utforarId);
+      verifyUppgiftStatusUpdate(handlaggningId, utforarId, UppgiftStatus.PLANERAD);
 
       //
-      // mock GET operation requested from portal FE
+      // Verify utökad uppgiftsbeskrivning
       //
-      var getUtokadUppgiftsbeskrivningResponse = sendGetUtokadUppgiftsbeskrivning();
+      verifyUtokadUppgiftsbeskrivning();
 
       //
-      // Verify GET operation response
+      // Verify handläggning DONE
       //
-      assertEquals("TestUtokadUppgiftsbeskrivning", getUtokadUppgiftsbeskrivningResponse.getBeskrivning());
-
-      // Clear previous requests
       wiremockServer.resetRequests();
+      mockRegelService(expectedUtfall, handlaggningId);
+      sendPostRegelManuellHandlaggningDone(handlaggningId);
+      verifyUppgiftStatusUpdate(handlaggningId, utforarId, UppgiftStatus.AVSLUTAD);
+      verifyOulStatusMessage(uppgiftId, Status.AVSLUTAD);
+      verifyRegelResponse(handlaggningId, expectedUtfall);
 
-      //
-      // Configure regelManuellService methods with expected values
-      //
-      Mockito.when(regelManuellService.decideUtfall(Mockito.any())).thenReturn(expectedUtfall);
-      Mockito.doNothing().when(regelManuellService).handleRegelDone(UUID.fromString(handlaggningId));
-
-      //
-      // mock POST operation from portal FE
-      //
-      sendPostRegelManuell(handlaggningId);
-
-      //
-      // verify that rule performed requests to handlaggning
-      //
-      handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
-      var putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
-
-      assertEquals(1, handlaggningRequests.size());
-      assertEquals(1, putRequests.size());
-
-      var sentJson = putRequests.getLast().getBodyAsString();
-      var sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
-      var handlaggning = sentPutHandlaggningRequest.getHandlaggning();
-      assertNotNull(handlaggning.getUppgift().getId());
-      assertEquals(1, handlaggning.getUppgift().getVersion());
-      assertEquals(UUID.fromString("383cc515-4c55-479b-a96b-244734ef1336"), handlaggning.getUppgift().getUtforarId());
-      assertEquals(UppgiftStatus.AVSLUTAD, handlaggning.getUppgift().getUppgiftStatus());
-
-      //
-      // verify kafka status message sent to oul
-      //
-      messages = waitForMessages(oulStatusControlChannel);
-      assertEquals(1, messages.size());
-
-      message = messages.getFirst().getPayload();
-      assertInstanceOf(OperativtUppgiftslagerStatusMessage.class, message);
-
-      oulStatusMessage = (OperativtUppgiftslagerStatusMessage) message;
-      assertEquals(oulResponseMessage.getUppgiftId(), oulStatusMessage.getUppgiftId());
-      assertEquals(Status.AVSLUTAD, oulStatusMessage.getStatus());
-
-      //
-      // verify kafka manuell response message sent to VAH
-      //
-      messages = waitForMessages(regelResponsesChannel);
-      assertEquals(1, messages.size());
-
-      message = messages.getFirst().getPayload();
-      assertInstanceOf(RegelResponseMessagePayload.class, message);
-
-      var regelManuellResponseMessagePayload = (RegelResponseMessagePayload) message;
-      assertEquals(handlaggningId, regelManuellResponseMessagePayload.getData().getHandlaggningId());
-      assertEquals(expectedUtfall, regelManuellResponseMessagePayload.getData().getUtfall());
-
-      //
-      // verify expected mock call counts
-      //
-      Mockito.verify(regelManuellService, Mockito.times(1)).decideUtfall(Mockito.any());
-      Mockito.verify(regelManuellService, Mockito.times(1)).handleRegelDone(UUID.fromString(handlaggningId));
+      // Verify interactions
+      verifyMocks(handlaggningId);
    }
+
+   private LoggedRequest getLastPutRequest(String handlaggningId)
+   {
+      var requests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
+
+      return requests.stream()
+            .filter(r -> r.getMethod().equals(RequestMethod.PUT))
+            .reduce((first, second) -> second)
+            .orElseThrow();
+   }
+
+   private void resetState()
+   {
+      Mockito.reset(regelManuellService);
+      wiremockServer.resetRequests();
+      inMemoryConnector.sink(oulRequestsChannel).clear();
+      inMemoryConnector.sink(oulStatusControlChannel).clear();
+      inMemoryConnector.sink(regelResponsesChannel).clear();
+   }
+
+   private void verifyInitialHandlaggningGet(String handlaggningId)
+   {
+      var requests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
+      assertEquals(1, requests.stream().filter(p -> p.getMethod().equals(RequestMethod.GET)).count());
+   }
+
+   private void verifyOulRequestProduced(String handlaggningId)
+   {
+      var messages = waitForMessages(oulRequestsChannel);
+      assertEquals(1, messages.size());
+      var payload = (OperativtUppgiftslagerRequestMessage) messages.getFirst().getPayload();
+      assertEquals(handlaggningId, payload.getHandlaggningId());
+      assertEquals("TestUppgiftBeskrivning", payload.getBeskrivning());
+      assertEquals("TestUppgiftNamn", payload.getRegel());
+      assertEquals("C", payload.getVerksamhetslogik());
+      assertEquals("ANSVARIG_HANDLAGGARE", payload.getRoll());
+      assertTrue(payload.getUrl().contains("/regel/manuell"));
+   }
+
+   private void simulateOulResponse(String handlaggningId, String uppgiftId)
+   {
+      var msg = new OperativtUppgiftslagerResponseMessage();
+      msg.setHandlaggningId(handlaggningId);
+      msg.setUppgiftId(uppgiftId);
+
+      inMemoryConnector.source(oulResponsesChannel).send(msg);
+   }
+
+   private void simulateOulStatus(String handlaggningId, String uppgiftId, String utforarId)
+   {
+      var msg = new OperativtUppgiftslagerStatusMessage();
+      msg.setStatus(Status.NY);
+      msg.setUppgiftId(uppgiftId);
+      msg.setHandlaggningId(handlaggningId);
+      msg.setUtforarId(utforarId);
+
+      inMemoryConnector.source(oulStatusNotificationChannel).send(msg);
+   }
+
+   private void verifyUppgiftStatusUpdate(String handlaggningId, String utforarId, UppgiftStatus expectedUppgiftStatus)
+         throws Exception
+   {
+      var request = getLastPutRequest(handlaggningId);
+
+      var dto = mapper.readValue(request.getBodyAsString(), PutHandlaggningRequest.class);
+      var uppgift = dto.getHandlaggning().getUppgift();
+
+      assertEquals(expectedUppgiftStatus, uppgift.getUppgiftStatus());
+      assertEquals(UUID.fromString(utforarId), uppgift.getUtforarId());
+   }
+
+   private void verifyUtokadUppgiftsbeskrivning()
+   {
+      var response = sendGetUtokadUppgiftsbeskrivning();
+      assertEquals("TestUtokadUppgiftsbeskrivning", response.getBeskrivning());
+   }
+
+   private void mockRegelService(Utfall utfall, String handlaggningId)
+   {
+      Mockito.when(regelManuellService.decideUtfall(Mockito.any())).thenReturn(utfall);
+      Mockito.doNothing().when(regelManuellService)
+            .handleRegelDone(UUID.fromString(handlaggningId));
+   }
+
+   private void verifyCompletedUppgiftUpdate(String handlaggningId, String utforarId) throws Exception
+   {
+      var request = getLastPutRequest(handlaggningId);
+
+      var dto = mapper.readValue(request.getBodyAsString(), PutHandlaggningRequest.class);
+      var uppgift = dto.getHandlaggning().getUppgift();
+
+      assertEquals(UppgiftStatus.AVSLUTAD, uppgift.getUppgiftStatus());
+      assertEquals(UUID.fromString(utforarId), uppgift.getUtforarId());
+   }
+
+   private void verifyOulStatusMessage(String uppgiftId, Status expectedStatus)
+   {
+      var msg = (OperativtUppgiftslagerStatusMessage) waitForMessages(oulStatusControlChannel)
+            .getFirst().getPayload();
+
+      assertEquals(uppgiftId, msg.getUppgiftId());
+      assertEquals(expectedStatus, msg.getStatus());
+   }
+
+   private void verifyRegelResponse(String handlaggningId, Utfall utfall)
+   {
+      var msg = (RegelResponseMessagePayload) waitForMessages(regelResponsesChannel)
+            .getFirst().getPayload();
+
+      assertEquals(handlaggningId, msg.getData().getHandlaggningId());
+      assertEquals(utfall, msg.getData().getUtfall());
+   }
+
+   private void verifyMocks(String handlaggningId)
+   {
+      Mockito.verify(regelManuellService).decideUtfall(Mockito.any());
+      Mockito.verify(regelManuellService)
+            .handleRegelDone(UUID.fromString(handlaggningId));
+   }
+
 }
