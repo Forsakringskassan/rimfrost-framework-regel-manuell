@@ -41,7 +41,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Inject
    ManuellRegelCommonDataStorage dataStorage;
 
-   public Handlaggning createHandlaggning(HandlaggningRead handlaggningRead, UUID aktivitetId, UUID kogitoprocInstanceId)
+   public HandlaggningUpdate createHandlaggning(Handlaggning handlaggning, UUID aktivitetId, UUID kogitoprocInstanceId)
    {
       var uppgiftSpecifikation = ImmutableUppgiftSpecifikation.builder()
             .id(regelConfig.getSpecifikation().getId())
@@ -59,14 +59,14 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .uppgiftSpecifikation(uppgiftSpecifikation)
             .build();
 
-      return ImmutableHandlaggning.builder()
-            .id(handlaggningRead.id())
-            .version(handlaggningRead.version())
-            .yrkande(handlaggningRead.yrkande())
+      return ImmutableHandlaggningUpdate.builder()
+            .id(handlaggning.id())
+            .version(handlaggning.version())
+            .yrkande(handlaggning.yrkande())
             .processInstansId(kogitoprocInstanceId)
-            .skapadTS(handlaggningRead.skapadTS())
-            .avslutadTS(handlaggningRead.avslutadTS())
-            .handlaggningspecifikationId(handlaggningRead.handlaggningspecifikationId())
+            .skapadTS(handlaggning.skapadTS())
+            .avslutadTS(handlaggning.avslutadTS())
+            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
             .uppgift(uppgift)
             .build();
    }
@@ -74,22 +74,22 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
-      var handlaggningRead = handlaggningAdapter.readHandlaggning(request.handlaggningId());
+      var handlaggning = handlaggningAdapter.readHandlaggning(request.handlaggningId());
 
-      var handlaggning = createHandlaggning(handlaggningRead, request.aktivitetId(), request.kogitoprocinstanceid());
+      var handlaggningUpdate = createHandlaggning(handlaggning, request.aktivitetId(), request.kogitoprocinstanceid());
 
       var cloudevent = createCloudEvent(request);
 
       var commonRegelData = ImmutableManuellRegelCommonData.builder()
             .cloudEventData(cloudevent)
-            .handlaggning(handlaggning)
+            .handlaggningUpdate(handlaggningUpdate)
             .build();
       dataStorage.setManuellRegelCommonData(request.handlaggningId(), commonRegelData);
 
       var oulMessageRequest = ImmutableOulMessageRequest.builder()
             .handlaggningId(request.handlaggningId())
             .individer(
-                  handlaggningRead.yrkande().individYrkandeRoller().stream().map(Yrkande.IndividYrkandeRoll::individId).toList())
+                  handlaggning.yrkande().individYrkandeRoller().stream().map(Yrkande.IndividYrkandeRoll::individId).toList())
             .regel(regelConfig.getSpecifikation().getNamn())
             .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
             .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
@@ -132,41 +132,42 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          return;
       }
 
-      Handlaggning handlaggning = commonRegelData.handlaggning();
+      HandlaggningUpdate handlaggningUpdate = commonRegelData.handlaggningUpdate();
 
       var updatedUppgift = ImmutableUppgift.builder()
-            .from(handlaggning.uppgift())
+            .from(handlaggningUpdate.uppgift())
             .utforarId(oulStatus.utforarId())
             .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
             .build();
 
-      var updatedHandlaggning = ImmutableHandlaggning.builder()
-            .from(handlaggning)
+      var updatedHandlaggning = ImmutableHandlaggningUpdate.builder()
+            .from(handlaggningUpdate)
             .uppgift(updatedUppgift)
             .build();
 
       var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
             .from(commonRegelData)
-            .handlaggning(updatedHandlaggning)
+            .handlaggningUpdate(updatedHandlaggning)
             .build();
       dataStorage.setManuellRegelCommonData(oulStatus.handlaggningId(), updatedCommonRegelData);
+      handlaggningAdapter.updateHandlaggning(updatedHandlaggning);
    }
 
    @Override
    public void handleUppgiftDone(UUID handlaggningId)
    {
       var commonRegelData = dataStorage.getManuellRegelCommonData(handlaggningId);
-      Handlaggning handlaggning = commonRegelData.handlaggning();
+      HandlaggningUpdate handlaggningUpdate = commonRegelData.handlaggningUpdate();
       CloudEventData cloudevent = commonRegelData.cloudEventData();
       UUID oulUppgiftId = commonRegelData.oulUppgiftId();
 
       var updatedUppgift = ImmutableUppgift.builder()
-            .from(handlaggning.uppgift())
+            .from(handlaggningUpdate.uppgift())
             .uppgiftStatus(UppgiftStatus.AVSLUTAD)
             .build();
 
-      var updatedHandlaggning = ImmutableHandlaggning.builder()
-            .from(handlaggning)
+      var updatedHandlaggning = ImmutableHandlaggningUpdate.builder()
+            .from(handlaggningUpdate)
             .uppgift(updatedUppgift)
             .build();
 

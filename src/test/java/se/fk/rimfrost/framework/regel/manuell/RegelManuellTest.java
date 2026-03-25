@@ -102,10 +102,10 @@ public class RegelManuellTest extends RegelTest
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, JA",
-         "5367f6b8-cc4a-11f0-8de9-199901011234, NEJ"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, JA, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29",
+         "5367f6b8-cc4a-11f0-8de9-199901011234, NEJ , 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
-   void TestRegelManuell(String handlaggningId, Utfall expectedUtfall) throws Exception
+   void TestRegelManuell(String handlaggningId, Utfall expectedUtfall, String utforarId, String uppgiftId) throws Exception
    {
       Mockito.reset(regelManuellService);
       wiremockServer.resetRequests();
@@ -154,7 +154,7 @@ public class RegelManuellTest extends RegelTest
       //
       OperativtUppgiftslagerResponseMessage oulResponseMessage = new OperativtUppgiftslagerResponseMessage();
       oulResponseMessage.setHandlaggningId(handlaggningId);
-      oulResponseMessage.setUppgiftId("11e53b18-e9ac-4707-825b-a1cb80689c29");
+      oulResponseMessage.setUppgiftId(uppgiftId);
       inMemoryConnector.source(oulResponsesChannel).send(oulResponseMessage);
 
       //
@@ -164,8 +164,25 @@ public class RegelManuellTest extends RegelTest
       oulStatusMessage.setStatus(Status.NY);
       oulStatusMessage.setUppgiftId(oulResponseMessage.getUppgiftId());
       oulStatusMessage.setHandlaggningId(handlaggningId);
-      oulStatusMessage.setUtforarId("383cc515-4c55-479b-a96b-244734ef1336");
+      oulStatusMessage.setUtforarId(utforarId);
       inMemoryConnector.source(oulStatusNotificationChannel).send(oulStatusMessage);
+
+       //
+       // verify that rule updates uppgift status in new PUT handlaggning
+       //
+       handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
+       var putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
+
+       assertEquals(1, handlaggningRequests.size());
+       assertEquals(1, putRequests.size());
+
+       var sentJson = putRequests.getLast().getBodyAsString();
+       var sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
+       var handlaggning = sentPutHandlaggningRequest.getHandlaggning();
+       assertNotNull(handlaggning.getUppgift().getId());
+       assertEquals(1, handlaggning.getUppgift().getVersion());
+       assertEquals(UUID.fromString(utforarId), handlaggning.getUppgift().getUtforarId());
+       assertEquals(UppgiftStatus.PLANERAD, handlaggning.getUppgift().getUppgiftStatus());
 
       //
       // mock GET operation requested from portal FE
@@ -195,17 +212,17 @@ public class RegelManuellTest extends RegelTest
       // verify that rule performed requests to handlaggning
       //
       handlaggningRequests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
-      var putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
+      putRequests = handlaggningRequests.stream().filter(p -> p.getMethod().equals(RequestMethod.PUT)).toList();
 
       assertEquals(1, handlaggningRequests.size());
       assertEquals(1, putRequests.size());
 
-      var sentJson = putRequests.getLast().getBodyAsString();
-      var sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
-      var handlaggning = sentPutHandlaggningRequest.getHandlaggning();
+      sentJson = putRequests.getLast().getBodyAsString();
+      sentPutHandlaggningRequest = mapper.readValue(sentJson, PutHandlaggningRequest.class);
+      handlaggning = sentPutHandlaggningRequest.getHandlaggning();
       assertNotNull(handlaggning.getUppgift().getId());
       assertEquals(1, handlaggning.getUppgift().getVersion());
-      assertEquals(UUID.fromString("383cc515-4c55-479b-a96b-244734ef1336"), handlaggning.getUppgift().getUtforarId());
+      assertEquals(UUID.fromString(utforarId), handlaggning.getUppgift().getUtforarId());
       assertEquals(UppgiftStatus.AVSLUTAD, handlaggning.getUppgift().getUppgiftStatus());
 
       //
