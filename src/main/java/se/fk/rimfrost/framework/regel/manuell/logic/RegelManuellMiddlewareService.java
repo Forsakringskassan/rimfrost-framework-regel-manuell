@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.inject.Inject;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
+import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
+import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
+import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUnderlag;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 
@@ -22,9 +25,6 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    HandlaggningAdapter handlaggningAdapter;
 
    @Inject
-   HandlaggningMapper handlaggningMapper;
-
-   @Inject
    ObjectMapper objectMapper;
 
    @Override
@@ -33,7 +33,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
       var result = regelService.readData(handlaggning);
       var underlag = createUnderlag("GetResponse", 1, result);
-      var handlaggningUpdate = handlaggningMapper.toHandlaggningUpdate(handlaggning, underlag);
+      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, underlag);
       handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
       return result;
    }
@@ -66,6 +66,22 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       {
          throw new InternalError("Could not parse object to String", e);
       }
+   }
+
+   
+   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Underlag underlag)
+   {
+      return ImmutableHandlaggningUpdate.builder()
+            .id(handlaggning.id())
+            .processInstansId(handlaggning.processInstansId())
+            .skapadTS(handlaggning.skapadTS())
+            .avslutadTS(handlaggning.avslutadTS())
+            .version(handlaggning.version() + 1)
+            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
+            .yrkande(handlaggning.yrkande())
+            .addUnderlag(underlag)
+            .build();
+
    }
 
 }
