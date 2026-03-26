@@ -238,7 +238,6 @@ public class AbstractRegelManuellTest extends RegelTest
 
    protected void mockRegelService(Utfall utfall, String handlaggningId)
    {
-       
       Mockito.doNothing().when(regelManuellService)
             .done(UUID.fromString(handlaggningId));
    }

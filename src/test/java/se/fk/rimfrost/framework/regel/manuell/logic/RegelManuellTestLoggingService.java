@@ -8,23 +8,26 @@ import se.fk.rimfrost.framework.regel.Utfall;
 
 @ApplicationScoped
 @DefaultBean
-public class RegelManuellTestLoggingService extends RegelManuellServiceBase implements LoggingServiceInterface<String, String> {
+public class RegelManuellTestLoggingService extends RegelManuellServiceBase implements LoggingServiceInterface<String, String>
+{
 
-    @Override
-    public String read(UUID handlaggningId) {
-        return "read";
-    }
+   @Override
+   public String read(UUID handlaggningId)
+   {
+      return "read";
+   }
 
-    @Override
-    public void update(UUID handlaggningId, String request) {
+   @Override
+   public void update(UUID handlaggningId, String request)
+   {
       //update
-    }
+   }
 
-    @Override
-    public void done(UUID handlaggningId) {
-        
-        sendRegelResponse(handlaggningId, Utfall.JA);
-    }
+   @Override
+   public void done(UUID handlaggningId)
+   {
 
+      sendRegelResponse(handlaggningId, Utfall.JA);
+   }
 
 }

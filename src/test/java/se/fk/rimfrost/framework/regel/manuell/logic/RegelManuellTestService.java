@@ -14,17 +14,20 @@ public class RegelManuellTestService implements RegelManuellServiceInterface<Str
 {
 
    @Override
-   public String readData(Handlaggning handlaggning) {
+   public String readData(Handlaggning handlaggning)
+   {
       return "";
    }
 
    @Override
-   public HandlaggningUpdate updateData(Handlaggning handlaggning, String request) {
+   public HandlaggningUpdate updateData(Handlaggning handlaggning, String request)
+   {
       return ImmutableHandlaggningUpdate.builder().build();
    }
 
    @Override
-   public void done(UUID handlaggningId) {
-     //nope
+   public void done(UUID handlaggningId)
+   {
+      //nope
    }
 }
