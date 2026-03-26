@@ -8,7 +8,7 @@ import se.fk.rimfrost.framework.regel.Utfall;
 
 @ApplicationScoped
 @DefaultBean
-public class RegelManuellTestLoggingService extends RegelManuellServiceBase implements LoggingServiceInterface<String, String>
+public class RegelManuellMiddlewareServiceTest extends RegelManuellServiceBase implements RegelManuellMiddlewareServiceInterface<String, String>
 {
 
    @Override

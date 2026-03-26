@@ -58,7 +58,7 @@ public class RegelManuellHandlaggningTest extends AbstractRegelManuellTest
       sendRegelRequest(handlaggningId);
       simulateOulResponse(handlaggningId, uppgiftId);
       simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
-      //mockRegelService(Utfall.JA, handlaggningId);
+      mockRegelService(Utfall.JA, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       verifyPutHandlaggningContentUppgiftStatus(handlaggningId, utforarId, UppgiftStatus.AVSLUTAD);
    }

@@ -10,7 +10,9 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUnderlag;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 
-public abstract class LoggingService<T, Y> implements LoggingServiceInterface<T, Y>
+//Middleware that handles the read and update operations to handlaggningService.
+//T is the GET operations response body and Y is the PATCH operations body.
+public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuellMiddlewareServiceInterface<T, Y>
 {
 
    @Inject

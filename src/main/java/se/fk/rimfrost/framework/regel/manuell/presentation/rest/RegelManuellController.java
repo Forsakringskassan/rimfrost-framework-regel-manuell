@@ -14,14 +14,14 @@ import jakarta.ws.rs.core.Response;
 import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.RegelManuellControllerApi;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
-import se.fk.rimfrost.framework.regel.manuell.logic.LoggingServiceInterface;
+import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceInterface;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellServiceInterface;
 
 @SuppressWarnings("unused")
 public abstract class RegelManuellController<T, Y> implements RegelManuellControllerApi
 {
    @Inject
-   LoggingServiceInterface<T, Y> loggingService;
+   RegelManuellMiddlewareServiceInterface<T, Y> regelManuellMiddlewareService;
 
    @Inject
    RegelConfigProvider regelConfigProvider;
@@ -43,7 +43,7 @@ public abstract class RegelManuellController<T, Y> implements RegelManuellContro
    @Path("/{handlaggningId}")
    public Response getData(UUID handlaggningId)
    {
-      var result = loggingService.read(handlaggningId);
+      var result = regelManuellMiddlewareService.read(handlaggningId);
       return Response.ok(result).build();
    }
 
@@ -51,7 +51,7 @@ public abstract class RegelManuellController<T, Y> implements RegelManuellContro
    @Path("/{handlaggningId}")
    public void patch(@PathParam("handlaggningId") UUID handlaggningId, Y request)
    {
-      loggingService.update(handlaggningId, request);
+      regelManuellMiddlewareService.update(handlaggningId, request);
    }
 
    @POST
@@ -60,6 +60,6 @@ public abstract class RegelManuellController<T, Y> implements RegelManuellContro
    public void markDone(
          @PathParam("handlaggningId") UUID handlaggningId)
    {
-      loggingService.done(handlaggningId);
+      regelManuellMiddlewareService.done(handlaggningId);
    }
 }
