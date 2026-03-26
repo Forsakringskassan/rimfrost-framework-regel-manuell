@@ -68,7 +68,6 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       }
    }
 
-   
    private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Underlag underlag)
    {
       return ImmutableHandlaggningUpdate.builder()
