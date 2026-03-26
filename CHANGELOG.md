@@ -2,6 +2,25 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.0 (2026-03-26)
+
+### Features
+
+-  add a middleware service that logs handlaggning ([112f1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/112f1898e533c06) Nils Elveros)  
+
+### Bug Fixes
+
+-  removed unused imports ([1093d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/1093d55b5119eaf) Nils Elveros)  
+-  spotless ([a0364](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a0364e93c2cb5ed) Nils Elveros)  
+-  remove mapper and use private method instead ([7bb97](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7bb97cd714a2051) Nils Elveros)  
+-  rename loggingservice to RegelManuellMiddlewareService ([ea45d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ea45d2949d4b619) Nils Elveros)  
+-  spotless ([d1597](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d15978e297751ad) Nils Elveros)  
+-  working on fixing tests ([bdbd1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/bdbd14f89645701) Nils Elveros)  
+-  refactoring av testerna ([e03f4](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/e03f48e931e760f) Ulf Slunga)  
+
+### Other changes
+
+
 ## 0.1.29 (2026-03-25)
 
 ### Bug Fixes
