@@ -54,7 +54,7 @@ public class AbstractRegelManuellTest extends RegelTest
    }
 
    @InjectMock
-   RegelManuellServiceInterface regelManuellService;
+   RegelManuellServiceInterface<String, String> regelManuellService;
 
    protected void resetState()
    {
@@ -232,16 +232,14 @@ public class AbstractRegelManuellTest extends RegelTest
    //
    protected void verifyMocks(String handlaggningId)
    {
-      Mockito.verify(regelManuellService).decideUtfall(Mockito.any());
       Mockito.verify(regelManuellService)
-            .handleRegelDone(UUID.fromString(handlaggningId));
+            .done(UUID.fromString(handlaggningId));
    }
 
    protected void mockRegelService(Utfall utfall, String handlaggningId)
    {
-      Mockito.when(regelManuellService.decideUtfall(Mockito.any())).thenReturn(utfall);
       Mockito.doNothing().when(regelManuellService)
-            .handleRegelDone(UUID.fromString(handlaggningId));
+            .done(UUID.fromString(handlaggningId));
    }
 
 }

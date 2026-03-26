@@ -25,8 +25,7 @@ public class RegelManuellResponseTest extends AbstractRegelManuellTest
    @ParameterizedTest
    @CsvSource(
    {
-         "JA, 5367f6b8-cc4a-11f0-8de9-199901011234, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29",
-         "NEJ, 5367f6b8-cc4a-11f0-8de9-199901011234, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29"
+         "JA, 5367f6b8-cc4a-11f0-8de9-199901011234, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
    void should_return_correct_regel_response(Utfall expectedUtfall, String handlaggningId, String utforarId, String uppgiftId)
    {

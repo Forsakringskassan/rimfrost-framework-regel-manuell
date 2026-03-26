@@ -14,8 +14,8 @@ import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageReq
 import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
+import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
-import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellUppgiftDoneHandler;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
@@ -25,7 +25,7 @@ import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInte
 @SuppressWarnings("unused")
 @ApplicationScoped
 public class RegelManuellRequestHandler extends RegelRequestHandlerBase
-      implements OulHandlerInterface, RegelManuellUppgiftDoneHandler, RegelRequestHandlerInterface
+      implements OulHandlerInterface, RegelRequestHandlerInterface, RegelManuellUppgiftDoneHandler
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellRequestHandler.class);
 
@@ -36,40 +36,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    protected OulKafkaProducer oulKafkaProducer;
 
    @Inject
-   RegelManuellServiceInterface regelService;
-
-   @Inject
    ManuellRegelCommonDataStorage dataStorage;
-
-   public HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, UUID aktivitetId, UUID kogitoprocInstanceId)
-   {
-      var uppgiftSpecifikation = ImmutableUppgiftSpecifikation.builder()
-            .id(regelConfig.getSpecifikation().getId())
-            .version(regelConfig.getSpecifikation().getVersion())
-            .build();
-
-      var uppgift = ImmutableUppgift.builder()
-            .id(UUID.randomUUID())
-            .version(1)
-            .aktivitetId(aktivitetId)
-            .skapadTs(OffsetDateTime.now())
-            .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
-            .uppgiftStatus(UppgiftStatus.PLANERAD)
-            .fSSAinformation(FSSAinformation.HANDLAGGNING_PAGAR)
-            .uppgiftSpecifikation(uppgiftSpecifikation)
-            .build();
-
-      return ImmutableHandlaggningUpdate.builder()
-            .id(handlaggning.id())
-            .version(handlaggning.version())
-            .yrkande(handlaggning.yrkande())
-            .processInstansId(kogitoprocInstanceId)
-            .skapadTS(handlaggning.skapadTS())
-            .avslutadTS(handlaggning.avslutadTS())
-            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
-            .uppgift(uppgift)
-            .build();
-   }
 
    @Override
    public void handleRegelRequest(RegelDataRequest request)
@@ -132,7 +99,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          return;
       }
 
-      HandlaggningUpdate handlaggningUpdate = commonRegelData.handlaggningUpdate();
+      var handlaggningUpdate = commonRegelData.handlaggningUpdate();
 
       var updatedUppgift = ImmutableUppgift.builder()
             .from(handlaggningUpdate.uppgift())
@@ -154,7 +121,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    @Override
-   public void handleUppgiftDone(UUID handlaggningId)
+   public void handleUppgiftDone(UUID handlaggningId, Utfall utfall)
    {
       var commonRegelData = dataStorage.getManuellRegelCommonData(handlaggningId);
       HandlaggningUpdate handlaggningUpdate = commonRegelData.handlaggningUpdate();
@@ -173,21 +140,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       handlaggningAdapter.updateHandlaggning(updatedHandlaggning);
 
-      sendResponse(handlaggningId, cloudevent, regelService.decideUtfall(updatedHandlaggning));
+      sendResponse(handlaggningId, cloudevent, utfall);
 
       DelayedException delayedException = new DelayedException();
       // We do this before cleaning up CloudEvent and RegelData instances
       // since the rule could possibly have dependency on them during
       // callback execution.
-      try
-      {
-         regelService.handleRegelDone(handlaggningId);
-      }
-      catch (Exception e)
-      {
-         delayedException.addSuppressed(e);
-      }
-
       try
       {
          dataStorage.deleteManuellRegelCommonData(handlaggningId);
@@ -210,6 +168,36 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       {
          throw delayedException;
       }
+   }
+
+   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, UUID aktivitetId, UUID kogitoprocInstanceId)
+   {
+      var uppgiftSpecifikation = ImmutableUppgiftSpecifikation.builder()
+            .id(regelConfig.getSpecifikation().getId())
+            .version(regelConfig.getSpecifikation().getVersion())
+            .build();
+
+      var uppgift = ImmutableUppgift.builder()
+            .id(UUID.randomUUID())
+            .version(1)
+            .aktivitetId(aktivitetId)
+            .skapadTs(OffsetDateTime.now())
+            .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
+            .uppgiftStatus(UppgiftStatus.PLANERAD)
+            .fSSAinformation(FSSAinformation.HANDLAGGNING_PAGAR)
+            .uppgiftSpecifikation(uppgiftSpecifikation)
+            .build();
+
+      return ImmutableHandlaggningUpdate.builder()
+            .id(handlaggning.id())
+            .version(handlaggning.version())
+            .yrkande(handlaggning.yrkande())
+            .processInstansId(kogitoprocInstanceId)
+            .skapadTS(handlaggning.skapadTS())
+            .avslutadTS(handlaggning.avslutadTS())
+            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
+            .uppgift(uppgift)
+            .build();
    }
 
    private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus) {

@@ -1,11 +1,12 @@
 package se.fk.rimfrost.framework.regel.manuell.presentation.rest;
 
+import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Path;
-import se.fk.rimfrost.framework.regel.manuell.presentation.rest.RegelManuellController;
 
 @ApplicationScoped
 @Path("/regel/manuell")
-public class RegelManuellTestController extends RegelManuellController
+@DefaultBean
+public class RegelManuellTestController extends RegelManuellController<String, String>
 {
 }

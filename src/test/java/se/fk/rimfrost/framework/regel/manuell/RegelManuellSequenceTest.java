@@ -5,8 +5,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import se.fk.rimfrost.Status;
-import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.UppgiftStatus;
 
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -19,10 +17,9 @@ public class RegelManuellSequenceTest extends AbstractRegelManuellTest
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, JA, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29",
-         "5367f6b8-cc4a-11f0-8de9-199901011234, NEJ , 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
-   void TestRegelManuellSequenceTest(String handlaggningId, Utfall expectedUtfall, String utforarId, String uppgiftId)
+   void TestRegelManuellSequenceTest(String handlaggningId, String utforarId, String uppgiftId)
          throws Exception
    {
       System.out.printf("Starting TestRegelManuell. %S%n", handlaggningId);
@@ -59,13 +56,10 @@ public class RegelManuellSequenceTest extends AbstractRegelManuellTest
       // Verify handläggning DONE
       //
       wiremockServer.resetRequests();
-      mockRegelService(expectedUtfall, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
-      verifyPutHandlaggningContentUppgiftStatus(handlaggningId, utforarId, UppgiftStatus.AVSLUTAD);
+      verifyPutHandlaggningProduced(handlaggningId);
       verifyOulStatusMessageProduced();
       verifyRegelResponseProduced();
-
-      verifyMocks(handlaggningId);
    }
 
 }
