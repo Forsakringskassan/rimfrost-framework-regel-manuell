@@ -4,10 +4,11 @@ import java.util.UUID;
 
 import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
+import se.fk.rimfrost.framework.regel.Utfall;
 
 @ApplicationScoped
 @DefaultBean
-public class RegelManuellTestLoggingService implements LoggingServiceInterface<String, String> {
+public class RegelManuellTestLoggingService extends RegelManuellServiceBase implements LoggingServiceInterface<String, String> {
 
     @Override
     public String read(UUID handlaggningId) {
@@ -21,7 +22,8 @@ public class RegelManuellTestLoggingService implements LoggingServiceInterface<S
 
     @Override
     public void done(UUID handlaggningId) {
-       //done
+        
+        sendRegelResponse(handlaggningId, Utfall.JA);
     }
 
 

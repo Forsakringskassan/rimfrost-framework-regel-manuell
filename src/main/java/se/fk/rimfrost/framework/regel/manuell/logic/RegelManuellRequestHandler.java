@@ -38,36 +38,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Inject
    ManuellRegelCommonDataStorage dataStorage;
 
-   public HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, UUID aktivitetId, UUID kogitoprocInstanceId)
-   {
-      var uppgiftSpecifikation = ImmutableUppgiftSpecifikation.builder()
-            .id(regelConfig.getSpecifikation().getId())
-            .version(regelConfig.getSpecifikation().getVersion())
-            .build();
-
-      var uppgift = ImmutableUppgift.builder()
-            .id(UUID.randomUUID())
-            .version(1)
-            .aktivitetId(aktivitetId)
-            .skapadTs(OffsetDateTime.now())
-            .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
-            .uppgiftStatus(UppgiftStatus.PLANERAD)
-            .fSSAinformation(FSSAinformation.HANDLAGGNING_PAGAR)
-            .uppgiftSpecifikation(uppgiftSpecifikation)
-            .build();
-
-      return ImmutableHandlaggningUpdate.builder()
-            .id(handlaggning.id())
-            .version(handlaggning.version())
-            .yrkande(handlaggning.yrkande())
-            .processInstansId(kogitoprocInstanceId)
-            .skapadTS(handlaggning.skapadTS())
-            .avslutadTS(handlaggning.avslutadTS())
-            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
-            .uppgift(uppgift)
-            .build();
-   }
-
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
@@ -129,7 +99,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          return;
       }
 
-      var handlaggningUpdate = commonRegelData.handlaggning();
+      var handlaggningUpdate = commonRegelData.handlaggningUpdate();
 
       var updatedUppgift = ImmutableUppgift.builder()
             .from(handlaggningUpdate.uppgift())
@@ -198,6 +168,36 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       {
          throw delayedException;
       }
+   }
+
+   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, UUID aktivitetId, UUID kogitoprocInstanceId)
+   {
+      var uppgiftSpecifikation = ImmutableUppgiftSpecifikation.builder()
+            .id(regelConfig.getSpecifikation().getId())
+            .version(regelConfig.getSpecifikation().getVersion())
+            .build();
+
+      var uppgift = ImmutableUppgift.builder()
+            .id(UUID.randomUUID())
+            .version(1)
+            .aktivitetId(aktivitetId)
+            .skapadTs(OffsetDateTime.now())
+            .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
+            .uppgiftStatus(UppgiftStatus.PLANERAD)
+            .fSSAinformation(FSSAinformation.HANDLAGGNING_PAGAR)
+            .uppgiftSpecifikation(uppgiftSpecifikation)
+            .build();
+
+      return ImmutableHandlaggningUpdate.builder()
+            .id(handlaggning.id())
+            .version(handlaggning.version())
+            .yrkande(handlaggning.yrkande())
+            .processInstansId(kogitoprocInstanceId)
+            .skapadTS(handlaggning.skapadTS())
+            .avslutadTS(handlaggning.avslutadTS())
+            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
+            .uppgift(uppgift)
+            .build();
    }
 
    private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus) {
