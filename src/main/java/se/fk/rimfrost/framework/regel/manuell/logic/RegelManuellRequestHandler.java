@@ -43,12 +43,15 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    {
       var handlaggning = handlaggningAdapter.readHandlaggning(request.handlaggningId());
 
-      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, request.aktivitetId(), request.kogitoprocinstanceid());
+      var uppgift = createUppgift(request.aktivitetId());
+
+      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid());
 
       var cloudevent = createCloudEvent(request);
 
       var commonRegelData = ImmutableManuellRegelCommonData.builder()
             .cloudEventData(cloudevent)
+            .uppgift(uppgift)
             .handlaggningUpdate(handlaggningUpdate)
             .build();
       dataStorage.setManuellRegelCommonData(request.handlaggningId(), commonRegelData);
@@ -114,6 +117,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
             .from(commonRegelData)
+            .uppgift(updatedUppgift)
             .handlaggningUpdate(updatedHandlaggning)
             .build();
       dataStorage.setManuellRegelCommonData(oulStatus.handlaggningId(), updatedCommonRegelData);
@@ -170,24 +174,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
-   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, UUID aktivitetId, UUID kogitoprocInstanceId)
+   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Uppgift uppgift, UUID kogitoprocInstanceId)
    {
-      var uppgiftSpecifikation = ImmutableUppgiftSpecifikation.builder()
-            .id(regelConfig.getSpecifikation().getId())
-            .version(regelConfig.getSpecifikation().getVersion())
-            .build();
-
-      var uppgift = ImmutableUppgift.builder()
-            .id(UUID.randomUUID())
-            .version(1)
-            .aktivitetId(aktivitetId)
-            .skapadTs(OffsetDateTime.now())
-            .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
-            .uppgiftStatus(UppgiftStatus.PLANERAD)
-            .fSSAinformation(FSSAinformation.HANDLAGGNING_PAGAR)
-            .uppgiftSpecifikation(uppgiftSpecifikation)
-            .build();
-
       return ImmutableHandlaggningUpdate.builder()
             .id(handlaggning.id())
             .version(handlaggning.version())
@@ -197,6 +185,28 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .avslutadTS(handlaggning.avslutadTS())
             .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
             .uppgift(uppgift)
+            .build();
+   }
+
+   private Uppgift createUppgift(UUID aktivitetId)
+   {
+      return ImmutableUppgift.builder()
+            .id(UUID.randomUUID())
+            .version(1)
+            .aktivitetId(aktivitetId)
+            .skapadTs(OffsetDateTime.now())
+            .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
+            .uppgiftStatus(UppgiftStatus.PLANERAD)
+            .fSSAinformation(FSSAinformation.HANDLAGGNING_PAGAR)
+            .uppgiftSpecifikation(createUppgiftSpecifikation())
+            .build();
+   }
+
+   private UppgiftSpecifikation createUppgiftSpecifikation()
+   {
+      return ImmutableUppgiftSpecifikation.builder()
+            .id(regelConfig.getSpecifikation().getId())
+            .version(regelConfig.getSpecifikation().getVersion())
             .build();
    }
 

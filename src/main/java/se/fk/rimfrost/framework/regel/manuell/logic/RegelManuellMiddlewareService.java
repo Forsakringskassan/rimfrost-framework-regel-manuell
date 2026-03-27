@@ -12,6 +12,8 @@ import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUnderlag;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
+import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
+import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 
 //Middleware that handles the read and update operations to handlaggningService.
 //T is the GET operations response body and Y is the PATCH operations body.
@@ -26,6 +28,9 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    @Inject
    ObjectMapper objectMapper;
+
+   @Inject
+   ManuellRegelCommonDataStorage dataStorage;
 
    @Override
    public T read(UUID handlaggningId)
@@ -78,9 +83,14 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
             .version(handlaggning.version() + 1)
             .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
             .yrkande(handlaggning.yrkande())
+            .uppgift(getUppgift(handlaggning.id()))
             .addUnderlag(underlag)
             .build();
+   }
 
+   private Uppgift getUppgift(UUID handlaggningId)
+   {
+      return dataStorage.getManuellRegelCommonData(handlaggningId).uppgift();
    }
 
 }
