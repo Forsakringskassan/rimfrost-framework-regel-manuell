@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.1 (2026-03-27)
+
+### Bug Fixes
+
+-  add uppgift in put in middleware ([fe9a1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/fe9a16c00ba5452) Nils Elveros)  
+
 ## 0.2.0 (2026-03-26)
 
 ### Features
