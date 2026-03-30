@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.3 (2026-03-30)
+
+### Bug Fixes
+
+-  Step uppgift version on field change ([18927](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/18927fdb5d81081) Lars Persson)  
+
 ## 0.2.2 (2026-03-30)
 
 ### Bug Fixes
