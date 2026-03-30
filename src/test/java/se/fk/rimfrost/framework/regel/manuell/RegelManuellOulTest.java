@@ -38,10 +38,11 @@ public class RegelManuellOulTest extends AbstractRegelManuellTest
    {
          "JA, 5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
-   void should_send_oul_status_uppgift_avslutad(Utfall expectedUtfall, String handlaggningId, String uppgiftId)
+   void should_send_oul_status_uppgift_avslutad(Utfall expectedUtfall, String handlaggningId, String uppgiftId) throws Exception
    {
       sendRegelRequest(handlaggningId);
       simulateOulResponse(handlaggningId, uppgiftId);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       mockRegelService(expectedUtfall, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       verifyOulStatusMessageContent(uppgiftId, Status.AVSLUTAD);

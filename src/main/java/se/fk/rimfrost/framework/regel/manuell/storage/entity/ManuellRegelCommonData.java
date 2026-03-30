@@ -13,8 +13,6 @@ public interface ManuellRegelCommonData
 {
    CloudEventData cloudEventData();
 
-   HandlaggningUpdate handlaggningUpdate();
-
    Uppgift uppgift();
 
    @Nullable

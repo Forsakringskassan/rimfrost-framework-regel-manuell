@@ -117,7 +117,7 @@ public class AbstractRegelManuellTest extends RegelTest
 
    private LoggedRequest getLastHandlaggningPutRequest(String handlaggningId)
    {
-      var requests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 1);
+      var requests = waitForWireMockRequest(wiremockServer, handlaggningEndpoint + handlaggningId, 2);
       return requests.stream()
             .filter(r -> r.getMethod().equals(RequestMethod.PUT))
             .reduce((first, second) -> second)
