@@ -28,10 +28,12 @@ public class RegelManuellResponseTest extends AbstractRegelManuellTest
          "JA, 5367f6b8-cc4a-11f0-8de9-199901011234, 383cc515-4c55-479b-a96b-244734ef1336, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
    void should_return_correct_regel_response(Utfall expectedUtfall, String handlaggningId, String utforarId, String uppgiftId)
+         throws Exception
    {
       sendRegelRequest(handlaggningId);
       simulateOulResponse(handlaggningId, uppgiftId);
       simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       mockRegelService(expectedUtfall, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       verifyRegelResponseContent(handlaggningId, expectedUtfall);

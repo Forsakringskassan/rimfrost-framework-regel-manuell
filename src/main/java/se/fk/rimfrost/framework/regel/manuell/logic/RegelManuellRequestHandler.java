@@ -109,6 +109,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       var updatedUppgift = ImmutableUppgift.builder()
             .from(uppgift)
+            .version(uppgift.version() + 1)
             .utforarId(oulStatus.utforarId())
             .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
             .build();
@@ -135,6 +136,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       var updatedUppgift = ImmutableUppgift.builder()
             .from(uppgift)
+            .version(uppgift.version() + 1)
             .uppgiftStatus(UppgiftStatus.AVSLUTAD)
             .build();
 
