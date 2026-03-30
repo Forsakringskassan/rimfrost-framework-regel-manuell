@@ -45,16 +45,18 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       var uppgift = createUppgift(request.aktivitetId());
 
-      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid());
+      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
+            handlaggning.version() + 1);
 
       var cloudevent = createCloudEvent(request);
 
       var commonRegelData = ImmutableManuellRegelCommonData.builder()
             .cloudEventData(cloudevent)
             .uppgift(uppgift)
-            .handlaggningUpdate(handlaggningUpdate)
             .build();
       dataStorage.setManuellRegelCommonData(request.handlaggningId(), commonRegelData);
+
+      handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
 
       var oulMessageRequest = ImmutableOulMessageRequest.builder()
             .handlaggningId(request.handlaggningId())
@@ -102,47 +104,43 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          return;
       }
 
-      var handlaggningUpdate = commonRegelData.handlaggningUpdate();
+      var uppgift = commonRegelData.uppgift();
+      var handlaggning = handlaggningAdapter.readHandlaggning(oulStatus.handlaggningId());
 
       var updatedUppgift = ImmutableUppgift.builder()
-            .from(handlaggningUpdate.uppgift())
+            .from(uppgift)
             .utforarId(oulStatus.utforarId())
             .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
             .build();
 
-      var updatedHandlaggning = ImmutableHandlaggningUpdate.builder()
-            .from(handlaggningUpdate)
-            .uppgift(updatedUppgift)
-            .build();
+      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
+            handlaggning.version());
 
       var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
             .from(commonRegelData)
             .uppgift(updatedUppgift)
-            .handlaggningUpdate(updatedHandlaggning)
             .build();
       dataStorage.setManuellRegelCommonData(oulStatus.handlaggningId(), updatedCommonRegelData);
-      handlaggningAdapter.updateHandlaggning(updatedHandlaggning);
+      handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
    }
 
    @Override
    public void handleUppgiftDone(UUID handlaggningId, Utfall utfall)
    {
       var commonRegelData = dataStorage.getManuellRegelCommonData(handlaggningId);
-      HandlaggningUpdate handlaggningUpdate = commonRegelData.handlaggningUpdate();
+      var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
       CloudEventData cloudevent = commonRegelData.cloudEventData();
       UUID oulUppgiftId = commonRegelData.oulUppgiftId();
+      var uppgift = commonRegelData.uppgift();
 
       var updatedUppgift = ImmutableUppgift.builder()
-            .from(handlaggningUpdate.uppgift())
+            .from(uppgift)
             .uppgiftStatus(UppgiftStatus.AVSLUTAD)
             .build();
 
-      var updatedHandlaggning = ImmutableHandlaggningUpdate.builder()
-            .from(handlaggningUpdate)
-            .uppgift(updatedUppgift)
-            .build();
-
-      handlaggningAdapter.updateHandlaggning(updatedHandlaggning);
+      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
+            handlaggning.version());
+      handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
 
       sendResponse(handlaggningId, cloudevent, utfall);
 
@@ -174,11 +172,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
-   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Uppgift uppgift, UUID kogitoprocInstanceId)
+   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Uppgift uppgift, UUID kogitoprocInstanceId,
+         int version)
    {
       return ImmutableHandlaggningUpdate.builder()
             .id(handlaggning.id())
-            .version(handlaggning.version())
+            .version(version)
             .yrkande(handlaggning.yrkande())
             .processInstansId(kogitoprocInstanceId)
             .skapadTS(handlaggning.skapadTS())

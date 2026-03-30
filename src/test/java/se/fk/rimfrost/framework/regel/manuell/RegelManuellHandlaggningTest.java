@@ -58,6 +58,7 @@ public class RegelManuellHandlaggningTest extends AbstractRegelManuellTest
       sendRegelRequest(handlaggningId);
       simulateOulResponse(handlaggningId, uppgiftId);
       simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       mockRegelService(Utfall.JA, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       verifyPutHandlaggningContentUppgiftStatus(handlaggningId, utforarId, UppgiftStatus.AVSLUTAD);
