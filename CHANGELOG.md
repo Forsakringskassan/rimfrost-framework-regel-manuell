@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.2 (2026-03-30)
+
+### Bug Fixes
+
+-  Remove handlaggning from ManuellRegelCommonData ([aa2e1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/aa2e16e22f8c88c) Lars Persson)  
+
 ## 0.2.1 (2026-03-27)
 
 ### Bug Fixes
