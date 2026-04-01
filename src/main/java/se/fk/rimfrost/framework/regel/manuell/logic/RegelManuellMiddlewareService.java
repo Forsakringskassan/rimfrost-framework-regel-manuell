@@ -13,6 +13,7 @@ import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUnderlag;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
+import se.fk.rimfrost.framework.regel.logic.RegelUtils;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 
 //Middleware that handles the read and update operations to handlaggningService.
@@ -37,7 +38,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    {
       var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
       var result = regelService.readData(handlaggning);
-      var underlag = createUnderlag("GetResponse", 1, result);
+      var underlag = RegelUtils.createUnderlag("GetResponse", 1, result, objectMapper);
       var handlaggningUpdate = createHandlaggningUpdate(handlaggning, underlag);
       handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
       return result;
@@ -48,6 +49,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    {
       var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
       var handlaggningUpdate = regelService.updateData(handlaggning, request);
+
       handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
    }
 
@@ -55,22 +57,6 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    public void done(UUID handlaggningId)
    {
       regelService.done(handlaggningId);
-   }
-
-   private Underlag createUnderlag(String typ, int version, Object object)
-   {
-      try
-      {
-         return ImmutableUnderlag.builder()
-               .typ(typ)
-               .version(version)
-               .data(objectMapper.writeValueAsString(object))
-               .build();
-      }
-      catch (JsonProcessingException e)
-      {
-         throw new InternalError("Could not parse object to String", e);
-      }
    }
 
    private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Underlag underlag)
