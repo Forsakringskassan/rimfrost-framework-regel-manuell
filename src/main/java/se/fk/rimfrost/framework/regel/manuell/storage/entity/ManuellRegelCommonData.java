@@ -1,7 +1,6 @@
 package se.fk.rimfrost.framework.regel.manuell.storage.entity;
 
 import org.immutables.value.Value;
-import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
 
