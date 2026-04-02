@@ -1,9 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell.presentation.rest;
 
-import java.net.http.HttpResponse;
 import java.util.UUID;
 
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
@@ -15,7 +13,6 @@ import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.RegelManuellControllerApi;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceInterface;
-import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellServiceInterface;
 
 @SuppressWarnings("unused")
 public abstract class RegelManuellController<T, Y> implements RegelManuellControllerApi
