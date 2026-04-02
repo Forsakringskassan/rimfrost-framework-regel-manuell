@@ -2,6 +2,15 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.6 (2026-04-02)
+
+### Bug Fixes
+
+-  framework regel 0.3.29 ([5fcec](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5fcecf9da654ce7) Ulf Slunga)  
+
+### Dependency updates
+
+- add renovate.json ([6068e](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/6068ef4f52467d7) renovate[bot])  
 ## 0.2.5 (2026-04-01)
 
 ### Bug Fixes
