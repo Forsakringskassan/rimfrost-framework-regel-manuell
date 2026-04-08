@@ -13,21 +13,19 @@ import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.regel.*;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellServiceInterface;
-import se.fk.rimfrost.framework.regel.test.RegelTest;
+import se.fk.rimfrost.framework.regel.test.AbstractRegelTest;
 import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.PutHandlaggningRequest;
 import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.UppgiftStatus;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.UUID;
-
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class AbstractRegelManuellTest extends RegelTest
+public class AbstractRegelManuellTest extends AbstractRegelTest
 {
 
    private static final String oulRequestsChannel = "operativt-uppgiftslager-requests";
