@@ -33,24 +33,6 @@ public class AbstractRegelManuellTest extends AbstractRegelTest
    private static final String oulStatusNotificationChannel = "operativt-uppgiftslager-status-notification";
    private static final String oulStatusControlChannel = "operativt-uppgiftslager-status-control";
 
-   @BeforeAll
-   static void setupRegelManuellTest()
-   {
-      Properties props = new Properties();
-      try (InputStream in = RegelManuellSequenceTest.class.getResourceAsStream("/test.properties"))
-      {
-         if (in == null)
-         {
-            throw new RuntimeException("Could not find /test.properties in classpath");
-         }
-         props.load(in);
-      }
-      catch (IOException e)
-      {
-         throw new RuntimeException("Failed to load test.properties", e);
-      }
-   }
-
    @InjectMock
    RegelManuellServiceInterface<String, String> regelManuellService;
 
