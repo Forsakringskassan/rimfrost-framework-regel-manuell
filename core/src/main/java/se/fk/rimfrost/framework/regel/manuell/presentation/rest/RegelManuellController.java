@@ -1,7 +1,6 @@
 package se.fk.rimfrost.framework.regel.manuell.presentation.rest;
 
 import java.util.UUID;
-
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;

@@ -1,7 +1,6 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import java.util.UUID;
-
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 

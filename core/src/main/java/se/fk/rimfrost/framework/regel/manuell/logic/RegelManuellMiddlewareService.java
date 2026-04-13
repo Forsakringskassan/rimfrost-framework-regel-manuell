@@ -1,16 +1,12 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import java.util.UUID;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.inject.Inject;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
-import se.fk.rimfrost.framework.handlaggning.model.ImmutableUnderlag;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.regel.logic.RegelUtils;

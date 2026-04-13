@@ -9,9 +9,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 @QuarkusTest
 @QuarkusTestResource.List(
 {

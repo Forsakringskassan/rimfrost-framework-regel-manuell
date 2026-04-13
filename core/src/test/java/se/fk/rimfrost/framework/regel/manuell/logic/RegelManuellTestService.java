@@ -5,7 +5,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
-
 import java.util.UUID;
 
 @ApplicationScoped

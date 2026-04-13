@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningMapper;
 import se.fk.rimfrost.framework.handlaggning.model.*;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
@@ -23,7 +22,6 @@ import se.fk.rimfrost.framework.regel.logic.entity.*;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
-import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 
 @SuppressWarnings("unused")
 @ApplicationScoped

@@ -1,9 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import java.util.UUID;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.inject.Inject;
 import se.fk.rimfrost.framework.regel.Utfall;
 

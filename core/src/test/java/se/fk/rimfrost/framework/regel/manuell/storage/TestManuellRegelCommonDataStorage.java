@@ -2,9 +2,7 @@ package se.fk.rimfrost.framework.regel.manuell.storage;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
-
 import java.util.UUID;
-
 import io.quarkus.arc.DefaultBean;
 
 @ApplicationScoped
