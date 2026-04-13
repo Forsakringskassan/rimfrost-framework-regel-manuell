@@ -2,15 +2,16 @@ package se.fk.rimfrost.framework.regel.manuell;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 @QuarkusTestResource.List(
 {
-      @QuarkusTestResource(WireMockTestResource.class)
+      @QuarkusTestResource(WireMockRegelManuell.class)
 })
-public class RegelManuellUtokadUppgiftsbeskrivningTest extends AbstractRegelManuellTest
+public class RegelManuellUtokadUppgiftsbeskrivningTest extends RegelManuellTest
 {
 
    @BeforeEach
@@ -22,7 +23,8 @@ public class RegelManuellUtokadUppgiftsbeskrivningTest extends AbstractRegelManu
    @Test
    void should_return_correct_utokad_uppgiftsbeskrivning()
    {
-      verifyUtokadUppgiftsbeskrivningContent();
+      var response = sendGetUtokadUppgiftsbeskrivning();
+      Assertions.assertEquals("TestUtokadUppgiftsbeskrivning", response.getBeskrivning());
    }
 
 }

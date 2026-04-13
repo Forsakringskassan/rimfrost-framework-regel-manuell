@@ -1,27 +1,24 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
+import com.github.tomakehurst.wiremock.http.RequestMethod;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.jaxrsspec.controllers.generatedsource.model.UppgiftStatus;
+import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
+import static se.fk.rimfrost.framework.regel.manuell.RegelManuellTestData.newHandlaggningApiIdtyp;
+import static se.fk.rimfrost.framework.regel.manuell.RegelManuellTestData.newHandlaggningIdtyp;
+import static se.fk.rimfrost.framework.regel.test.WireMockHandlaggning.getUppgiftFromLastPutHandlaggning;
 
 @QuarkusTest
 @QuarkusTestResource.List(
 {
-      @QuarkusTestResource(WireMockTestResource.class)
+      @QuarkusTestResource(WireMockRegelManuell.class)
 })
-public class RegelManuellHandlaggningTest extends AbstractRegelManuellTest
+public class RegelManuellHandlaggningTest extends RegelManuellTest
 {
-
-   @BeforeEach
-   void setup()
-   {
-      resetState();
-   }
 
    @ParameterizedTest
    @CsvSource(
@@ -30,38 +27,59 @@ public class RegelManuellHandlaggningTest extends AbstractRegelManuellTest
    })
    void should_create_initial_handlaggning_request(String handlaggningId)
    {
-      sendRegelRequest(handlaggningId);
-      verifyGetHandlaggningProduced(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var handlaggningRequests = WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.GET, 1);
+      Assertions.assertEquals(1, handlaggningRequests.size());
    }
 
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234 , 383cc515-4c55-479b-a96b-244734ef1336 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
-   void should_put_handlaggning_with_uppgiftstatus_planerad(String handlaggningId, String utforarId, String uppgiftId)
+   void should_put_handlaggning_with_uppgiftstatus_planerad(String handlaggningId, String uppgiftId)
          throws Exception
    {
-      sendRegelRequest(handlaggningId);
-      simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
-      verifyPutHandlaggningContentUppgiftStatus(handlaggningId, utforarId, UppgiftStatus.PLANERAD);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
+      var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
+      Assertions.assertEquals(UppgiftStatus.PLANERAD, uppgift.getUppgiftStatus());
    }
 
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234 , 383cc515-4c55-479b-a96b-244734ef1336 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
+         "5367f6b8-cc4a-11f0-8de9-199901011234 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
-   void should_put_handlaggning_with_uppgiftstatus_avslutad(String handlaggningId, String utforarId, String uppgiftId)
+   void should_put_handlaggning_with_uppgiftstatus_avslutad(String handlaggningId, String uppgiftId)
          throws Exception
    {
-      sendRegelRequest(handlaggningId);
-      simulateOulResponse(handlaggningId, uppgiftId);
-      simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
-      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       mockRegelService(Utfall.JA, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
-      verifyPutHandlaggningContentUppgiftStatus(handlaggningId, utforarId, UppgiftStatus.AVSLUTAD);
+      var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
+      Assertions.assertEquals(UppgiftStatus.AVSLUTAD, uppgift.getUppgiftStatus());
    }
 
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
+   })
+   void should_put_handlaggning_with_uppgift_correct_utforar_id(String handlaggningId, String uppgiftId)
+         throws Exception
+   {
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
+      mockRegelService(Utfall.JA, handlaggningId);
+      sendPostRegelManuellHandlaggningDone(handlaggningId);
+      var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
+      Assertions.assertEquals(newHandlaggningApiIdtyp(), uppgift.getUtforarId());
+   }
 }

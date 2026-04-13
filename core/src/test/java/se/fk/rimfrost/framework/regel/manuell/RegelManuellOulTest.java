@@ -2,18 +2,22 @@ package se.fk.rimfrost.framework.regel.manuell;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.regel.Utfall;
+import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @QuarkusTest
 @QuarkusTestResource.List(
 {
-      @QuarkusTestResource(WireMockTestResource.class)
+      @QuarkusTestResource(WireMockRegelManuell.class)
 })
-public class RegelManuellOulTest extends AbstractRegelManuellTest
+public class RegelManuellOulTest extends RegelManuellTest
 {
 
    @BeforeEach
@@ -29,8 +33,14 @@ public class RegelManuellOulTest extends AbstractRegelManuellTest
    })
    void should_create_correct_oul_request(String handlaggningId)
    {
-      sendRegelRequest(handlaggningId);
-      verifyOulRequestContent(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
+      Assertions.assertEquals(handlaggningId, oulRequest.getHandlaggningId());
+      Assertions.assertEquals("TestUppgiftBeskrivning", oulRequest.getBeskrivning());
+      Assertions.assertEquals("TestUppgiftNamn", oulRequest.getRegel());
+      Assertions.assertEquals("C", oulRequest.getVerksamhetslogik());
+      Assertions.assertEquals("ANSVARIG_HANDLAGGARE", oulRequest.getRoll());
+      Assertions.assertTrue(oulRequest.getUrl().contains("/regel/manuell"));
    }
 
    @ParameterizedTest
@@ -40,12 +50,14 @@ public class RegelManuellOulTest extends AbstractRegelManuellTest
    })
    void should_send_oul_status_uppgift_avslutad(Utfall expectedUtfall, String handlaggningId, String uppgiftId) throws Exception
    {
-      sendRegelRequest(handlaggningId);
-      simulateOulResponse(handlaggningId, uppgiftId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       mockRegelService(expectedUtfall, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
-      verifyOulStatusMessageContent(uppgiftId, Status.AVSLUTAD);
+      var oulStatusMessage = oulKafkaConnector.waitForOulStatusMessage();
+      Assertions.assertEquals(uppgiftId, oulStatusMessage.getUppgiftId());
+      Assertions.assertEquals(UppgiftStatus.AVSLUTAD, oulStatusMessage.getStatus());
    }
 
 }

@@ -3,11 +3,12 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.fk.rimfrost.Status;
+import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningMapper;
 import se.fk.rimfrost.framework.handlaggning.model.*;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
@@ -16,11 +17,13 @@ import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
+import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
+import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 
 @SuppressWarnings("unused")
 @ApplicationScoped
@@ -61,7 +64,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       var oulMessageRequest = ImmutableOulMessageRequest.builder()
             .handlaggningId(request.handlaggningId())
             .individer(
-                  handlaggning.yrkande().individYrkandeRoller().stream().map(Yrkande.IndividYrkandeRoll::individId).toList())
+                  handlaggning.yrkande().individYrkandeRoller().stream()
+                        .map(r -> toIdtyp(r.individ()))
+                        .toList())
             .regel(regelConfig.getSpecifikation().getNamn())
             .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
             .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
@@ -70,6 +75,14 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .replyToTopic(oulReplyToSubTopic)
             .build();
       oulKafkaProducer.sendOulRequest(oulMessageRequest);
+   }
+
+   private se.fk.rimfrost.framework.oul.logic.dto.Idtyp toIdtyp(Idtyp idtyp)
+   {
+      return se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp.builder()
+            .typId(idtyp.typId())
+            .varde(idtyp.varde())
+            .build();
    }
 
    @Override
@@ -94,7 +107,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          /* This may happen if commonRegelData was cleaned up during handleUppgiftDone
           * and a notification was sent to OUL that the task was finished.
           */
-         if (oulStatus.uppgiftStatus() != se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD)
+         if (!Objects.equals(oulStatus.uppgiftStatus(), UppgiftStatus.AVSLUTAD))
          {
             LOGGER.error(
                   "CommonRegelData for handlaggningId {} was not found during OUL status update for uppgift {} with uppgiftStatus {}",
@@ -110,8 +123,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       var updatedUppgift = ImmutableUppgift.builder()
             .from(uppgift)
             .version(uppgift.version() + 1)
-            .utforarId(oulStatus.utforarId())
-            .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
+            .utforarId(toHandlaggningModelIdtyp(Objects.requireNonNull(oulStatus.utforarId())))
+            .uppgiftStatus(oulStatus.uppgiftStatus())
             .build();
 
       var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
@@ -161,7 +174,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       try
       {
-         oulKafkaProducer.sendOulStatusUpdate(oulUppgiftId, Status.AVSLUTAD);
+         oulKafkaProducer.sendOulStatusUpdate(oulUppgiftId, UppgiftStatus.AVSLUTAD);
       }
       catch (Exception e)
       {
@@ -198,7 +211,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .skapadTs(OffsetDateTime.now())
             .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
             .uppgiftStatus(UppgiftStatus.PLANERAD)
-            .fSSAinformation(FSSAinformation.HANDLAGGNING_PAGAR)
+            .fSSAinformation("FSSAinformation.HANDLAGGNING_PAGAR") // TODO
             .uppgiftSpecifikation(createUppgiftSpecifikation())
             .build();
    }
@@ -211,12 +224,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .build();
    }
 
-   private UppgiftStatus toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus) {
-        return switch (uppgiftStatus) {
-            case NY -> UppgiftStatus.PLANERAD;
-            case TILLDELAD -> UppgiftStatus.TILLDELAD;
-            case AVSLUTAD -> UppgiftStatus.AVSLUTAD;
-            default -> throw new IllegalStateException("Unexpected value: " + uppgiftStatus);
-        };
-    }
+   private Idtyp toHandlaggningModelIdtyp(se.fk.rimfrost.framework.oul.logic.dto.Idtyp idtyp)
+   {
+      return ImmutableIdtyp.builder()
+            .typId(idtyp.typId())
+            .varde(idtyp.varde())
+            .build();
+   }
+
 }

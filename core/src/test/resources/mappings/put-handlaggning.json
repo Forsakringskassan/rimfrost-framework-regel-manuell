@@ -22,7 +22,10 @@
           "avsikt": "NY",
           "individYrkandeRoller": [
             {
-              "individId": "91234567-89ab-4cde-9012-3456789abcde",
+              "individ": {
+                "typId": "123456789",
+                "varde": "19901010-1234"
+              },
               "yrkandeRollId": "d1b6721d-a3d8-4fd1-aae8-6ba11849e9bc"
             }
           ],
