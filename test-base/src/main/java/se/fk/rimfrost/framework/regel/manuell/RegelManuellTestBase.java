@@ -53,9 +53,18 @@ public abstract class RegelManuellTestBase extends AbstractRegelTest
    void resetState()
    {
       WireMockRegelManuell.getWireMockServer().resetRequests();
-      regelKafkaConnector = new RegelKafkaConnector(inMemoryConnector);
+      if (regelKafkaConnector == null)
+      {
+         regelKafkaConnector = new RegelKafkaConnector(inMemoryConnector);
+      }
+      if (oulKafkaConnector == null)
+      {
+         oulKafkaConnector = new OulKafkaConnector(inMemoryConnector, oulKafkaMapper);
+      }
+      //
+      // Have to clear even when connectors are new, since the inMemoryCpnnector is not necessarily empty
+      //
       regelKafkaConnector.clear();
-      oulKafkaConnector = new OulKafkaConnector(inMemoryConnector, oulKafkaMapper);
       oulKafkaConnector.clear();
    }
 
