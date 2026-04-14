@@ -6,7 +6,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import se.fk.rimfrost.framework.regel.Utfall;
+import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
 import static se.fk.rimfrost.framework.regel.manuell.RegelManuellTestData.newHandlaggningApiIdtyp;
 import static se.fk.rimfrost.framework.regel.manuell.RegelManuellTestData.newHandlaggningIdtyp;
@@ -41,7 +41,7 @@ public class RegelManuellHandlaggningTest extends RegelManuellTest
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals(UppgiftStatus.PLANERAD, uppgift.getUppgiftStatus());
@@ -57,9 +57,8 @@ public class RegelManuellHandlaggningTest extends RegelManuellTest
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.TILLDELAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
-      mockRegelService(Utfall.JA, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals(UppgiftStatus.AVSLUTAD, uppgift.getUppgiftStatus());
@@ -75,9 +74,8 @@ public class RegelManuellHandlaggningTest extends RegelManuellTest
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
-      mockRegelService(Utfall.JA, handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals(newHandlaggningApiIdtyp(), uppgift.getUtforarId());

@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
 import static se.fk.rimfrost.framework.regel.manuell.RegelManuellTestData.newHandlaggningIdtyp;
 
 @QuarkusTest
@@ -34,7 +34,7 @@ public class RegelManuellResponseTest extends RegelManuellTest
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -51,7 +51,7 @@ public class RegelManuellResponseTest extends RegelManuellTest
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), UppgiftStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();

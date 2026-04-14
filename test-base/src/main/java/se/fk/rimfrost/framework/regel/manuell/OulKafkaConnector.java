@@ -4,6 +4,7 @@ import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import se.fk.rimfrost.OperativtUppgiftslagerRequestMessage;
 import se.fk.rimfrost.OperativtUppgiftslagerResponseMessage;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
+import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.Idtyp;
 import se.fk.rimfrost.framework.regel.test.KafkaConnector;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaMapper;
@@ -51,7 +52,7 @@ public class OulKafkaConnector extends KafkaConnector
       inMemoryConnector.source(oulResponsesChannel).send(msg);
    }
 
-   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, String status)
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, Status status)
    {
       var msg = new OperativtUppgiftslagerStatusMessage();
       msg.setStatus(status);

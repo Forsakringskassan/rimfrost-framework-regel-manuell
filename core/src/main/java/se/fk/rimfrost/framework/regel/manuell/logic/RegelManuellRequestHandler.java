@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.handlaggning.model.*;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
 import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
@@ -105,7 +106,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          /* This may happen if commonRegelData was cleaned up during handleUppgiftDone
           * and a notification was sent to OUL that the task was finished.
           */
-         if (!Objects.equals(oulStatus.uppgiftStatus(), UppgiftStatus.AVSLUTAD))
+         if (!Objects.equals(oulStatus.uppgiftStatus(), se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD))
          {
             LOGGER.error(
                   "CommonRegelData for handlaggningId {} was not found during OUL status update for uppgift {} with uppgiftStatus {}",
@@ -122,7 +123,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .from(uppgift)
             .version(uppgift.version() + 1)
             .utforarId(toHandlaggningModelIdtyp(Objects.requireNonNull(oulStatus.utforarId())))
-            .uppgiftStatus(oulStatus.uppgiftStatus())
+            .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
             .build();
 
       var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
@@ -172,7 +173,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       try
       {
-         oulKafkaProducer.sendOulStatusUpdate(oulUppgiftId, UppgiftStatus.AVSLUTAD);
+         oulKafkaProducer.sendOulStatusUpdate(oulUppgiftId, Status.AVSLUTAD);
       }
       catch (Exception e)
       {
@@ -228,6 +229,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .typId(idtyp.typId())
             .varde(idtyp.varde())
             .build();
+   }
+
+   @SuppressWarnings("UnnecessaryDefault")
+   private String toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus)
+   {
+      return switch(uppgiftStatus){case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.NY->UppgiftStatus.PLANERAD;case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.TILLDELAD->UppgiftStatus.TILLDELAD;case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD->UppgiftStatus.AVSLUTAD;default->throw new IllegalArgumentException("Unsupported uppgift status: "+uppgiftStatus);};
    }
 
 }

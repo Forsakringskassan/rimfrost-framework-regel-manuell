@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
 
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -54,7 +54,7 @@ public class RegelManuellOulTest extends RegelManuellTest
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var oulStatusMessage = oulKafkaConnector.waitForOulStatusMessage();
       Assertions.assertEquals(uppgiftId, oulStatusMessage.getUppgiftId());
-      Assertions.assertEquals(UppgiftStatus.AVSLUTAD, oulStatusMessage.getStatus());
+      Assertions.assertEquals(Status.AVSLUTAD, oulStatusMessage.getStatus());
    }
 
 }
