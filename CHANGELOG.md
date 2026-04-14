@@ -2,6 +2,18 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.8 (2026-04-14)
+
+### Bug Fixes
+
+-  uppgiftstatus hantering ([ab5d3](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ab5d31e7d67447c) Ulf Slunga)  
+-  conditional creation of kafka connectors ([4725a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/4725a1d1de6fa29) Ulf Slunga)  
+-  bumpar framework. tar bort onödiga wiremockmappings som hör hemma i resp regel. ([04d97](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/04d978b0dc8786b) Ulf Slunga)  
+-  cleanup av imports ([85ecc](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/85ecc70d832fb0f) Ulf Slunga)  
+-  test refactoring ([21a31](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/21a314ddbf71191) Ulf Slunga)  
+-  tar bort setupRegelManuellTest eftersom loadTestProperties ärvs från basklass ([930f4](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/930f48ab713ef46) Ulf Slunga)  
+-  flyttar befintlig src till /core ([0ff37](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/0ff370a67abb195) Ulf Slunga)  
+
 ## 0.2.7 (2026-04-02)
 
 ### Bug Fixes
