@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.9 (2026-04-15)
+
+### Bug Fixes
+
+-  Depend on UppgiftStatusProvider for upppgift status ids ([3bf2b](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3bf2bb3ef9fa177) Lars Persson)  
+
 ## 0.2.8 (2026-04-14)
 
 ### Bug Fixes
