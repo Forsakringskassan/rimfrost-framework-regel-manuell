@@ -85,7 +85,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>se.fk.rimfrost</groupId>
       <artifactId>rimfrost-service-oul-asyncapi</artifactId>
@@ -96,7 +95,17 @@
       <artifactId>rimfrost-framework-handlaggning-adapter</artifactId>
       <version>0.1.18</version>
     </dependency>
-
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.uppgiftstatusprovider</groupId>
+      <artifactId>rimfrost-framework-uppgift-status-provider-interface</artifactId>
+      <version>0.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.uppgiftstatusprovider</groupId>
+      <artifactId>rimfrost-framework-uppgift-status-provider</artifactId>
+      <version>0.0.3</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <repositories>

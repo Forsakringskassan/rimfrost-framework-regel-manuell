@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import se.fk.rimfrost.Status;
-import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
 import static se.fk.rimfrost.framework.regel.manuell.RegelManuellTestData.newHandlaggningApiIdtyp;
 import static se.fk.rimfrost.framework.regel.manuell.RegelManuellTestData.newHandlaggningIdtyp;
 import static se.fk.rimfrost.framework.regel.test.WireMockHandlaggning.getUppgiftFromLastPutHandlaggning;
@@ -44,7 +43,7 @@ public class RegelManuellHandlaggningTest extends RegelManuellTest
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
-      Assertions.assertEquals(UppgiftStatus.PLANERAD, uppgift.getUppgiftStatus());
+      Assertions.assertEquals("1", uppgift.getUppgiftStatus());
    }
 
    @ParameterizedTest
@@ -61,7 +60,7 @@ public class RegelManuellHandlaggningTest extends RegelManuellTest
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
-      Assertions.assertEquals(UppgiftStatus.AVSLUTAD, uppgift.getUppgiftStatus());
+      Assertions.assertEquals("3", uppgift.getUppgiftStatus());
    }
 
    @ParameterizedTest
