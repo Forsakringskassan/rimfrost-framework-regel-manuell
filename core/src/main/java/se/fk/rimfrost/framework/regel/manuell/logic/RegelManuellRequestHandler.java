@@ -17,12 +17,12 @@ import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
-import se.fk.rimfrost.framework.regel.logic.UppgiftStatus;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.entity.*;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
+import se.fk.rimfrost.framework.uppgiftstatusprovider.UppgiftStatusProvider;
 
 @SuppressWarnings("unused")
 @ApplicationScoped
@@ -39,6 +39,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
    @Inject
    ManuellRegelCommonDataStorage dataStorage;
+
+   @Inject
+   UppgiftStatusProvider uppgiftStatusProvider;
 
    @Override
    public void handleRegelRequest(RegelDataRequest request)
@@ -149,7 +152,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       var updatedUppgift = ImmutableUppgift.builder()
             .from(uppgift)
             .version(uppgift.version() + 1)
-            .uppgiftStatus(UppgiftStatus.AVSLUTAD)
+            .uppgiftStatus(uppgiftStatusProvider.getAvslutadId())
             .build();
 
       var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
@@ -209,7 +212,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .aktivitetId(aktivitetId)
             .skapadTs(OffsetDateTime.now())
             .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
-            .uppgiftStatus(UppgiftStatus.PLANERAD)
+            .uppgiftStatus(uppgiftStatusProvider.getPlaneradId())
             .fSSAinformation("FSSAinformation.HANDLAGGNING_PAGAR") // TODO
             .uppgiftSpecifikation(createUppgiftSpecifikation())
             .build();
@@ -234,7 +237,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @SuppressWarnings("UnnecessaryDefault")
    private String toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus)
    {
-      return switch(uppgiftStatus){case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.NY->UppgiftStatus.PLANERAD;case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.TILLDELAD->UppgiftStatus.TILLDELAD;case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD->UppgiftStatus.AVSLUTAD;default->throw new IllegalArgumentException("Unsupported uppgift status: "+uppgiftStatus);};
+      return switch(uppgiftStatus){case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.NY->uppgiftStatusProvider.getPlaneradId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.TILLDELAD->uppgiftStatusProvider.getTilldeladId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD->uppgiftStatusProvider.getAvslutadId();default->throw new IllegalArgumentException("Unsupported uppgift status: "+uppgiftStatus);};
    }
 
 }
