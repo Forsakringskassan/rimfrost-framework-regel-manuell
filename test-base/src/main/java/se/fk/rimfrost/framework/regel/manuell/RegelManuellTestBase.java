@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.test.AbstractRegelTest;
-import se.fk.rimfrost.framework.regel.test.RegelKafkaConnector;
 
 @SuppressWarnings("SameParameterValue")
 public abstract class RegelManuellTestBase extends AbstractRegelTest
@@ -38,8 +37,6 @@ public abstract class RegelManuellTestBase extends AbstractRegelTest
       return oulStatusControlChannel;
    }
 
-   protected RegelKafkaConnector regelKafkaConnector;
-
    protected OulKafkaConnector oulKafkaConnector;
 
    @Inject
@@ -53,10 +50,6 @@ public abstract class RegelManuellTestBase extends AbstractRegelTest
    void resetState()
    {
       WireMockRegelManuell.getWireMockServer().resetRequests();
-      if (regelKafkaConnector == null)
-      {
-         regelKafkaConnector = new RegelKafkaConnector(inMemoryConnector);
-      }
       if (oulKafkaConnector == null)
       {
          oulKafkaConnector = new OulKafkaConnector(inMemoryConnector, oulKafkaMapper);
@@ -64,7 +57,6 @@ public abstract class RegelManuellTestBase extends AbstractRegelTest
       //
       // Have to clear even when connectors are new, since the inMemoryCpnnector is not necessarily empty
       //
-      regelKafkaConnector.clear();
       oulKafkaConnector.clear();
    }
 
