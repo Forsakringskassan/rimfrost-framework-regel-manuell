@@ -8,6 +8,15 @@ import java.util.Map;
 public class WireMockRegelManuell extends WireMockHandlaggning
 {
 
+   /**
+    * Defines wiremock mappings for manual rules.
+    *
+    * Note: Introducing this class creates a placeholder for adding mappings to all manual rules
+    * (even if initially no such mappings have been identified).
+    *
+    * @param server active WireMock server
+    * @return property mappings
+    */
    @SuppressWarnings("UnnecessaryLocalVariable")
    @Override
    protected Map<String, String> wiremockMapping(WireMockServer server)
