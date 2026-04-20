@@ -2,6 +2,16 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.11 (2026-04-20)
+
+### Bug Fixes
+
+-  specar ej junit version i pom, bumpar version av quarkus-parent ([8584a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/8584a9fcf722c1b) Ulf Slunga)  
+-  flyttar regelKafkaConnector till basklass ([ab0d5](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ab0d5c383e240f3) Ulf Slunga)  
+
+### Dependency updates
+
+- update dependency com.diffplug.spotless:spotless-maven-plugin to v3.4.0 ([b9abc](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b9abc610961c14a) renovate[bot])  
 ## 0.2.10 (2026-04-17)
 
 ### Bug Fixes
