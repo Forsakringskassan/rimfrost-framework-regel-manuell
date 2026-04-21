@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.12 (2026-04-20)
+
+### Bug Fixes
+
+-  javadoc och readme ([c34cb](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c34cbfcc63a5682) Ulf Slunga)  
+
 ## 0.2.11 (2026-04-20)
 
 ### Bug Fixes
