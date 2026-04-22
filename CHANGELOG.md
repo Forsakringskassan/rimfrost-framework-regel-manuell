@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.13 (2026-04-22)
+
+### Bug Fixes
+
+-  bump framework-regel-version ([9cb8e](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/9cb8e843cbe5e4b) Nils Elveros)  
+-  common manuell properties in in framework ([74b26](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/74b26f7a819e8e6) Nils Elveros)  
+
 ## 0.2.12 (2026-04-20)
 
 ### Bug Fixes
