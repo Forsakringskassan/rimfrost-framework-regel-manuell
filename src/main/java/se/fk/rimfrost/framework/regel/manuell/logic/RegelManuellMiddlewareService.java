@@ -20,8 +20,6 @@ import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStor
 public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuellMiddlewareServiceInterface<T, Y>
 {
 
-   private static final Logger logger = LoggerFactory.getLogger(RegelManuellMiddlewareService.class);
-
    @Inject
    RegelManuellServiceInterface<T, Y> regelService;
 
@@ -57,10 +55,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    @Override
    public void done(UUID handlaggningId)
    {
-      logger.info("RegelManuellMiddlewareService done START");
       regelService.done(handlaggningId);
-      logger.info("RegelManuellMiddlewareService done END");
-
    }
 
    private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Underlag underlag)
