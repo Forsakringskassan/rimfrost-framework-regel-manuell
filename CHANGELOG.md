@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.15 (2026-04-23)
+
+### Bug Fixes
+
+-  lägger till nytt OUL test ([cac29](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/cac29a0764807dc) Ulf Slunga)  
+
 ## 0.2.14 (2026-04-23)
 
 ### Bug Fixes
