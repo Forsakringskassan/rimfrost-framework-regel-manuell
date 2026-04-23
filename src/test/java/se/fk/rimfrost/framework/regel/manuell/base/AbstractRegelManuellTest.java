@@ -72,7 +72,6 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
     */
    protected OulKafkaConnector oulKafkaConnector;
 
-   @Inject
    @ConfigProperty(name = "regel.manuell.base-path")
    String basePath;
 
