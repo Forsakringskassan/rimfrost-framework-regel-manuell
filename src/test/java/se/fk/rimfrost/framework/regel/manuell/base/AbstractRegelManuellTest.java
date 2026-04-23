@@ -113,7 +113,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       super.regelResetState();
       if (inMemoryConnector == null)
       {
-         throw new IllegalStateException("inMemoryConnector not injected1");
+         throw new IllegalStateException("inMemoryConnector not injected");
       }
       var server = WireMockRegelManuell.getWireMockServer();
       if (server == null)
@@ -121,10 +121,6 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
          throw new IllegalStateException("WireMock not initialized");
       }
       server.resetRequests();
-      if (inMemoryConnector == null)
-      {
-         throw new IllegalStateException("inMemoryConnector not injected2");
-      }
       if (oulKafkaConnector == null)
       {
          oulKafkaConnector = new OulKafkaConnector(inMemoryConnector, oulKafkaMapper);
