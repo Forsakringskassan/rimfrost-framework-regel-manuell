@@ -3,19 +3,20 @@
 Ramverkskomponent med definitioner gemensamma för alla manuella regler.
 Innehåller både framework-logik och hjälpklasser vid test av regler.
 
-- **`core`** – Framework-logik
-- **`test-base`** – Återanvändbara testkomponenter för implementation av manuella reglers tester
 
 ```text
 root
-├── core
+├── src/main
 │   └── (framework implementation)
-├── test-base
-│   └── (test-klasser)
-└── pom.xml (parent)
+├── src/test
+│   └── (tester av ramverket)
+├── src/test/base
+│   └── (abstrakta testklasser)
+├── src/test/helpers
+    └── (helpers för testklasser)
 ```
 
-# Core
+# src/main
 
 ## RegelManuellService
 
@@ -38,21 +39,41 @@ Implementerar _RegelRequestHandlerInterface_ eftersom alla manuella regler kan i
 för _handleRegelRequest_.<br>
 Implementerar även _OulHandlerInterface_ och _OulUppgiftDoneHandler_ som även de har samma logik för alla manuella regler.<br>
 
-# test-base
+# src/test
 
-## RegelManuellTestBase
+Innehåller tester av ramverket, men även abstrakta testklasser som är byggda för att kunna användas och köras i den färdiga regeln.<br>
+Ramverkstestklasserna _Regel*Test.java_ extendar de abstrakta testklasserna i _src/test/base_ för att kunna köras även för verifiering av ramverket.
 
-Innehåller testkomponenter som är gemensamma för alla manuella regler. 
-Ärver komponenter från rimfrost-framework-regel.<br>
+Note: Vid bygge av test-jar-filen (som sedan används av de färdiga reglerna) inkluderas endast /base och /helpers.<br>
+Övriga testklasser används bara vid verifiering av ramverket.
 
-## OulKafkaConnector
+## src/test/base
 
-Extendar KafkaConnector för att hantera kommunikation med OUL.
+Abstrakta testklasser _Abstract*Test.java_ som innehåller tester som behöver extendas och annoteras med QuarkusTest för att kunna köras.
+T.ex. genom:
+```
+@QuarkusTest
+@QuarkusTestResource.List(
+{
+      @QuarkusTestResource(WireMockRegelManuell.class)
+})
+public class RegelManuellHandlaggningTest extends AbstractRegelManuellHandlaggningTest
+{
+}
+```
 
-## RegelManuellTestData
+### RegelManuellTestData
 
 Utility-klass som skapar testdata.
 
-## WireMockRegelManuell
+## src/test/helpers
+
+Innehåller hjälpkomponenter för OUL-kafka-kommunikation och Wiremock för manuella regler. 
+
+### OulKafkaConnector
+
+Extendar _KafkaConnector_ för att hantera kommunikation med OUL.
+
+### WireMockRegelManuell
 
 Utility-klass för hantering av manuella reglers Wiremock-setup.
