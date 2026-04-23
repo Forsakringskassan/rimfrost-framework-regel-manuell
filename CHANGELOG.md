@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.17 (2026-04-23)
+
+### Bug Fixes
+
+-  Uppdatering av README. Tar bort icke använd abstrakt testklass AbstractMockedRegelManuellTest. ([ff930](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ff930a0ed457327) Ulf Slunga)  
+
 ## 0.2.16 (2026-04-23)
 
 ### Bug Fixes
