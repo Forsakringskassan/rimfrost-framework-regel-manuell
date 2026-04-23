@@ -53,7 +53,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.TILLDELAD);
-      Thread.sleep(5000); // Sleep 1 second to ensure that kafka messages are processed
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals("3", uppgift.getUppgiftStatus());
