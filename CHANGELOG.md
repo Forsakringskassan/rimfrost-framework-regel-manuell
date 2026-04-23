@@ -2,6 +2,16 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 0.2.14 (2026-04-23)
+
+### Bug Fixes
+
+-  tar bort onödig inMemoryConnector null-check ([a5bbd](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a5bbd114cda5070) Ulf Slunga)  
+-  tar bort annotation Inject för basePath ([5f26c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5f26ca8ea3a0831) Ulf Slunga)  
+-  minskar sleep i testfall ([70e4b](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/70e4b76b2dd5961) Ulf Slunga)  
+-  tar bort onödig loggning ([25496](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/25496dcb072c09c) Ulf Slunga)  
+-  single module. fixar för att kunna köra tester även av regler. ([2d99a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2d99abc87dcfdf9) Ulf Slunga)  
+
 ## 0.2.13 (2026-04-22)
 
 ### Bug Fixes
