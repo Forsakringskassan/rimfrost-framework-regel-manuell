@@ -26,6 +26,7 @@
     <violations.maxViolations>0</violations.maxViolations>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.build.skip>true</quarkus.build.skip>
+    <argline></argline>
   </properties>
 
   <dependencies>
@@ -152,11 +153,23 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <excludes>
             <exclude>**/Abstract*.java</exclude>
           </excludes>
+          <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
         </configuration>
       </plugin>
       <plugin>
