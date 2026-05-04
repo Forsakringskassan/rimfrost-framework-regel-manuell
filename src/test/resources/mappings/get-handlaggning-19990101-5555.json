@@ -1,7 +1,7 @@
 {
   "request": {
-    "method": "PUT",
-    "urlPathPattern": "/handlaggning/.*"
+    "method": "GET",
+    "urlPathPattern": "/handlaggning/.+5555$"
   },
   "response": {
     "status": 200,
@@ -10,7 +10,7 @@
     },
     "jsonBody": {
       "handlaggning": {
-        "id": "5367f6b8-cc4a-11f0-8de9-199901011234",
+        "id": "5367f6b8-cc4a-11f0-8de9-199901015555",
         "yrkande": {
           "id": "81234d56-7890-4abc-1234-56789abcdef0",
           "version": 1,
@@ -24,7 +24,7 @@
             {
               "individ": {
                 "typId": "123456789",
-                "varde": "19901010-1234"
+                "varde": "19901010-5555"
               },
               "yrkandeRollId": "d1b6721d-a3d8-4fd1-aae8-6ba11849e9bc"
             }
@@ -41,19 +41,6 @@
             }
           ]
         },
-        "uppgift": {
-          "id": "f14760e8-b521-4f17-b6ca-13addd313286",
-          "version": 1,
-          "skapadTs": "2025-01-10T16:15:50Z",
-          "aktivitetId": "c922e375-9c94-4718-8cbb-aef6283a2904",
-          "uppgiftspecifikation": {
-            "id": "98e64c9f-2233-4ce9-beee-aa8956394ecf",
-            "version": 1
-          },
-          "uppgiftStatus": "AVSLUTAD",
-          "FSSAinformation": "HANDLAGGNING_PAGAR"
-        },
-        "underlag": [],
         "processinstansId": "e7f3c5a2-1234-4abc-9876-56789abcdef0",
         "version": 1,
         "skapadTS": "2026-01-22T13:31:00.8742683+01:00",
@@ -63,3 +50,6 @@
     }
   }
 }
+
+
+    
