@@ -96,7 +96,8 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate)
    {
-      try{
+      try
+      {
          handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
       }
       catch (HandlaggningException e)
