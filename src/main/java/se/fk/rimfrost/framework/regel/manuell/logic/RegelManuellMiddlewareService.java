@@ -43,32 +43,16 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       var result = regelService.readData(handlaggning);
       var underlag = RegelUtils.createUnderlag("GetResponse", 1, result, objectMapper);
       var handlaggningUpdate = createHandlaggningUpdate(handlaggning, underlag);
-      try
-      {
-         handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
-      }
-      catch (HandlaggningException e)
-      {
-         LOGGER.error("Error updating handlaggning for handlaggningsId: " + handlaggningId, e);
-         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
-      }
+      updateHandlaggning(handlaggningUpdate);
       return result;
    }
 
    @Override
    public void update(UUID handlaggningId, Y request)
    {
-      try
-      {
-         var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
-         var handlaggningUpdate = regelService.updateData(handlaggning, request);
-         handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
-      }
-      catch (HandlaggningException e)
-      {
-         LOGGER.error("Error in update for handlaggningsId: " + handlaggningId, e);
-         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
-      }
+      var handlaggning = getHandlaggning(handlaggningId);
+      var handlaggningUpdate = regelService.updateData(handlaggning, request);
+      updateHandlaggning(handlaggningUpdate);
    }
 
    @Override
@@ -106,6 +90,18 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       catch (HandlaggningException e)
       {
          LOGGER.error("Error reading handlaggning for handlaggningsId: " + handlaggningId, e);
+         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+      }
+   }
+
+   private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate)
+   {
+      try{
+         handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
+      }
+      catch (HandlaggningException e)
+      {
+         LOGGER.error("Error in update for handlaggningsId: {}", handlaggningUpdate.id(), e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
    }
