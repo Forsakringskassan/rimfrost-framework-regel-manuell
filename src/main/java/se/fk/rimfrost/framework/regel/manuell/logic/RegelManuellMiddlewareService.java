@@ -3,6 +3,8 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
@@ -108,12 +110,12 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       }
    }
 
-   private static int toHttpStatus(HandlaggningException e) {
+   private static Response.Status toHttpStatus(HandlaggningException e) {
       return switch (e.getErrorType()) {
-         case NOT_FOUND -> 404;
-         case BAD_REQUEST -> 400;
-         case SERVICE_UNAVAILABLE -> 503;
-         default -> 500;
+         case NOT_FOUND -> Response.Status.NOT_FOUND;
+         case BAD_REQUEST -> Response.Status.BAD_REQUEST;
+         case SERVICE_UNAVAILABLE -> Response.Status.SERVICE_UNAVAILABLE;
+         default -> Response.Status.INTERNAL_SERVER_ERROR;
       };
    }
 }

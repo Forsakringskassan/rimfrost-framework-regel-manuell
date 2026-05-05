@@ -14,10 +14,10 @@ public class RegelManuellExceptionMapper
    public Response toResponse(RegelManuellException exception)
    {
       var body = new ErrorResponse(
-            exception.getHttpStatusCode(),
+            exception.getStatus().getStatusCode(),
             exception.getMessage());
 
-      return Response.status(exception.getHttpStatusCode())
+      return Response.status(exception.getStatus())
             .entity(body)
             .type(MediaType.APPLICATION_JSON)
             .build();

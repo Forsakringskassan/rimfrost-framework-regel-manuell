@@ -1,23 +1,25 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
+import jakarta.ws.rs.core.Response.Status;
+
 public class RegelManuellException extends RuntimeException
 {
-   private final int httpStatusCode;
+   private final Status status;
 
-   public RegelManuellException(int httpStatusCode, String message, Exception e)
+   public RegelManuellException(Status status, String message, Exception e)
    {
       super(message, e);
-      this.httpStatusCode = httpStatusCode;
+      this.status = status;
    }
 
-   public RegelManuellException(int httpStatusCode, String message)
+   public RegelManuellException(Status status, String message)
    {
       super(message);
-      this.httpStatusCode = httpStatusCode;
+      this.status = status;
    }
 
-   public int getHttpStatusCode()
+   public Status getStatus()
    {
-      return httpStatusCode;
+      return status;
    }
 }
