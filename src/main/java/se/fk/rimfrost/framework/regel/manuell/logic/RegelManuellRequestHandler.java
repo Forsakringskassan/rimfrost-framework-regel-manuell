@@ -57,31 +57,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    {
       try
       {
-         Handlaggning handlaggning;
          var cloudevent = createCloudEvent(request);
          var uppgift = createUppgift(request.aktivitetId());
-
-         try
-         {
-            handlaggning = handlaggningAdapter.readHandlaggning(request.handlaggningId());
-         }
-         catch (HandlaggningException e)
-         {
-            sendErrorResponse(request.handlaggningId(), cloudevent, RegelFelkod.HANDLAGGNING_READ_FAILURE, e.getMessage());
-            return;
-         }
-
-         try
-         {
-            var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
-                  handlaggning.version() + 1);
-            handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
-         }
-         catch (HandlaggningException e)
-         {
-            sendErrorResponse(request.handlaggningId(), cloudevent, RegelFelkod.HANDLAGGNING_WRITE_FAILURE, e.getMessage());
-            return;
-         }
+         var handlaggning = getHandlaggning(request.handlaggningId(), cloudevent);
+         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
+               handlaggning.version() + 1);
+         updateHandlaggning(handlaggningUpdate, cloudevent);
 
          var commonRegelData = ImmutableManuellRegelCommonData.builder()
                .cloudEventData(cloudevent)
@@ -171,32 +152,26 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          }
 
          var uppgift = commonRegelData.uppgift();
-         try
-         {
-            var handlaggning = handlaggningAdapter.readHandlaggning(oulStatus.handlaggningId());
+         Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), commonRegelData.cloudEventData());
 
-            var updatedUppgift = ImmutableUppgift.builder()
-                  .from(uppgift)
-                  .version(uppgift.version() + 1)
-                  .utforarId(toHandlaggningModelIdtyp(Objects.requireNonNull(oulStatus.utforarId())))
-                  .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
-                  .build();
+         var updatedUppgift = ImmutableUppgift.builder()
+               .from(uppgift)
+               .version(uppgift.version() + 1)
+               .utforarId(toHandlaggningModelIdtyp(Objects.requireNonNull(oulStatus.utforarId())))
+               .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
+               .build();
 
-            var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
-                  handlaggning.version());
+         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
+               handlaggning.version());
 
-            var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
-                  .from(commonRegelData)
-                  .uppgift(updatedUppgift)
-                  .build();
-            dataStorage.setManuellRegelCommonData(oulStatus.handlaggningId(), updatedCommonRegelData);
-            handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
-         }
-         catch (HandlaggningException e)
-         {
-            LOGGER.error("Error in handleOulStatus() while trying to update handlaggning with id: {}", oulStatus.handlaggningId(),
-                  e);
-         }
+         var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
+               .from(commonRegelData)
+               .uppgift(updatedUppgift)
+               .build();
+
+         writeManuellRegelCommonData(oulStatus.handlaggningId(), updatedCommonRegelData);
+
+         updateHandlaggning(handlaggningUpdate, commonRegelData.cloudEventData());
       }
       catch (RegelCancelledException e)
       {
@@ -275,14 +250,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       };
    }
 
-   private void sendErrorResponse(UUID handlaggningId, CloudEventData cloudevent, RegelFelkod regelFelkod, String errorMessage)
-   {
-      var errorInfo = new RegelErrorInformation();
-      errorInfo.setFelkod(regelFelkod);
-      errorInfo.setFelmeddelande(errorMessage);
-      sendResponse(handlaggningId, cloudevent, errorInfo);
-   }
-
    private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Uppgift uppgift, UUID kogitoprocInstanceId,
          int version)
    {
@@ -354,6 +321,44 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       regelErrorInformation.setFelmeddelande(meddelande);
 
       return regelErrorInformation;
+   }
+
+   private Handlaggning getHandlaggning(UUID handlaggningId, CloudEventData cloudEventData)
+   {
+      try
+      {
+         return handlaggningAdapter.readHandlaggning(handlaggningId);
+      }
+      catch (HandlaggningException e)
+      {
+         var message = String.format(
+               "Failed to read handlaggning. handlaggningId: %s, kogitoprocId: %s", handlaggningId,
+               cloudEventData.kogitoprocinstanceid());
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.HANDLAGGNING_READ_FAILURE, message);
+         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
+         exception.addSuppressed(e);
+
+         throw exception;
+      }
+   }
+
+   private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate, CloudEventData cloudEventData)
+   {
+      try
+      {
+         handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
+      }
+      catch (HandlaggningException e)
+      {
+         var message = String.format(
+               "Failed to write handlaggning update. handlaggningId: %s, kogitoprocId: %s",
+               handlaggningUpdate.id(), cloudEventData.kogitoprocinstanceid());
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.HANDLAGGNING_WRITE_FAILURE, message);
+         var exception = new RegelCancelledException(handlaggningUpdate.id(), cloudEventData, regelErrorInformation, message);
+         exception.addSuppressed(e);
+
+         throw exception;
+      }
    }
 
    private void writeManuellRegelCommonData(UUID handlaggningId, ManuellRegelCommonData manuellRegelCommonData)
