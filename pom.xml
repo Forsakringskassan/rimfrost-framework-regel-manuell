@@ -62,7 +62,7 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel.manuell</groupId>
       <artifactId>rimfrost-framework-regel-manuell-openapi-jaxrs-spec</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.oul</groupId>
@@ -72,7 +72,7 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.2</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
@@ -84,11 +84,6 @@
     <dependency>
       <groupId>se.fk.rimfrost</groupId>
       <artifactId>rimfrost-service-oul-asyncapi</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>se.fk.rimfrost.framework.handlaggning</groupId>
-      <artifactId>rimfrost-framework-handlaggning-adapter</artifactId>
       <version>1.0.0</version>
     </dependency>
     <dependency>
