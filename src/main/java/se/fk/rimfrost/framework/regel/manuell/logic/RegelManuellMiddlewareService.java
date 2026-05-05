@@ -3,9 +3,12 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
+import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
@@ -19,6 +22,7 @@ import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStor
 @SuppressWarnings("unused")
 public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuellMiddlewareServiceInterface<T, Y>
 {
+   private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellMiddlewareService.class);
 
    @Inject
    RegelManuellServiceInterface<T, Y> regelService;
@@ -35,21 +39,20 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    @Override
    public T read(UUID handlaggningId)
    {
-      var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
+      var handlaggning = getHandlaggning(handlaggningId);
       var result = regelService.readData(handlaggning);
       var underlag = RegelUtils.createUnderlag("GetResponse", 1, result, objectMapper);
       var handlaggningUpdate = createHandlaggningUpdate(handlaggning, underlag);
-      handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
+      updateHandlaggning(handlaggningUpdate);
       return result;
    }
 
    @Override
    public void update(UUID handlaggningId, Y request)
    {
-      var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
+      var handlaggning = getHandlaggning(handlaggningId);
       var handlaggningUpdate = regelService.updateData(handlaggning, request);
-
-      handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
+      updateHandlaggning(handlaggningUpdate);
    }
 
    @Override
@@ -78,4 +81,37 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       return dataStorage.getManuellRegelCommonData(handlaggningId).uppgift();
    }
 
+   private Handlaggning getHandlaggning(UUID handlaggningId)
+   {
+      try
+      {
+         return handlaggningAdapter.readHandlaggning(handlaggningId);
+      }
+      catch (HandlaggningException e)
+      {
+         LOGGER.error("Error reading handlaggning for handlaggningsId: " + handlaggningId, e);
+         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+      }
+   }
+
+   private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate)
+   {
+      try{
+         handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
+      }
+      catch (HandlaggningException e)
+      {
+         LOGGER.error("Error in update for handlaggningsId: {}", handlaggningUpdate.id(), e);
+         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+      }
+   }
+
+   private static Response.Status toHttpStatus(HandlaggningException e) {
+      return switch (e.getErrorType()) {
+         case NOT_FOUND -> Response.Status.NOT_FOUND;
+         case BAD_REQUEST -> Response.Status.BAD_REQUEST;
+         case SERVICE_UNAVAILABLE -> Response.Status.SERVICE_UNAVAILABLE;
+         default -> Response.Status.INTERNAL_SERVER_ERROR;
+      };
+   }
 }

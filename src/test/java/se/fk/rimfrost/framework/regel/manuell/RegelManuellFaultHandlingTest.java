@@ -1,21 +1,16 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.Mockito;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
 import se.fk.rimfrost.framework.regel.RegelFelkod;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
-
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
