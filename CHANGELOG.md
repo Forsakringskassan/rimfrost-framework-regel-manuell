@@ -2,6 +2,33 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.1 (2026-05-05)
+
+### Bug Fixes
+
+-  spotless ([19eb2](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/19eb27fe00ce5e9) Nils Elveros)  
+-  small fix in RegelManuellMiddlewareService ([a03c6](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a03c6de0ce3db96) Nils Elveros)  
+-  framework-regel bump depenedency ([64430](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/64430dff9556a8f) Nils Elveros)  
+-  use RegelCancelledException ([c2ad8](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c2ad8b7c6ac717e) Nils Elveros)  
+-  spotless ([744ac](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/744ac32277f1ede) Nils Elveros)  
+-  removed unused import ([79e6f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/79e6f8ff6981596) Nils Elveros)  
+-  handle handlaggning errors ([a6d4a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a6d4a31704454d8) Nils Elveros)  
+-  Error handling for non-REST parts ([62b8c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/62b8cfd666155ab) Lars Persson)  
+
+### Dependency updates
+
+- update dependency org.immutables:value-processor to v2.12.1 ([ae6c5](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ae6c5848ef6fa19) renovate[bot])  
+- update dependency org.awaitility:awaitility to v4.3.0 ([b37da](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b37da07a874506a) renovate[bot])  
+- update dependency org.apache.maven.plugins:maven-jar-plugin to v3.5.0 ([46999](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/4699927e694b46f) renovate[bot])  
+- update dependency org.apache.maven.plugins:maven-compiler-plugin to v3.15.0 ([f3bb1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/f3bb13fd067a52e) renovate[bot])  
+### Other changes
+
+**Merge branch 'main' into fix/handle-handlaggning-errors**
+
+
+[813f2](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/813f2a151323500) Nils Elveros *2026-05-05 08:18:11*
+
+
 ## 1.0.0 (2026-04-28)
 
 ### Breaking changes
