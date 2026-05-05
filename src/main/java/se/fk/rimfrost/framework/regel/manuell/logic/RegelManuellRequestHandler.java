@@ -61,27 +61,27 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var cloudevent = createCloudEvent(request);
          var uppgift = createUppgift(request.aktivitetId());
 
-          try
-            {
-               handlaggning = handlaggningAdapter.readHandlaggning(request.handlaggningId());
-            }
-            catch (HandlaggningException e)
-            {
-               sendErrorResponse(request.handlaggningId(), cloudevent, RegelFelkod.HANDLAGGNING_READ_FAILURE, e.getMessage());
-               return;
-            }
+         try
+         {
+            handlaggning = handlaggningAdapter.readHandlaggning(request.handlaggningId());
+         }
+         catch (HandlaggningException e)
+         {
+            sendErrorResponse(request.handlaggningId(), cloudevent, RegelFelkod.HANDLAGGNING_READ_FAILURE, e.getMessage());
+            return;
+         }
 
-            try
-            {
-               var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
-                     handlaggning.version() + 1);
-               handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
-            }
-            catch (HandlaggningException e)
-            {
-               sendErrorResponse(request.handlaggningId(), cloudevent, RegelFelkod.HANDLAGGNING_WRITE_FAILURE, e.getMessage());
-               return;
-            }
+         try
+         {
+            var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
+                  handlaggning.version() + 1);
+            handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
+         }
+         catch (HandlaggningException e)
+         {
+            sendErrorResponse(request.handlaggningId(), cloudevent, RegelFelkod.HANDLAGGNING_WRITE_FAILURE, e.getMessage());
+            return;
+         }
 
          var commonRegelData = ImmutableManuellRegelCommonData.builder()
                .cloudEventData(cloudevent)
