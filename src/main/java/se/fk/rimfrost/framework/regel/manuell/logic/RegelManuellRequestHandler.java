@@ -312,7 +312,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       return switch(uppgiftStatus){case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.NY->uppgiftStatusProvider.getPlaneradId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.TILLDELAD->uppgiftStatusProvider.getTilldeladId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD->uppgiftStatusProvider.getAvslutadId();default->throw new IllegalArgumentException("Unsupported uppgift status: "+uppgiftStatus);};
    }
 
-   private void sendErrorResponse(UUID handlaggningId, se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData,
+   private void sendErrorResponse(UUID handlaggningId, CloudEventData cloudEventData,
          RegelErrorInformation regelErrorInformation)
    {
       if (handlaggningId == null || cloudEventData == null || regelErrorInformation == null)
@@ -355,7 +355,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate,
-         se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData)
+         CloudEventData cloudEventData)
    {
       try
       {
@@ -375,7 +375,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    private void writeCloudEventData(UUID handlaggningId,
-         se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData)
+         CloudEventData cloudEventData)
    {
       try
       {
@@ -394,7 +394,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
-   private se.fk.rimfrost.framework.regel.logic.entity.CloudEventData readCloudEventData(UUID handlaggningId)
+   private CloudEventData readCloudEventData(UUID handlaggningId)
    {
       try
       {

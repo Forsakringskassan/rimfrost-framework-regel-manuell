@@ -1,12 +1,13 @@
 package se.fk.rimfrost.framework.regel.manuell.storage;
 
+import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
 import java.util.UUID;
 
 public interface CloudEventDataStorage
 {
-   se.fk.rimfrost.framework.regel.logic.entity.CloudEventData getCloudEventData(UUID handlaggningId);
+   CloudEventData getCloudEventData(UUID handlaggningId);
 
-   void setCloudEventData(UUID handlaggningId, se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData);
+   void setCloudEventData(UUID handlaggningId, CloudEventData cloudEventData);
 
    void deleteCloudEventData(UUID handlaggningId);
 }

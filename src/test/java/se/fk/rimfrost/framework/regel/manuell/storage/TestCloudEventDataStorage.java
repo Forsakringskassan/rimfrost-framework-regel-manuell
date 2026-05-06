@@ -2,7 +2,7 @@ package se.fk.rimfrost.framework.regel.manuell.storage;
 
 import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
-
+import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -12,16 +12,16 @@ import java.util.UUID;
 @DefaultBean
 public class TestCloudEventDataStorage implements CloudEventDataStorage
 {
-   private final Map<UUID, se.fk.rimfrost.framework.regel.logic.entity.CloudEventData> store = new HashMap<>();
+   private final Map<UUID, CloudEventData> store = new HashMap<>();
 
    @Override
-   public se.fk.rimfrost.framework.regel.logic.entity.CloudEventData getCloudEventData(UUID handlaggningId)
+   public CloudEventData getCloudEventData(UUID handlaggningId)
    {
       return store.get(handlaggningId);
    }
 
    @Override
-   public void setCloudEventData(UUID handlaggningId, se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData)
+   public void setCloudEventData(UUID handlaggningId, CloudEventData cloudEventData)
    {
       store.put(handlaggningId, cloudEventData);
    }
