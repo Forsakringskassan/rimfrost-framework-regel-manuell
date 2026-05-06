@@ -5,10 +5,7 @@ import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
-
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +23,8 @@ import se.fk.rimfrost.framework.regel.RegelFelkod;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
-import se.fk.rimfrost.framework.regel.logic.entity.*;
+import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
+import se.fk.rimfrost.framework.regel.manuell.storage.CloudEventDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
@@ -50,6 +48,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    ManuellRegelCommonDataStorage dataStorage;
 
    @Inject
+   CloudEventDataStorage cloudEventDataStorage;
+
+   @Inject
    UppgiftStatusProvider uppgiftStatusProvider;
 
    @Override
@@ -63,9 +64,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
                handlaggning.version() + 1);
          updateHandlaggning(handlaggningUpdate, cloudevent);
+         writeCloudEventData(request.handlaggningId(), cloudevent);
 
          var commonRegelData = ImmutableManuellRegelCommonData.builder()
-               .cloudEventData(cloudevent)
                .uppgift(uppgift)
                .build();
 
@@ -151,8 +152,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             return;
          }
 
+         var cloudEventData = readCloudEventData(oulStatus.handlaggningId());
          var uppgift = commonRegelData.uppgift();
-         Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), commonRegelData.cloudEventData());
+         Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), cloudEventData);
 
          var updatedUppgift = ImmutableUppgift.builder()
                .from(uppgift)
@@ -171,7 +173,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
          writeManuellRegelCommonData(oulStatus.handlaggningId(), updatedCommonRegelData);
 
-         updateHandlaggning(handlaggningUpdate, commonRegelData.cloudEventData());
+         updateHandlaggning(handlaggningUpdate, cloudEventData);
       }
       catch (RegelCancelledException e)
       {
@@ -187,8 +189,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Override
    public void handleUppgiftDone(UUID handlaggningId, Utfall utfall)
    {
+      var cloudEventData = readCloudEventData(handlaggningId);
       var commonRegelData = dataStorage.getManuellRegelCommonData(handlaggningId);
-      CloudEventData cloudevent = commonRegelData.cloudEventData();
 
       try
       {
@@ -211,7 +213,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
 
-      sendResponse(handlaggningId, cloudevent, utfall);
+      sendResponse(handlaggningId, cloudEventData, utfall);
 
       DelayedException delayedException = new DelayedException();
       // We do this before cleaning up CloudEvent and RegelData instances
@@ -220,6 +222,15 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       try
       {
          dataStorage.deleteManuellRegelCommonData(handlaggningId);
+      }
+      catch (Exception e)
+      {
+         delayedException.addSuppressed(e);
+      }
+
+      try
+      {
+         this.cloudEventDataStorage.deleteCloudEventData(handlaggningId);
       }
       catch (Exception e)
       {
@@ -301,7 +312,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       return switch(uppgiftStatus){case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.NY->uppgiftStatusProvider.getPlaneradId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.TILLDELAD->uppgiftStatusProvider.getTilldeladId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD->uppgiftStatusProvider.getAvslutadId();default->throw new IllegalArgumentException("Unsupported uppgift status: "+uppgiftStatus);};
    }
 
-   private void sendErrorResponse(UUID handlaggningId, CloudEventData cloudEventData, RegelErrorInformation regelErrorInformation)
+   private void sendErrorResponse(UUID handlaggningId, se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData,
+         RegelErrorInformation regelErrorInformation)
    {
       if (handlaggningId == null || cloudEventData == null || regelErrorInformation == null)
       {
@@ -342,7 +354,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
-   private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate, CloudEventData cloudEventData)
+   private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate,
+         se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData)
    {
       try
       {
@@ -361,6 +374,39 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
+   private void writeCloudEventData(UUID handlaggningId,
+         se.fk.rimfrost.framework.regel.logic.entity.CloudEventData cloudEventData)
+   {
+      try
+      {
+         this.cloudEventDataStorage.setCloudEventData(handlaggningId, cloudEventData);
+      }
+      catch (Exception e)
+      {
+         var message = String.format(
+               "Failed to write CloudEventData to correlation storage. handlaggningId: %s, kogitoprocId: %s",
+               handlaggningId, cloudEventData.kogitoprocinstanceid());
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.OTHER, message);
+         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
+         exception.addSuppressed(e);
+
+         throw exception;
+      }
+   }
+
+   private se.fk.rimfrost.framework.regel.logic.entity.CloudEventData readCloudEventData(UUID handlaggningId)
+   {
+      try
+      {
+         return cloudEventDataStorage.getCloudEventData(handlaggningId);
+      }
+      catch (Exception e)
+      {
+         LOGGER.error("Failed to read CloudEventData from correlation storage. handlaggningId: {}", handlaggningId, e);
+         return null;
+      }
+   }
+
    private void writeManuellRegelCommonData(UUID handlaggningId, ManuellRegelCommonData manuellRegelCommonData)
    {
       try
@@ -369,12 +415,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (Exception e)
       {
+         var cloudEventData = readCloudEventData(handlaggningId);
          var message = String.format(
-               "Failed to write ManuellRegelCommonData update to data storage. handlaggningId: %s, kogitoprocId: %s",
-               handlaggningId, manuellRegelCommonData.cloudEventData().kogitoprocinstanceid());
+               "Failed to write ManuellRegelCommonData update to data storage. handlaggningId: %s",
+               handlaggningId);
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.OTHER, message);
-         var exception = new RegelCancelledException(handlaggningId, manuellRegelCommonData.cloudEventData(),
-               regelErrorInformation, message);
+         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
          throw exception;
@@ -389,13 +435,14 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (Exception e)
       {
+         var cloudEventData = readCloudEventData(handlaggningId);
          var message = String.format(
                "Failed to read ManuellRegelCommonData from data storage. handlaggningId: %s",
                handlaggningId);
-         var exception = new RegelCancelledException(message);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.OTHER, message);
+         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
-         // TODO: How to handle this case? We do not have access to cloudEventData...
          throw exception;
       }
    }

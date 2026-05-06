@@ -13,16 +13,13 @@ import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
 import se.fk.rimfrost.framework.regel.RegelFelkod;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.logic.entity.ImmutableCloudEventData;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
-
 import java.time.OffsetDateTime;
 import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -41,18 +38,6 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    @BeforeAll
    void setUp()
    {
-      var cloudEventData = ImmutableCloudEventData.builder()
-            .id(UUID.randomUUID())
-            .kogitorootprociid(UUID.randomUUID())
-            .kogitoparentprociid(UUID.randomUUID())
-            .kogitoprocinstanceid(UUID.randomUUID())
-            .kogitorootprocid(UUID.randomUUID().toString())
-            .kogitoprocid(UUID.randomUUID().toString())
-            .kogitoprocist(UUID.randomUUID().toString())
-            .kogitoprocversion(UUID.randomUUID().toString())
-            .type(UUID.randomUUID().toString())
-            .source(UUID.randomUUID().toString())
-            .build();
 
       var uppgiftSpecification = ImmutableUppgiftSpecifikation.builder()
             .id(UUID.randomUUID())
@@ -71,7 +56,6 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .build();
 
       manuellRegelCommonDataStorage = ImmutableManuellRegelCommonData.builder()
-            .cloudEventData(cloudEventData)
             .uppgift(uppgift)
             .build();
    }
