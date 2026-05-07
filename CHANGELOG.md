@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.3 (2026-05-07)
+
+### Bug Fixes
+
+-  hanterar cloudevent attributes. avbryter uppgift vid exception men skickar regel respons. ([10fa5](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/10fa50d73ae0b2d) Ulf Slunga)  
+-  hanterar cloudevent attributes ([3d270](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3d2707a3fab6d09) Ulf Slunga)  
+
 ## 1.0.2 (2026-05-07)
 
 ### Bug Fixes
