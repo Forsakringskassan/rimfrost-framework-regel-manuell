@@ -6,15 +6,10 @@ import jakarta.inject.Inject;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
-import se.fk.rimfrost.framework.handlaggning.model.ProduceratResultat;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.logic.RegelUtils;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 
-import java.util.ArrayList;
 import java.util.UUID;
-
-import com.networknt.schema.OutputFormat.List;
 
 @SuppressWarnings("unused")
 @ApplicationScoped
