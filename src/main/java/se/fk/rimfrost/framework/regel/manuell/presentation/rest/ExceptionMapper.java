@@ -1,4 +1,4 @@
-package se.fk.github.manuellregelratttillforsakring.presentation.rest;
+package se.fk.rimfrost.framework.regel.manuell.presentation.rest;
 
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
