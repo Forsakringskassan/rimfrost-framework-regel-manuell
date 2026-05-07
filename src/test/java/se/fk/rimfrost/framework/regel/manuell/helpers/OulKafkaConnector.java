@@ -1,6 +1,8 @@
 package se.fk.rimfrost.framework.regel.manuell.helpers;
 
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
+import java.util.Map;
+import java.util.UUID;
 import se.fk.rimfrost.OperativtUppgiftslagerRequestMessage;
 import se.fk.rimfrost.OperativtUppgiftslagerResponseMessage;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
@@ -97,22 +99,56 @@ public class OulKafkaConnector extends KafkaConnector
    }
 
    /**
-    * Simulates an OUL status notification message.
-    * *
+    * Simulates an OUL status notification message with default test CloudEvent attributes.
     *
     * @param handlaggningId identifier for the handlaggning
     * @param uppgiftId      identifier for the task
     * @param utforarId      utforare identifier
-    * @param status         current
+    * @param status         current status
     */
    public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, Status status)
+   {
+      simulateOulStatus(handlaggningId, uppgiftId, utforarId, status, testCloudeventAttributes());
+   }
+
+   /**
+    * Simulates an OUL status notification message with explicit CloudEvent attributes.
+    *
+    * <p>Use this overload when the test needs to verify that specific CloudEvent attributes
+    * are correctly propagated through the handler, for example by passing the attributes
+    * from the outgoing OUL request that triggered this status.
+    *
+    * @param handlaggningId      identifier for the handlaggning
+    * @param uppgiftId           identifier for the task
+    * @param utforarId           utforare identifier
+    * @param status              current status
+    * @param cloudeventAttributes CloudEvent correlation attributes to embed in the message
+    */
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, Status status,
+         Map<String, String> cloudeventAttributes)
    {
       var msg = new OperativtUppgiftslagerStatusMessage();
       msg.setStatus(status);
       msg.setUppgiftId(uppgiftId);
       msg.setHandlaggningId(handlaggningId);
       msg.setUtforarId(oulKafkaMapper.toApiIdtyp(utforarId));
+      msg.setCloudeventAttributes(cloudeventAttributes);
       inMemoryConnector.source(oulStatusNotificationChannel).send(msg);
+   }
+
+   private static Map<String, String> testCloudeventAttributes()
+   {
+      return Map.of(
+            "id", UUID.randomUUID().toString(),
+            "kogitorootprociid", "00000000-0000-0000-0000-000000000001",
+            "kogitoparentprociid", "00000000-0000-0000-0000-000000000002",
+            "kogitoprocinstanceid", "00000000-0000-0000-0000-000000000003",
+            "kogitorootprocid", "test-root-proc",
+            "kogitoprocid", "test-proc",
+            "kogitoprocist", "test-proc-ist",
+            "kogitoprocversion", "1.0",
+            "type", "test-type",
+            "source", "test-source");
    }
 
 }

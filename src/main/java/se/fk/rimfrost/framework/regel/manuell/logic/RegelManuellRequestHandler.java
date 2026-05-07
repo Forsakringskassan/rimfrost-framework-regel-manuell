@@ -84,6 +84,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .roll(regelConfig.getSpecifikation().getRoll())
                .url(regelConfig.getUppgift().getPath())
                .replyToTopic(oulReplyToSubTopic)
+               .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
                .build();
 
          sendOULRequest(oulMessageRequest, cloudevent);
@@ -133,8 +134,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Override
    public void handleOulStatus(OulStatus oulStatus)
    {
+      CloudEventData cloudEventData = null;
       try
       {
+         cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulStatus.cloudeventAttributes());
+
          ManuellRegelCommonData commonRegelData = readManuellRegelCommonData(oulStatus.handlaggningId());
 
          if (commonRegelData == null)
@@ -151,8 +155,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
             return;
          }
-
-         var cloudEventData = readCloudEventData(oulStatus.handlaggningId());
          var uppgift = commonRegelData.uppgift();
          Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), cloudEventData);
 
@@ -179,9 +181,16 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       {
          LOGGER.error("Regel run cancelled due to error", e);
 
-         // TODO: How to handle created uppgift in OUL?
+         try
+         {
+            oulKafkaProducer.sendOulStatusUpdate(oulStatus.uppgiftId(), Status.AVBRUTEN);
+         }
+         catch (Exception oulException)
+         {
+            LOGGER.error("Failed to send AVBRUTEN status to OUL for uppgiftId: {}", oulStatus.uppgiftId(), oulException);
+         }
 
-         sendErrorResponse(e.getHandlaggningId(), e.getCloudEventData(), e.getRegelErrorInformation());
+         sendErrorResponse(e.getHandlaggningId(), cloudEventData, e.getRegelErrorInformation());
          return;
       }
    }
@@ -306,7 +315,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .build();
    }
 
-   @SuppressWarnings("UnnecessaryDefault")
    private String toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus)
    {
       return switch(uppgiftStatus){case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.NY->uppgiftStatusProvider.getPlaneradId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.TILLDELAD->uppgiftStatusProvider.getTilldeladId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD->uppgiftStatusProvider.getAvslutadId();default->throw new IllegalArgumentException("Unsupported uppgift status: "+uppgiftStatus);};
