@@ -2,6 +2,17 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.2 (2026-05-07)
+
+### Bug Fixes
+
+-  Fix minor issues with exception mappers ([d0c93](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d0c930f760ad613) Lars Persson)  
+-  Add exception mappers for consistent error response ([1b5c4](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/1b5c449c90e41df) Lars Persson)  
+-  remove unused imports ([47241](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/47241e16b3abec5) Nils Elveros)  
+-  add tests for middleware ([6169d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/6169d118d51fd54) Nils Elveros)  
+-  full sökväg till CloudEventData ej nödvändigt ([5de32](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5de3244c612b196) Ulf Slunga)  
+-  cloudevent data i separat storage interface ([64010](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/64010f6a9683572) Ulf Slunga)  
+
 ## 1.0.1 (2026-05-05)
 
 ### Bug Fixes
