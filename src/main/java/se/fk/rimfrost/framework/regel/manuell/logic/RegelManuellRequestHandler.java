@@ -84,6 +84,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .roll(regelConfig.getSpecifikation().getRoll())
                .url(regelConfig.getUppgift().getPath())
                .replyToTopic(oulReplyToSubTopic)
+               .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
                .build();
 
          sendOULRequest(oulMessageRequest, cloudevent);
@@ -152,7 +153,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             return;
          }
 
-         var cloudEventData = readCloudEventData(oulStatus.handlaggningId());
+         var cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulStatus.cloudeventAttributes());
          var uppgift = commonRegelData.uppgift();
          Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), cloudEventData);
 

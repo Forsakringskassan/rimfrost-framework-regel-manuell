@@ -20,6 +20,7 @@ import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellReg
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import se.fk.rimfrost.framework.regel.RegelTestData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -157,5 +158,40 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
+   })
+   void should_use_cloudevent_attributes_from_oul_status_in_error_response(
+         String handlaggningId,
+         String uppgiftId,
+         Utfall expectedUtfall) throws InterruptedException
+   {
+      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(manuellRegelCommonDataStorage);
+      // Allow initial write from handleRegelRequest, throw on the subsequent write from handleOulStatus
+      Mockito.doNothing().doThrow(new IllegalStateException())
+            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
+
+      var utforarId = ImmutableIdtyp.builder()
+            .typId("Idtyp_typId")
+            .varde("Idtyp_varde")
+            .build();
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY,
+            oulRequest.getCloudeventAttributes());
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
+
+      var regelResponse = regelKafkaConnector.waitForRegelResponse();
+      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
+      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      // Verify the error response carries the kogitoprocinstanceid from the embedded OUL status attributes
+      assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
+            regelResponse.getKogitoprocinstanceid());
    }
 }

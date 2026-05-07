@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
+import se.fk.rimfrost.framework.regel.RegelTestData;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,6 +30,30 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       Assertions.assertEquals("C", oulRequest.getVerksamhetslogik());
       Assertions.assertEquals("ANSVARIG_HANDLAGGARE", oulRequest.getRoll());
       Assertions.assertTrue(oulRequest.getUrl().contains(basePath));
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   void should_include_cloudevent_attributes_in_oul_request(String handlaggningId)
+   {
+      var testRequest = RegelTestData.newRegelRequestMessagePayload(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
+      var attributes = oulRequest.getCloudeventAttributes();
+      Assertions.assertNotNull(attributes);
+      Assertions.assertEquals(testRequest.getId(), attributes.get("id"));
+      Assertions.assertEquals(testRequest.getKogitoprocinstanceid(), attributes.get("kogitoprocinstanceid"));
+      Assertions.assertEquals(testRequest.getKogitorootprociid(), attributes.get("kogitorootprociid"));
+      Assertions.assertEquals(testRequest.getKogitoparentprociid(), attributes.get("kogitoparentprociid"));
+      Assertions.assertEquals(testRequest.getKogitorootprocid(), attributes.get("kogitorootprocid"));
+      Assertions.assertEquals(testRequest.getKogitoprocid(), attributes.get("kogitoprocid"));
+      Assertions.assertEquals(testRequest.getKogitoprocist(), attributes.get("kogitoprocist"));
+      Assertions.assertEquals(testRequest.getKogitoprocversion(), attributes.get("kogitoprocversion"));
+      Assertions.assertNotNull(attributes.get("type"));
+      Assertions.assertNotNull(attributes.get("source"));
    }
 
    @ParameterizedTest
