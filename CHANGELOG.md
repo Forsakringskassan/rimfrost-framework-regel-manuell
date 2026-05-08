@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.4 (2026-05-08)
+
+### Bug Fixes
+
+-  bumpar rimfrost-service-oul-asyncapi ([5e672](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5e67202cb80481f) Ulf Slunga)  
+-  hanterar cloudevent attributes. avbryter uppgift vid exception i hantering av OUL response, men skickar regel respons. ([e6c47](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/e6c4732389b666e) Ulf Slunga)  
+
 ## 1.0.3 (2026-05-07)
 
 ### Bug Fixes
