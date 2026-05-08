@@ -211,7 +211,17 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    public void handleUppgiftDone(UUID handlaggningId, Utfall utfall)
    {
       var cloudEventData = readCloudEventData(handlaggningId);
-      var commonRegelData = dataStorage.getManuellRegelCommonData(handlaggningId);
+
+      ManuellRegelCommonData commonRegelData;
+      try
+      {
+         commonRegelData = readManuellRegelCommonData(handlaggningId);
+      }
+      catch (RegelCancelledException e)
+      {
+         LOGGER.error("Failed to read commonRegelData in handleUppgiftDone for handlaggningId: {}", handlaggningId, e);
+         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+      }
 
       try
       {
