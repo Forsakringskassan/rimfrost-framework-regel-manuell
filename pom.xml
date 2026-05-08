@@ -67,7 +67,7 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.oul</groupId>
       <artifactId>rimfrost-framework-oul</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
@@ -84,7 +84,7 @@
     <dependency>
       <groupId>se.fk.rimfrost</groupId>
       <artifactId>rimfrost-service-oul-asyncapi</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.uppgiftstatusprovider</groupId>

@@ -85,16 +85,33 @@ public class OulKafkaConnector extends KafkaConnector
    }
 
    /**
-    * Simulates an OUL response message by publishing it to the in-memory response channel.
+    * Simulates an OUL response message with default test CloudEvent attributes.
     *
     * @param handlaggningId identifier for the handlaggning
     * @param uppgiftId      identifier for the task
     */
    public void simulateOulResponse(String handlaggningId, String uppgiftId)
    {
+      simulateOulResponse(handlaggningId, uppgiftId, testCloudeventAttributes());
+   }
+
+   /**
+    * Simulates an OUL response message with explicit CloudEvent attributes.
+    *
+    * <p>Use this overload when the test needs to verify that specific CloudEvent attributes
+    * are correctly propagated through the handler, for example by passing the attributes
+    * from the outgoing OUL request that triggered this response.
+    *
+    * @param handlaggningId       identifier for the handlaggning
+    * @param uppgiftId            identifier for the task
+    * @param cloudeventAttributes CloudEvent correlation attributes to embed in the message
+    */
+   public void simulateOulResponse(String handlaggningId, String uppgiftId, Map<String, String> cloudeventAttributes)
+   {
       var msg = new OperativtUppgiftslagerResponseMessage();
       msg.setHandlaggningId(handlaggningId);
       msg.setUppgiftId(uppgiftId);
+      msg.setCloudeventAttributes(cloudeventAttributes);
       inMemoryConnector.source(oulResponsesChannel).send(msg);
    }
 
