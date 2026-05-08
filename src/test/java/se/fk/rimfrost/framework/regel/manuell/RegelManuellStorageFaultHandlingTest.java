@@ -113,6 +113,74 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    @ParameterizedTest
    @CsvSource(
    {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
+   })
+   void should_send_oul_status_avbruten_on_write_failure_during_oul_response(
+         String handlaggningId,
+         String uppgiftId) throws InterruptedException
+   {
+      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(manuellRegelCommonDataStorage);
+      Mockito.doNothing().doThrow(new IllegalStateException())
+            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
+      Thread.sleep(1000);
+      var oulStatusMessage = oulKafkaConnector.waitForOulStatusMessage();
+      assertEquals(uppgiftId, oulStatusMessage.getUppgiftId());
+      assertEquals(Status.AVBRUTEN, oulStatusMessage.getStatus());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
+   })
+   void should_send_error_response_on_write_failure_during_oul_response_alongside_avbruten(
+         String handlaggningId,
+         String uppgiftId,
+         Utfall expectedUtfall) throws InterruptedException
+   {
+      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(manuellRegelCommonDataStorage);
+      Mockito.doNothing().doThrow(new IllegalStateException())
+            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
+      Thread.sleep(1000);
+      var regelResponse = regelKafkaConnector.waitForRegelResponse();
+      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
+      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
+   })
+   void should_use_cloudevent_attributes_from_oul_response_in_error_response(
+         String handlaggningId,
+         String uppgiftId,
+         Utfall expectedUtfall) throws InterruptedException
+   {
+      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(manuellRegelCommonDataStorage);
+      Mockito.doNothing().doThrow(new IllegalStateException())
+            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
+      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId, oulRequest.getCloudeventAttributes());
+      Thread.sleep(1000);
+      var regelResponse = regelKafkaConnector.waitForRegelResponse();
+      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
+      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
+            regelResponse.getKogitoprocinstanceid());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
    })
    void should_not_crash_on_read_failure_during_oul_status_update(

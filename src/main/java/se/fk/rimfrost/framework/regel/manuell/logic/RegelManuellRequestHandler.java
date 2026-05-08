@@ -109,8 +109,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Override
    public void handleOulResponse(OulResponse oulResponse)
    {
+      CloudEventData cloudEventData = null;
       try
       {
+         cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulResponse.cloudeventAttributes());
+
          ManuellRegelCommonData commonRegelData = readManuellRegelCommonData(oulResponse.handlaggningId());
 
          var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
@@ -122,11 +125,19 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (RegelCancelledException e)
       {
-         LOGGER.error("Regel run cancelled due to error", e);
+         LOGGER.error("Regel run in handleOulResponse cancelled due to error", e);
 
-         // TODO: How to handle created uppgift in OUL?
+         try
+         {
+            oulKafkaProducer.sendOulStatusUpdate(oulResponse.uppgiftId(), Status.AVBRUTEN);
+         }
+         catch (Exception oulException)
+         {
+            LOGGER.error("handleOulResponse failed to send AVBRUTEN status to OUL for uppgiftId: {}", oulResponse.uppgiftId(),
+                  oulException);
+         }
 
-         sendErrorResponse(e.getHandlaggningId(), e.getCloudEventData(), e.getRegelErrorInformation());
+         sendErrorResponse(e.getHandlaggningId(), cloudEventData, e.getRegelErrorInformation());
          return;
       }
    }
@@ -179,7 +190,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (RegelCancelledException e)
       {
-         LOGGER.error("Regel run cancelled due to error", e);
+         LOGGER.error("Regel run in handleOulStatus cancelled due to error", e);
 
          try
          {
@@ -187,7 +198,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          }
          catch (Exception oulException)
          {
-            LOGGER.error("Failed to send AVBRUTEN status to OUL for uppgiftId: {}", oulStatus.uppgiftId(), oulException);
+            LOGGER.error("handleOulStatus failed to send AVBRUTEN status to OUL for uppgiftId: {}", oulStatus.uppgiftId(),
+                  oulException);
          }
 
          sendErrorResponse(e.getHandlaggningId(), cloudEventData, e.getRegelErrorInformation());
