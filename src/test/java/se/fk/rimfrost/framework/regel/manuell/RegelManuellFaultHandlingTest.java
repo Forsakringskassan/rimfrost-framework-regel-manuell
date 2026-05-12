@@ -7,8 +7,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
-import se.fk.rimfrost.framework.regel.RegelFelkod;
 import se.fk.rimfrost.framework.regel.Utfall;
+import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 
@@ -31,7 +31,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -44,7 +44,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.HANDLAGGNING_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -73,7 +73,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
       //
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -102,6 +102,6 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
       //
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.HANDLAGGNING_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 }
