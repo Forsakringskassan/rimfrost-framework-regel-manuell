@@ -2,6 +2,14 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.5 (2026-05-12)
+
+### Bug Fixes
+
+-  Use specific error codes for applicable error cases insted of RIMFROST_OTHER ([07413](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/074136fe791ca48) Lars Persson)  
+-  **deps**  update dependency org.immutables:value to v2.12.1 ([06084](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/060849f1a985e6b) renovate[bot])  
+-  returnerar 500 för uppläsningsfel på commondata. lagt till test av detta. ([e0178](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/e0178c50df5ecb7) Ulf Slunga)  
+
 ## 1.0.4 (2026-05-08)
 
 ### Bug Fixes
