@@ -19,8 +19,8 @@ import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
-import se.fk.rimfrost.framework.regel.RegelFelkod;
 import se.fk.rimfrost.framework.regel.Utfall;
+import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
@@ -356,7 +356,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       sendResponse(handlaggningId, cloudEventData, regelErrorInformation);
    }
 
-   private RegelErrorInformation createRegelErrorInformation(RegelFelkod felkod, String meddelande)
+   private RegelErrorInformation createRegelErrorInformation(String felkod, String meddelande)
    {
       RegelErrorInformation regelErrorInformation = new RegelErrorInformation();
       regelErrorInformation.setFelkod(felkod);
@@ -376,7 +376,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var message = String.format(
                "Failed to read handlaggning. handlaggningId: %s, kogitoprocId: %s", handlaggningId,
                cloudEventData.kogitoprocinstanceid());
-         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.HANDLAGGNING_READ_FAILURE, message);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, message);
          var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
@@ -396,7 +396,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var message = String.format(
                "Failed to write handlaggning update. handlaggningId: %s, kogitoprocId: %s",
                handlaggningUpdate.id(), cloudEventData.kogitoprocinstanceid());
-         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.HANDLAGGNING_WRITE_FAILURE, message);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, message);
          var exception = new RegelCancelledException(handlaggningUpdate.id(), cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
@@ -416,7 +416,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var message = String.format(
                "Failed to write CloudEventData to correlation storage. handlaggningId: %s, kogitoprocId: %s",
                handlaggningId, cloudEventData.kogitoprocinstanceid());
-         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.OTHER, message);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_CLOUD_EVENT_DATA_WRITE_FAILURE, message);
          var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
@@ -449,7 +449,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var message = String.format(
                "Failed to write ManuellRegelCommonData update to data storage. handlaggningId: %s",
                handlaggningId);
-         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.OTHER, message);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE,
+               message);
          var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
@@ -469,7 +470,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var message = String.format(
                "Failed to read ManuellRegelCommonData from data storage. handlaggningId: %s",
                handlaggningId);
-         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.OTHER, message);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_READ_FAILURE,
+               message);
          var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
@@ -488,7 +490,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var message = String.format(
                "Failed to send oul uppgift creation request. handlaggningId: %s, kogitoprocId: %s",
                oulMessageRequest.handlaggningId(), cloudEventData.kogitoprocinstanceid());
-         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.OTHER, message);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER, message);
          var exception = new RegelCancelledException(oulMessageRequest.handlaggningId(), cloudEventData, regelErrorInformation,
                message);
          exception.addSuppressed(e);

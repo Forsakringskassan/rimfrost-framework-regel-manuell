@@ -11,8 +11,8 @@ import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
-import se.fk.rimfrost.framework.regel.RegelFelkod;
 import se.fk.rimfrost.framework.regel.Utfall;
+import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
@@ -73,21 +73,24 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
    })
-   void should_not_crash_on_read_failure_during_oul_response(String handlaggningId, String uppgiftId) throws InterruptedException
+   void should_send_error_response_on_read_failure_during_oul_response(String handlaggningId, String uppgiftId,
+         Utfall expectedUtfall) throws InterruptedException
    {
       Mockito.doThrow(new IllegalStateException()).when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
-      // TODO: Any better way to verify this case?
+      var regelResponse = regelKafkaConnector.waitForRegelResponse();
+      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_READ_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -107,7 +110,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -150,7 +153,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       Thread.sleep(1000);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -173,7 +176,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       Thread.sleep(1000);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
       assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
             regelResponse.getKogitoprocinstanceid());
    }
@@ -181,13 +184,14 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
    })
-   void should_not_crash_on_read_failure_during_oul_status_update(
+   void should_send_error_response_on_read_failure_during_oul_status_update(
          String handlaggningId,
          String uppgiftId,
          String idtypTypId,
-         String idtypVarde) throws InterruptedException
+         String idtypVarde,
+         Utfall expectedUtfall) throws InterruptedException
    {
       Mockito.doThrow(new IllegalStateException()).when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
       regelKafkaConnector.sendRegelRequest(handlaggningId);
@@ -197,7 +201,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .build();
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
-      // TODO: Any better way to verify this case?
+      var regelResponse = regelKafkaConnector.waitForRegelResponse();
+      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_READ_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -225,7 +231,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -280,7 +286,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       Thread.sleep(1000);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -312,7 +318,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
 
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.OTHER, regelResponse.getData().getError().getFelkod());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
       // Verify the error response carries the kogitoprocinstanceid from the embedded OUL status attributes
       assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
             regelResponse.getKogitoprocinstanceid());
