@@ -93,6 +93,9 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    @Inject
    HandlaggningAdapter handlaggningAdapter;
 
+   @Inject
+   StorageTestCleaner storageTestCleaner;
+
    /**
     * Resets external system state before each test execution.
     *
@@ -129,6 +132,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       // Have to clear even when connectors are new, since the inMemoryConnector is not necessarily empty
       //
       oulKafkaConnector.clear();
+      storageTestCleaner.clearAll();
    }
 
    //
