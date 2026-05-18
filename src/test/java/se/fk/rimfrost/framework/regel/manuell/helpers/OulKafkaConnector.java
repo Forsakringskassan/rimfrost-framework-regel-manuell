@@ -3,12 +3,10 @@ package se.fk.rimfrost.framework.regel.manuell.helpers;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import java.util.Map;
 import java.util.UUID;
-import se.fk.rimfrost.OperativtUppgiftslagerRequestMessage;
-import se.fk.rimfrost.OperativtUppgiftslagerResponseMessage;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.Idtyp;
-import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaMapper;
+import se.fk.rimfrost.framework.oul.presentation.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.KafkaConnector;
 
 /**
@@ -45,74 +43,10 @@ public class OulKafkaConnector extends KafkaConnector
       this.oulKafkaMapper = oulKafkaMapper;
    }
 
-   public static final String oulRequestsChannel = "operativt-uppgiftslager-requests";
-   public static final String oulResponsesChannel = "operativt-uppgiftslager-responses";
    public static final String oulStatusNotificationChannel = "operativt-uppgiftslager-status-notification";
-   public static final String oulStatusControlChannel = "operativt-uppgiftslager-status-control";
 
-   /**
-    * Clears all messages from relevant OUL Kafka channels.
-    *
-    * <p>Ensures a clean state before test execution by clearing both request
-    * and status control sinks in the in-memory connector.
-    */
    public void clear()
    {
-      inMemoryConnector.sink(oulRequestsChannel).clear();
-      inMemoryConnector.sink(oulStatusControlChannel).clear();
-   }
-
-   /**
-    * Waits for and returns the first OUL request message
-    *
-    * @return the first {@link OperativtUppgiftslagerRequestMessage} received
-    */
-   public OperativtUppgiftslagerRequestMessage waitForOulRequestMessage()
-   {
-      return (OperativtUppgiftslagerRequestMessage) waitForMessages(oulRequestsChannel)
-            .getFirst().getPayload();
-   }
-
-   /**
-    * Waits for and returns the first OUL status control message
-    *
-    * @return the first {@link OperativtUppgiftslagerStatusMessage} received
-    */
-   public OperativtUppgiftslagerStatusMessage waitForOulStatusMessage()
-   {
-      return (OperativtUppgiftslagerStatusMessage) waitForMessages(oulStatusControlChannel)
-            .getFirst().getPayload();
-   }
-
-   /**
-    * Simulates an OUL response message with default test CloudEvent attributes.
-    *
-    * @param handlaggningId identifier for the handlaggning
-    * @param uppgiftId      identifier for the task
-    */
-   public void simulateOulResponse(String handlaggningId, String uppgiftId)
-   {
-      simulateOulResponse(handlaggningId, uppgiftId, testCloudeventAttributes());
-   }
-
-   /**
-    * Simulates an OUL response message with explicit CloudEvent attributes.
-    *
-    * <p>Use this overload when the test needs to verify that specific CloudEvent attributes
-    * are correctly propagated through the handler, for example by passing the attributes
-    * from the outgoing OUL request that triggered this response.
-    *
-    * @param handlaggningId       identifier for the handlaggning
-    * @param uppgiftId            identifier for the task
-    * @param cloudeventAttributes CloudEvent correlation attributes to embed in the message
-    */
-   public void simulateOulResponse(String handlaggningId, String uppgiftId, Map<String, String> cloudeventAttributes)
-   {
-      var msg = new OperativtUppgiftslagerResponseMessage();
-      msg.setHandlaggningId(handlaggningId);
-      msg.setUppgiftId(uppgiftId);
-      msg.setCloudeventAttributes(cloudeventAttributes);
-      inMemoryConnector.source(oulResponsesChannel).send(msg);
    }
 
    /**
@@ -148,7 +82,6 @@ public class OulKafkaConnector extends KafkaConnector
       msg.setStatus(status);
       msg.setUppgiftId(uppgiftId);
       msg.setHandlaggningId(handlaggningId);
-      msg.setUtforarId(oulKafkaMapper.toApiIdtyp(utforarId));
       msg.setCloudeventAttributes(cloudeventAttributes);
       inMemoryConnector.source(oulStatusNotificationChannel).send(msg);
    }

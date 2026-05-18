@@ -79,7 +79,7 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.oul</groupId>
       <artifactId>rimfrost-framework-oul</artifactId>
-      <version>1.0.3</version>
+      <version>1.0.4</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
@@ -119,6 +119,11 @@
       <groupId>io.smallrye.reactive</groupId>
       <artifactId>smallrye-reactive-messaging-in-memory</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.oul</groupId>
+      <artifactId>rimfrost-framework-oul-adapter</artifactId>
+      <version>0.0.1</version>
     </dependency>
 
     <dependency>

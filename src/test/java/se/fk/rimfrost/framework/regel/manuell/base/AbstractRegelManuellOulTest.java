@@ -1,77 +1,17 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
-import se.fk.rimfrost.framework.regel.RegelTestData;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Disabled("Base test class - not executable")
 public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTest
 {
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234"
-   })
-   void should_create_correct_oul_request(String handlaggningId)
-   {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
-      Assertions.assertEquals(handlaggningId, oulRequest.getHandlaggningId());
-      Assertions.assertEquals("TestUppgiftBeskrivning", oulRequest.getBeskrivning());
-      Assertions.assertEquals("TestUppgiftNamn", oulRequest.getRegel());
-      Assertions.assertEquals("C", oulRequest.getVerksamhetslogik());
-      Assertions.assertEquals("ANSVARIG_HANDLAGGARE", oulRequest.getRoll());
-      Assertions.assertTrue(oulRequest.getUrl().contains(basePath));
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234"
-   })
-   void should_include_cloudevent_attributes_in_oul_request(String handlaggningId)
-   {
-      var testRequest = RegelTestData.newRegelRequestMessagePayload(handlaggningId);
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
-      var attributes = oulRequest.getCloudeventAttributes();
-      Assertions.assertNotNull(attributes);
-      Assertions.assertEquals(testRequest.getId(), attributes.get("id"));
-      Assertions.assertEquals(testRequest.getKogitoprocinstanceid(), attributes.get("kogitoprocinstanceid"));
-      Assertions.assertEquals(testRequest.getKogitorootprociid(), attributes.get("kogitorootprociid"));
-      Assertions.assertEquals(testRequest.getKogitoparentprociid(), attributes.get("kogitoparentprociid"));
-      Assertions.assertEquals(testRequest.getKogitorootprocid(), attributes.get("kogitorootprocid"));
-      Assertions.assertEquals(testRequest.getKogitoprocid(), attributes.get("kogitoprocid"));
-      Assertions.assertEquals(testRequest.getKogitoprocist(), attributes.get("kogitoprocist"));
-      Assertions.assertEquals(testRequest.getKogitoprocversion(), attributes.get("kogitoprocversion"));
-      Assertions.assertNotNull(attributes.get("type"));
-      Assertions.assertNotNull(attributes.get("source"));
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
-   })
-   void should_send_oul_status_uppgift_avslutad(String handlaggningId, String uppgiftId) throws Exception
-   {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
-      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
-      sendPostRegelManuellHandlaggningDone(handlaggningId);
-      var oulStatusMessage = oulKafkaConnector.waitForOulStatusMessage();
-      Assertions.assertEquals(uppgiftId, oulStatusMessage.getUppgiftId());
-      Assertions.assertEquals(Status.AVSLUTAD, oulStatusMessage.getStatus());
-   }
-
    @ParameterizedTest
    @CsvSource(
    {
@@ -101,5 +41,4 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       assertEquals("1", handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
       assertEquals(2, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
    }
-
 }

@@ -4,8 +4,11 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+
+import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
-import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaMapper;
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
+import se.fk.rimfrost.framework.oul.presentation.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.RegelTestBase;
 import se.fk.rimfrost.framework.regel.manuell.helpers.OulKafkaConnector;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
@@ -40,31 +43,13 @@ import static io.restassured.RestAssured.given;
 public abstract class AbstractRegelManuellTest extends RegelTestBase
 {
 
-   private static final String oulRequestsChannel = "operativt-uppgiftslager-requests";
-   private static final String oulResponsesChannel = "operativt-uppgiftslager-responses";
    private static final String oulStatusNotificationChannel = "operativt-uppgiftslager-status-notification";
-   private static final String oulStatusControlChannel = "operativt-uppgiftslager-status-control";
 
    // Add protected getters so subclasses can access them
-
-   protected static String getOulRequestsChannel()
-   {
-      return oulRequestsChannel;
-   }
-
-   protected static String getOulResponsesChannel()
-   {
-      return oulResponsesChannel;
-   }
 
    protected static String getOulStatusNotificationChannel()
    {
       return oulStatusNotificationChannel;
-   }
-
-   protected static String getOulStatusControlChannel()
-   {
-      return oulStatusControlChannel;
    }
 
    /**

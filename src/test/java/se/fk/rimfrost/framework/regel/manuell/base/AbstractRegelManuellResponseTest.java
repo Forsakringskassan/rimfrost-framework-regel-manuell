@@ -21,7 +21,6 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
@@ -38,7 +37,6 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulResponse(handlaggningId, uppgiftId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), Status.NY);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
