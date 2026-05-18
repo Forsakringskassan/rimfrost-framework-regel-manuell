@@ -76,6 +76,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
          var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
                .handlaggningId(request.handlaggningId())
+               .version("1")
                .individer(
                      handlaggning.yrkande().individYrkandeRoller().stream()
                            .map(r -> toIdtyp(r.individ()))
