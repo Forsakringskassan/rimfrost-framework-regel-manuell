@@ -94,6 +94,13 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    HandlaggningAdapter handlaggningAdapter;
 
    /**
+    * Clears all framework-owned storage tables before each test to ensure isolation.
+    * Exported in the test JAR so service tests extending this class get cleanup automatically.
+    */
+   @Inject
+   StorageTestCleaner storageTestCleaner;
+
+   /**
     * Resets external system state before each test execution.
     *
     * <p>This includes:
@@ -129,6 +136,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       // Have to clear even when connectors are new, since the inMemoryConnector is not necessarily empty
       //
       oulKafkaConnector.clear();
+      storageTestCleaner.clearAll();
    }
 
    //
