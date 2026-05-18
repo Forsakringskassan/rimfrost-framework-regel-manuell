@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "cloud_event_data")
-class CloudEventDataEntity
+public class CloudEventDataEntity
 {
    @Id
    UUID handlaggningId;
