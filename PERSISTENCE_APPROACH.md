@@ -120,9 +120,17 @@ V002__service_specific.sql     service-specific tables
 ...
 ```
 
-### Execution
+### Execution — `migrate-at-start=true`
 
-`migrate-at-start=true` in all environments. Flyway's DB-level lock makes concurrent pod startups safe — the first instance migrates, others wait then skip.
+Migrations run automatically on every pod startup. Flyway acquires a DB-level lock before applying migrations, so concurrent pod starts are safe: the first instance to start runs the migrations, the others wait and then skip them once the lock is released.
+
+The main reason to move away from this in prod would be if migrations become slow enough to trigger pod startup timeouts (long-running DDL on very large tables), or if a strict zero-downtime deploy model requires the schema to be updated before the new binary is deployed.
+
+### Schema creation — `create-schemas=true`
+
+Flyway creates the schema if it does not already exist. This requires the DB user to hold `CREATE SCHEMA` privileges, which is broader than the `USAGE` + object-level permissions a restricted app user would typically have.
+
+In dev and test this is unproblematic since Dev Services runs as a superuser. In prod the implication is that the app's CloudNativePG user must have schema-creation rights, or the schema must be pre-created by infrastructure (Terraform, DBA) and this flag set to `false` for the `%prod` profile. The current setup leaves it `true` in all environments, which works as long as the DB user is the schema owner.
 
 ### Schema generation
 
