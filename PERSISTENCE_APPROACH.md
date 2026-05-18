@@ -13,7 +13,7 @@ The framework implements `ManuellRegelCommonDataStorage` and `CloudEventDataStor
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ Service code                                             │
-│   Uses storage interfaces (unchanged contract)           │
+│   Uses storage interfaces                                │
 └────────────────────────┬─────────────────────────────────┘
                          │
 ┌────────────────────────▼─────────────────────────────────┐
@@ -65,7 +65,7 @@ src/main/java/.../storage/
 # No db/migration directory — framework ships no SQL migrations
 ```
 
-Each service provides its own `src/main/resources/db/migration/` with all migrations it needs, including the framework common data tables.
+Each service provides its own `src/main/resources/db/migration/` with all migrations it needs, including the common data tables.
 
 ---
 
@@ -94,7 +94,7 @@ Framework entities have:
 | `createdAt` (Instant) | Audit |
 | `updatedAt` (Instant, updated via `@PreUpdate`) | Audit |
 
-Service entities are encouraged to follow the same convention but not required to.
+Service entities are encouraged to follow the same convention.
 
 ---
 
@@ -102,7 +102,7 @@ Service entities are encouraged to follow the same convention but not required t
 
 Panache repositories (`PanacheRepository<EntityType>`) rather than active-record style. Entities are pure data; repositories are CDI beans. Storage interface implementations delegate to repositories.
 
-Storage implementations are annotated `@Transactional`. The interface contract guarantees atomicity for single-method calls. Service code that needs wider transactions adds `@Transactional` on the calling method — Quarkus joins existing transactions automatically.
+Storage implementations are annotated `@Transactional`. A single call to a storage method is always atomic. Service code that needs wider transactions adds `@Transactional` on the calling method — Quarkus joins existing transactions automatically.
 
 ---
 
@@ -128,9 +128,9 @@ The main reason to move away from this in prod would be if migrations become slo
 
 ### Schema creation — `create-schemas=true`
 
-Flyway creates the schema if it does not already exist. This requires the DB user to hold `CREATE SCHEMA` privileges, which is broader than the `USAGE` + object-level permissions a restricted app user would typically have.
+Flyway creates the schema if it does not already exist. This requires the DB user to hold `CREATE SCHEMA` permissions, which is broader than the `USAGE` + object-level permissions a restricted app user would typically have.
 
-In dev and test this is unproblematic since Dev Services runs as a superuser. In prod the implication is that the app's CloudNativePG user must have schema-creation rights, or the schema must be pre-created by infrastructure (Terraform, DBA) and this flag set to `false` for the `%prod` profile. The current setup leaves it `true` in all environments, which works as long as the DB user is the schema owner.
+In dev and test this is not a problem since Dev Services runs as a superuser. In production the implication is that the app's CloudNativePG user must have schema-creation permissions, or the schema must be pre-created by infrastructure (Terraform, DBA) and this flag set to `false` for the `%prod` profile. The current setup leaves it `true` in all environments, which works as long as the DB user is the schema owner.
 
 ### Schema generation
 
