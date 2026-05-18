@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "manuell_regel_common_data")
+@Table(name = "common_data")
 class ManuellRegelCommonDataEntity
 {
    @Id

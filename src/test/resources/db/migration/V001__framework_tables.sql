@@ -1,4 +1,4 @@
-CREATE TABLE manuell_regel_common_data (
+CREATE TABLE framework_test_common_data (
     handlaggning_id              UUID        NOT NULL PRIMARY KEY,
     uppgift_id                   UUID        NOT NULL,
     uppgift_version              INTEGER     NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE manuell_regel_common_data (
     updated_at                   TIMESTAMPTZ NOT NULL
 );
 
-CREATE TABLE cloud_event_data (
+CREATE TABLE framework_test_cloud_event_data (
     handlaggning_id        UUID         NOT NULL PRIMARY KEY,
     event_id               UUID         NOT NULL,
     kogitorootprociid      UUID         NOT NULL,
