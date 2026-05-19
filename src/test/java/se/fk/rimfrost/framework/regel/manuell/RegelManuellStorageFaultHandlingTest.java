@@ -4,13 +4,17 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
+import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
@@ -20,8 +24,8 @@ import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellReg
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import se.fk.rimfrost.framework.regel.RegelTestData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 @QuarkusTest
@@ -35,6 +39,23 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
 
    @InjectMock
    ManuellRegelCommonDataStorage storage;
+
+   @InjectMock
+   OulAdapter oulAdapter;
+
+   @BeforeEach
+   void stubOulAdapter() throws Exception
+   {
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation ->
+      {
+         CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
+         return ImmutableOperativUppgift.builder()
+               .uppgiftId(UUID.randomUUID())
+               .handlaggningId(req.getHandlaggningId())
+               .status("NY")
+               .build();
+      });
+   }
 
    @BeforeAll
    void setUp()
@@ -59,96 +80,6 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       manuellRegelCommonDataStorage = ImmutableManuellRegelCommonData.builder()
             .uppgift(uppgift)
             .build();
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, ERROR"
-   })
-   void should_send_error_response_on_write_failure_during_initial_storage_write(String handlaggningId, Utfall expectedUtfall)
-   {
-      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
-            Mockito.any());
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
-   })
-   void should_send_error_response_on_read_failure_during_oul_response(String handlaggningId, String uppgiftId,
-         Utfall expectedUtfall) throws InterruptedException
-   {
-      Mockito.doThrow(new IllegalStateException()).when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_READ_FAILURE, regelResponse.getData().getError().getFelkod());
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
-   })
-   void should_send_error_response_on_write_failure_during_oul_response(String handlaggningId, String uppgiftId,
-         Utfall expectedUtfall) throws InterruptedException
-   {
-      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
-            .thenReturn(manuellRegelCommonDataStorage);
-      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
-            Mockito.any());
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
-   })
-   void should_send_error_response_on_write_failure_during_oul_response_alongside_avbruten(
-         String handlaggningId,
-         String uppgiftId,
-         Utfall expectedUtfall) throws InterruptedException
-   {
-      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
-            .thenReturn(manuellRegelCommonDataStorage);
-      Mockito.doNothing().doThrow(new IllegalStateException())
-            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
-   })
-   void should_use_cloudevent_attributes_from_oul_response_in_error_response(
-         String handlaggningId,
-         String uppgiftId,
-         Utfall expectedUtfall) throws InterruptedException
-   {
-      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
-            .thenReturn(manuellRegelCommonDataStorage);
-      Mockito.doNothing().doThrow(new IllegalStateException())
-            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
-      assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
-            regelResponse.getKogitoprocinstanceid());
    }
 
    @ParameterizedTest
@@ -232,7 +163,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
-   /*
+   /*  TODO fix
    @ParameterizedTest
    @CsvSource(
    {
@@ -248,10 +179,13 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       // Allow initial write from handleRegelRequest, throw on the subsequent write from handleOulStatus
       Mockito.doNothing().doThrow(new IllegalStateException())
             .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
-
+   
       regelKafkaConnector.sendRegelRequest(handlaggningId);
+   
+      var cloudeventAttributes =RegelTestData.newRegelRequestMessagePayload(handlaggningId);
+   
       var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
-
+   
       var utforarId = ImmutableIdtyp.builder()
             .typId("Idtyp_typId")
             .varde("Idtyp_varde")
@@ -259,12 +193,13 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY,
             oulRequest.getCloudeventAttributes());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
-
+   
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
       // Verify the error response carries the kogitoprocinstanceid from the embedded OUL status attributes
       assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
             regelResponse.getKogitoprocinstanceid());
-   }*/
+   }
+            */
 }

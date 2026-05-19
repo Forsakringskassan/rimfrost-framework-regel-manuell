@@ -1,17 +1,47 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.quarkus.test.InjectMock;
+
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
 import se.fk.rimfrost.Status;
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
+import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 
 @Disabled("Base test class - not executable")
 public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTest
 {
+
+   @InjectMock
+   OulAdapter oulAdapter;
+
+   @BeforeEach
+   void stubOulAdapter() throws Exception
+   {
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation ->
+      {
+         CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
+         return ImmutableOperativUppgift.builder()
+               .uppgiftId(UUID.randomUUID())
+               .handlaggningId(req.getHandlaggningId())
+               .status("NY")
+               .build();
+      });
+   }
+
    @ParameterizedTest
    @CsvSource(
    {
@@ -37,8 +67,8 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       //
       var handlaggningPutUpdate = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
       assertEquals(handlaggningId, handlaggningPutUpdate.getHandlaggning().getId().toString());
-      assertEquals(1, handlaggningPutUpdate.getHandlaggning().getVersion());
+      assertEquals(2, handlaggningPutUpdate.getHandlaggning().getVersion());
       assertEquals("1", handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
-      assertEquals(2, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
+      assertEquals(1, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
    }
 }

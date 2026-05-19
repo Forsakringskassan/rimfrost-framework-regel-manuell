@@ -1,12 +1,24 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import com.github.tomakehurst.wiremock.http.RequestMethod;
+
+import io.quarkus.test.InjectMock;
+
+import java.util.UUID;
+
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
 import se.fk.rimfrost.Status;
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
+import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+
+import static org.mockito.ArgumentMatchers.any;
 import static se.fk.rimfrost.framework.regel.WireMockHandlaggning.getUppgiftFromLastPutHandlaggning;
 import static se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestData.newHandlaggningApiIdtyp;
 import static se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestData.newHandlaggningIdtyp;
@@ -14,6 +26,23 @@ import static se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestData.n
 @Disabled("Base test class - not executable")
 public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegelManuellTest
 {
+
+   @InjectMock
+   OulAdapter oulAdapter;
+
+   @BeforeEach
+   void stubOulAdapter() throws Exception
+   {
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation ->
+      {
+         CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
+         return ImmutableOperativUppgift.builder()
+               .uppgiftId(UUID.randomUUID())
+               .handlaggningId(req.getHandlaggningId())
+               .status("NY")
+               .build();
+      });
+   }
 
    @ParameterizedTest
    @CsvSource(

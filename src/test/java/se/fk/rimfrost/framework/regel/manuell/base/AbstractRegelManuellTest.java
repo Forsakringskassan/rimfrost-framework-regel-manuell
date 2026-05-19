@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Disabled;
 
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
-import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.RegelTestBase;
 import se.fk.rimfrost.framework.regel.manuell.helpers.OulKafkaConnector;
