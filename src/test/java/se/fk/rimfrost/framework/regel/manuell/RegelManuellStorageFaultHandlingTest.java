@@ -4,7 +4,6 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
@@ -13,7 +12,6 @@ import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
-import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
@@ -43,18 +41,14 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    @InjectMock
    OulAdapter oulAdapter;
 
-   @BeforeEach
-   void stubOulAdapter() throws Exception
+   private void stubOulAdapter(UUID handlaggningId) throws Exception
    {
-      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation ->
-      {
-         CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
-         return ImmutableOperativUppgift.builder()
-               .uppgiftId(UUID.randomUUID())
-               .handlaggningId(req.getHandlaggningId())
-               .status("NY")
-               .build();
-      });
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenReturn(
+            ImmutableOperativUppgift.builder()
+                  .uppgiftId(UUID.randomUUID())
+                  .handlaggningId(handlaggningId)
+                  .status("NY")
+                  .build());
    }
 
    @BeforeAll
@@ -92,8 +86,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String uppgiftId,
          String idtypTypId,
          String idtypVarde,
-         Utfall expectedUtfall) throws InterruptedException
+         Utfall expectedUtfall) throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.doThrow(new IllegalStateException()).when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       var utforarId = ImmutableIdtyp.builder()
@@ -117,8 +112,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String uppgiftId,
          String idtypTypId,
          String idtypVarde,
-         Utfall expectedUtfall) throws InterruptedException
+         Utfall expectedUtfall) throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
             .thenReturn(manuellRegelCommonDataStorage);
       Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
@@ -145,8 +141,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String uppgiftId,
          String idtypTypId,
          String idtypVarde,
-         Utfall expectedUtfall) throws InterruptedException
+         Utfall expectedUtfall) throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
             .thenReturn(manuellRegelCommonDataStorage);
       Mockito.doNothing().doThrow(new IllegalStateException())

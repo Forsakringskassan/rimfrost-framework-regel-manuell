@@ -82,8 +82,21 @@ public class OulKafkaConnector extends KafkaConnector
       msg.setStatus(status);
       msg.setUppgiftId(uppgiftId);
       msg.setHandlaggningId(handlaggningId);
+      msg.setUtforarId(toMessageIdtyp(utforarId));
       msg.setCloudeventAttributes(cloudeventAttributes);
       inMemoryConnector.source(oulStatusNotificationChannel).send(msg);
+   }
+
+   private static se.fk.rimfrost.Idtyp toMessageIdtyp(Idtyp idtyp)
+   {
+      if (idtyp == null)
+      {
+         return null;
+      }
+      var result = new se.fk.rimfrost.Idtyp();
+      result.setTypId(idtyp.typId());
+      result.setVarde(idtyp.varde());
+      return result;
    }
 
    private static Map<String, String> testCloudeventAttributes()
