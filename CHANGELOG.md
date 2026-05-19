@@ -2,6 +2,21 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.7 (2026-05-19)
+
+### Bug Fixes
+
+-  Add waitForRegelManuellReady to AbstractRegelManuellTest ([b0238](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b023856a9384e70) Ulf Slunga)  
+
+### Other changes
+
+**Add waitForRegelManuellReady to AbstractRegelManuellTest**
+
+* Adds a shared waitForRegelManuellReady helper to the test base class, using the already-configured regel.manuell.base-path property to construct the polling URL. This allows regel implementations to drop their own local wait utilities and rely on the framework instead. 
+
+[8de83](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/8de834037189e01) Ulf Slunga *2026-05-19 06:37:14*
+
+
 ## 1.0.6 (2026-05-18)
 
 ### Bug Fixes
