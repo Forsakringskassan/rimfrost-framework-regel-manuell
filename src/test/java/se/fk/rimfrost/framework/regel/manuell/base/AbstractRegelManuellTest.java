@@ -1,6 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import jakarta.inject.Inject;
+import java.util.concurrent.TimeUnit;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -13,6 +14,7 @@ import se.fk.rimfrost.framework.regel.manuell.helpers.OulKafkaConnector;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
 import static io.restassured.RestAssured.given;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Base class for manual Regel tests
@@ -126,6 +128,13 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    //
    // Rest assured helpers
    //
+
+   protected void waitForRegelManuellReady(String handlaggningId)
+   {
+      await().atMost(5, TimeUnit.SECONDS)
+            .until(() -> given().when().get(basePath() + "/{handlaggningId}", handlaggningId)
+                  .getStatusCode() == 200);
+   }
 
    protected void sendPostRegelManuellHandlaggningDone(String handlaggningId)
    {

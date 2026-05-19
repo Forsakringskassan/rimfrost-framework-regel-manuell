@@ -2,6 +2,37 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.7 (2026-05-19)
+
+### Bug Fixes
+
+-  Add waitForRegelManuellReady to AbstractRegelManuellTest ([b0238](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b023856a9384e70) Ulf Slunga)  
+
+### Other changes
+
+**Add waitForRegelManuellReady to AbstractRegelManuellTest**
+
+* Adds a shared waitForRegelManuellReady helper to the test base class, using the already-configured regel.manuell.base-path property to construct the polling URL. This allows regel implementations to drop their own local wait utilities and rely on the framework instead. 
+
+[8de83](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/8de834037189e01) Ulf Slunga *2026-05-19 06:37:14*
+
+
+## 1.0.6 (2026-05-18)
+
+### Bug Fixes
+
+-  public data entities ([29023](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/29023abd821c09e) Ulf Slunga)  
+-  initial approach för persistent lagring av reglers data ([2be44](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2be44aa72ad0328) Ulf Slunga)  
+-  **deps**  update dependency org.yaml:snakeyaml to v2.6 ([45bb2](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/45bb20562ee0e49) renovate[bot])  
+
+### Other changes
+
+**tabellnamn blir regel-specifika, specas i application.properties**
+
+
+[4e05c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/4e05c8d4c98bb73) Ulf Slunga *2026-05-18 11:31:16*
+
+
 ## 1.0.5 (2026-05-12)
 
 ### Bug Fixes

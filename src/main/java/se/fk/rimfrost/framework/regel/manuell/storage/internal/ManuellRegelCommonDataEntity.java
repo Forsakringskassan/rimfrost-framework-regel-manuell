@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "common_data")
-class ManuellRegelCommonDataEntity
+public class ManuellRegelCommonDataEntity
 {
    @Id
    UUID handlaggningId;
