@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
@@ -66,7 +65,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .aktivitetId(UUID.randomUUID())
             .skapadTs(OffsetDateTime.now())
             .planeradTs(OffsetDateTime.now())
-            .uppgiftStatus("1")
+            .uppgiftStatus(uppgiftStatusProvider.getPlaneradId())
             .fSSAinformation("FSSAinformation.HANDLAGGNING_PAGAR")
             .uppgiftSpecifikation(uppgiftSpecification)
             .build();
@@ -95,7 +94,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -124,7 +123,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -153,7 +152,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
       Thread.sleep(1000);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());

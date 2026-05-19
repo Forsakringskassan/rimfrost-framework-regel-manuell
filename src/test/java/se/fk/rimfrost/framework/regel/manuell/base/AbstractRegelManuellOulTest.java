@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
 import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
@@ -61,14 +60,14 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
       //
       // verify PUT handlaggning
       //
       var handlaggningPutUpdate = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
       assertEquals(handlaggningId, handlaggningPutUpdate.getHandlaggning().getId().toString());
-      assertEquals(2, handlaggningPutUpdate.getHandlaggning().getVersion());
-      assertEquals("1", handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
-      assertEquals(1, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
+      assertEquals(1, handlaggningPutUpdate.getHandlaggning().getVersion());
+      assertEquals(uppgiftStatusProvider.getPlaneradId(), handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
+      assertEquals(2, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
    }
 }

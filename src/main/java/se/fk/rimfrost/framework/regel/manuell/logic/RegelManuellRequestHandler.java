@@ -9,7 +9,6 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.*;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
@@ -128,10 +127,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
          if (commonRegelData == null)
          {
+
             /* This may happen if commonRegelData was cleaned up during handleUppgiftDone
              * and a notification was sent to OUL that the task was finished.
              */
-            if (!Objects.equals(oulStatus.uppgiftStatus(), Status.AVSLUTAD.getValue()))
+
+            if (!Objects.equals(oulStatus.uppgiftStatus(), uppgiftStatusProvider.getAvslutadId()))
             {
                LOGGER.error(
                      "CommonRegelData for handlaggningId {} was not found during OUL status update for uppgift {} with uppgiftStatus {}",

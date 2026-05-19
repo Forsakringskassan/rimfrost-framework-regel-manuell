@@ -4,7 +4,6 @@ import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import java.util.Map;
 import java.util.UUID;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.Idtyp;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.KafkaConnector;
@@ -57,7 +56,7 @@ public class OulKafkaConnector extends KafkaConnector
     * @param utforarId      utforare identifier
     * @param status         current status
     */
-   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, Status status)
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, String status)
    {
       simulateOulStatus(handlaggningId, uppgiftId, utforarId, status, testCloudeventAttributes());
    }
@@ -75,7 +74,7 @@ public class OulKafkaConnector extends KafkaConnector
     * @param status              current status
     * @param cloudeventAttributes CloudEvent correlation attributes to embed in the message
     */
-   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, Status status,
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, String status,
          Map<String, String> cloudeventAttributes)
    {
       var msg = new OperativtUppgiftslagerStatusMessage();

@@ -5,7 +5,6 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
@@ -67,7 +66,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
       //
       // verify response
       //
@@ -96,7 +95,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
       //
       // verify response
       //
