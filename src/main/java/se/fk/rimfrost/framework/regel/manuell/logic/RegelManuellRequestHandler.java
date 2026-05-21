@@ -6,18 +6,21 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.fk.rimfrost.Status;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.*;
-import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaProducer;
-import se.fk.rimfrost.framework.oul.integration.kafka.dto.ImmutableOulMessageRequest;
-import se.fk.rimfrost.framework.oul.integration.kafka.dto.OulMessageRequest;
-import se.fk.rimfrost.framework.oul.logic.dto.OulResponse;
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
+import se.fk.rimfrost.framework.oul.exception.OulException;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
-import se.fk.rimfrost.framework.oul.presentation.kafka.OulHandlerInterface;
+import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.oul.model.ImmutableCreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.oul.model.OperativUppgift;
+import se.fk.rimfrost.framework.oul.logic.OulHandlerInterface;
+import se.fk.rimfrost.framework.oul.presentation.kafka.OulMessageHandler;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
@@ -29,7 +32,6 @@ import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStor
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
-import se.fk.rimfrost.framework.uppgiftstatusprovider.UppgiftStatusProvider;
 
 @SuppressWarnings("unused")
 @ApplicationScoped
@@ -42,16 +44,13 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    String oulReplyToSubTopic;
 
    @Inject
-   protected OulKafkaProducer oulKafkaProducer;
-
-   @Inject
    ManuellRegelCommonDataStorage dataStorage;
 
    @Inject
    CloudEventDataStorage cloudEventDataStorage;
 
    @Inject
-   UppgiftStatusProvider uppgiftStatusProvider;
+   OulAdapter oulAdapter;
 
    @Override
    public void handleRegelRequest(RegelDataRequest request)
@@ -59,21 +58,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       try
       {
          var cloudevent = createCloudEvent(request);
-         var uppgift = createUppgift(request.aktivitetId());
          var handlaggning = getHandlaggning(request.handlaggningId(), cloudevent);
-         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
-               handlaggning.version() + 1);
-         updateHandlaggning(handlaggningUpdate, cloudevent);
-         writeCloudEventData(request.handlaggningId(), cloudevent);
 
-         var commonRegelData = ImmutableManuellRegelCommonData.builder()
-               .uppgift(uppgift)
-               .build();
-
-         writeManuellRegelCommonData(request.handlaggningId(), commonRegelData);
-
-         var oulMessageRequest = ImmutableOulMessageRequest.builder()
+         var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
                .handlaggningId(request.handlaggningId())
+               .version("1")
                .individer(
                      handlaggning.yrkande().individYrkandeRoller().stream()
                            .map(r -> toIdtyp(r.individ()))
@@ -83,62 +72,55 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
                .roll(regelConfig.getSpecifikation().getRoll())
                .url(regelConfig.getUppgift().getPath())
-               .replyToTopic(oulReplyToSubTopic)
+               .subTopic(oulReplyToSubTopic)
                .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
                .build();
 
-         sendOULRequest(oulMessageRequest, cloudevent);
+         var operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
+         var uppgift = createUppgift(request.aktivitetId(), operativUppgift.getStatus());
+
+         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
+               handlaggning.version() + 1);
+         updateHandlaggning(handlaggningUpdate, cloudevent, operativUppgift.getUppgiftId());
+         writeCloudEventData(request.handlaggningId(), cloudevent, operativUppgift.getUppgiftId());
+
+         var commonRegelData = ImmutableManuellRegelCommonData.builder()
+               .uppgift(uppgift)
+               .oulUppgiftId(operativUppgift.getUppgiftId())
+               .build();
+
+         writeManuellRegelCommonData(request.handlaggningId(), operativUppgift.getUppgiftId(), commonRegelData);
       }
       catch (RegelCancelledException e)
       {
          LOGGER.error("Regel run cancelled due to error", e);
 
+         if (e.getUppgiftId() != null)
+         {
+            tryEndOperativUppgift(e.getUppgiftId(), "Internal error");
+         }
          sendErrorResponse(e.getHandlaggningId(), e.getCloudEventData(), e.getRegelErrorInformation());
          return;
       }
    }
 
-   private se.fk.rimfrost.framework.oul.logic.dto.Idtyp toIdtyp(Idtyp idtyp)
+   private se.fk.rimfrost.framework.oul.model.Idtyp toIdtyp(Idtyp idtyp)
    {
-      return se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp.builder()
+      return se.fk.rimfrost.framework.oul.model.ImmutableIdtyp.builder()
             .typId(idtyp.typId())
             .varde(idtyp.varde())
             .build();
    }
 
-   @Override
-   public void handleOulResponse(OulResponse oulResponse)
+   private void tryEndOperativUppgift(UUID uppgiftId, String reason)
    {
-      CloudEventData cloudEventData = null;
       try
       {
-         cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulResponse.cloudeventAttributes());
-
-         ManuellRegelCommonData commonRegelData = readManuellRegelCommonData(oulResponse.handlaggningId());
-
-         var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
-               .from(commonRegelData)
-               .oulUppgiftId(oulResponse.uppgiftId())
-               .build();
-
-         writeManuellRegelCommonData(oulResponse.handlaggningId(), updatedCommonRegelData);
+         oulAdapter.endOperativUppgift(uppgiftId, reason);
       }
-      catch (RegelCancelledException e)
+      catch (OulException e)
       {
-         LOGGER.error("Regel run in handleOulResponse cancelled due to error", e);
-
-         try
-         {
-            oulKafkaProducer.sendOulStatusUpdate(oulResponse.uppgiftId(), Status.AVBRUTEN);
-         }
-         catch (Exception oulException)
-         {
-            LOGGER.error("handleOulResponse failed to send AVBRUTEN status to OUL for uppgiftId: {}", oulResponse.uppgiftId(),
-                  oulException);
-         }
-
-         sendErrorResponse(e.getHandlaggningId(), cloudEventData, e.getRegelErrorInformation());
-         return;
+         LOGGER.error("Could not end operativ uppgift with id {}", uppgiftId);
       }
    }
 
@@ -151,21 +133,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulStatus.cloudeventAttributes());
 
          ManuellRegelCommonData commonRegelData = readManuellRegelCommonData(oulStatus.handlaggningId());
-
-         if (commonRegelData == null)
-         {
-            /* This may happen if commonRegelData was cleaned up during handleUppgiftDone
-             * and a notification was sent to OUL that the task was finished.
-             */
-            if (!Objects.equals(oulStatus.uppgiftStatus(), se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD))
-            {
-               LOGGER.error(
-                     "CommonRegelData for handlaggningId {} was not found during OUL status update for uppgift {} with uppgiftStatus {}",
-                     oulStatus.handlaggningId(), oulStatus.uppgiftId(), oulStatus.uppgiftStatus());
-            }
-
-            return;
-         }
          var uppgift = commonRegelData.uppgift();
          Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), cloudEventData);
 
@@ -173,7 +140,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .from(uppgift)
                .version(uppgift.version() + 1)
                .utforarId(toHandlaggningModelIdtyp(Objects.requireNonNull(oulStatus.utforarId())))
-               .uppgiftStatus(toUppgiftStatus(oulStatus.uppgiftStatus()))
+               .uppgiftStatus(oulStatus.uppgiftStatus())
                .build();
 
          var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
@@ -184,24 +151,14 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .uppgift(updatedUppgift)
                .build();
 
-         writeManuellRegelCommonData(oulStatus.handlaggningId(), updatedCommonRegelData);
+         writeManuellRegelCommonData(oulStatus.handlaggningId(), commonRegelData.oulUppgiftId(), updatedCommonRegelData);
 
-         updateHandlaggning(handlaggningUpdate, cloudEventData);
+         updateHandlaggning(handlaggningUpdate, cloudEventData, commonRegelData.oulUppgiftId());
       }
       catch (RegelCancelledException e)
       {
          LOGGER.error("Regel run in handleOulStatus cancelled due to error", e);
-
-         try
-         {
-            oulKafkaProducer.sendOulStatusUpdate(oulStatus.uppgiftId(), Status.AVBRUTEN);
-         }
-         catch (Exception oulException)
-         {
-            LOGGER.error("handleOulStatus failed to send AVBRUTEN status to OUL for uppgiftId: {}", oulStatus.uppgiftId(),
-                  oulException);
-         }
-
+         tryEndOperativUppgift(oulStatus.uppgiftId(), "Internal error");
          sendErrorResponse(e.getHandlaggningId(), cloudEventData, e.getRegelErrorInformation());
          return;
       }
@@ -223,24 +180,26 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage(), e);
       }
 
+      Handlaggning handlaggning;
       try
       {
-         var handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
-         var uppgift = commonRegelData.uppgift();
-
-         var updatedUppgift = ImmutableUppgift.builder()
-               .from(uppgift)
-               .version(uppgift.version() + 1)
-               .uppgiftStatus(uppgiftStatusProvider.getAvslutadId())
-               .build();
-
-         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
-               handlaggning.version());
-         handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
+         handlaggning = handlaggningAdapter.readHandlaggning(handlaggningId);
       }
       catch (HandlaggningException e)
       {
          LOGGER.error("Error in handleUppgiftDone() while trying to update handlaggning with id: {}", handlaggningId, e);
+         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+      }
+
+      OperativUppgift operativUppgift;
+      try
+      {
+         operativUppgift = oulAdapter.endOperativUppgift(commonRegelData.oulUppgiftId(), "Uppgift klar");
+      }
+      catch (OulException e)
+      {
+         LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}", handlaggningId,
+               e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
 
@@ -270,17 +229,33 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
       try
       {
-         oulKafkaProducer.sendOulStatusUpdate(commonRegelData.oulUppgiftId(), Status.AVSLUTAD);
+         var uppgift = commonRegelData.uppgift();
+         var updatedUppgift = ImmutableUppgift.builder()
+               .from(uppgift)
+               .version(uppgift.version() + 1)
+               .uppgiftStatus(operativUppgift.getStatus())
+               .build();
+         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
+               handlaggning.version());
+         handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
       }
       catch (Exception e)
       {
          delayedException.addSuppressed(e);
       }
-
       if (delayedException.getSuppressed().length > 0)
       {
          throw delayedException;
       }
+   }
+
+   private Status toHttpStatus(OulException e) {
+      return switch (e.getErrorType()) {
+         case NOT_FOUND -> Response.Status.NOT_FOUND;
+         case BAD_REQUEST -> Response.Status.BAD_REQUEST;
+         case SERVICE_UNAVAILABLE -> Response.Status.SERVICE_UNAVAILABLE;
+         default -> Response.Status.INTERNAL_SERVER_ERROR;
+      };
    }
 
    private static Response.Status toHttpStatus(HandlaggningException e) {
@@ -307,7 +282,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .build();
    }
 
-   private Uppgift createUppgift(UUID aktivitetId)
+   private Uppgift createUppgift(UUID aktivitetId, String status)
    {
       return ImmutableUppgift.builder()
             .id(UUID.randomUUID())
@@ -315,7 +290,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .aktivitetId(aktivitetId)
             .skapadTs(OffsetDateTime.now())
             .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
-            .uppgiftStatus(uppgiftStatusProvider.getPlaneradId())
+            .uppgiftStatus(status)
             .fSSAinformation("FSSAinformation.HANDLAGGNING_PAGAR") // TODO
             .uppgiftSpecifikation(createUppgiftSpecifikation())
             .build();
@@ -335,11 +310,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .typId(idtyp.typId())
             .varde(idtyp.varde())
             .build();
-   }
-
-   private String toUppgiftStatus(se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus uppgiftStatus)
-   {
-      return switch(uppgiftStatus){case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.NY->uppgiftStatusProvider.getPlaneradId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.TILLDELAD->uppgiftStatusProvider.getTilldeladId();case se.fk.rimfrost.framework.oul.logic.dto.UppgiftStatus.AVSLUTAD->uppgiftStatusProvider.getAvslutadId();default->throw new IllegalArgumentException("Unsupported uppgift status: "+uppgiftStatus);};
    }
 
    private void sendErrorResponse(UUID handlaggningId, CloudEventData cloudEventData,
@@ -385,7 +355,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate,
-         CloudEventData cloudEventData)
+         CloudEventData cloudEventData, UUID uppgiftId)
    {
       try
       {
@@ -397,7 +367,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                "Failed to write handlaggning update. handlaggningId: %s, kogitoprocId: %s",
                handlaggningUpdate.id(), cloudEventData.kogitoprocinstanceid());
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, message);
-         var exception = new RegelCancelledException(handlaggningUpdate.id(), cloudEventData, regelErrorInformation, message);
+         var exception = new RegelCancelledException(handlaggningUpdate.id(), uppgiftId, cloudEventData, regelErrorInformation,
+               message);
          exception.addSuppressed(e);
 
          throw exception;
@@ -405,7 +376,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    private void writeCloudEventData(UUID handlaggningId,
-         CloudEventData cloudEventData)
+         CloudEventData cloudEventData, UUID uppgiftId)
    {
       try
       {
@@ -417,7 +388,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                "Failed to write CloudEventData to correlation storage. handlaggningId: %s, kogitoprocId: %s",
                handlaggningId, cloudEventData.kogitoprocinstanceid());
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_CLOUD_EVENT_DATA_WRITE_FAILURE, message);
-         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
+         var exception = new RegelCancelledException(handlaggningId, uppgiftId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
          throw exception;
@@ -437,7 +408,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
-   private void writeManuellRegelCommonData(UUID handlaggningId, ManuellRegelCommonData manuellRegelCommonData)
+   private void writeManuellRegelCommonData(UUID handlaggningId, UUID uppgiftId, ManuellRegelCommonData manuellRegelCommonData)
    {
       try
       {
@@ -451,7 +422,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                handlaggningId);
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE,
                message);
-         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
+         var exception = new RegelCancelledException(handlaggningId, uppgiftId, cloudEventData, regelErrorInformation, message);
          exception.addSuppressed(e);
 
          throw exception;
@@ -479,19 +450,19 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
-   private void sendOULRequest(OulMessageRequest oulMessageRequest, CloudEventData cloudEventData)
+   private OperativUppgift createOperativUppgift(CreateOperativUppgiftRequest oulRequest, CloudEventData cloudEventData)
    {
       try
       {
-         oulKafkaProducer.sendOulRequest(oulMessageRequest);
+         return oulAdapter.createOperativUppgift(oulRequest);
       }
-      catch (IllegalStateException e)
+      catch (OulException e)
       {
          var message = String.format(
-               "Failed to send oul uppgift creation request. handlaggningId: %s, kogitoprocId: %s",
-               oulMessageRequest.handlaggningId(), cloudEventData.kogitoprocinstanceid());
+               "Failed to create operativ uppgift. handlaggningId: %s, kogitoprocId: %s reason: %s",
+               oulRequest.getHandlaggningId(), cloudEventData.kogitoprocinstanceid(), e.getMessage());
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER, message);
-         var exception = new RegelCancelledException(oulMessageRequest.handlaggningId(), cloudEventData, regelErrorInformation,
+         var exception = new RegelCancelledException(oulRequest.getHandlaggningId(), cloudEventData, regelErrorInformation,
                message);
          exception.addSuppressed(e);
 

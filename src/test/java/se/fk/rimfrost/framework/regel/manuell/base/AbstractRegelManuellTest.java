@@ -5,12 +5,14 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+
+import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
-import se.fk.rimfrost.framework.oul.integration.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.RegelTestBase;
 import se.fk.rimfrost.framework.regel.manuell.helpers.OulKafkaConnector;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
+import se.fk.rimfrost.framework.uppgiftstatusprovider.UppgiftStatusProvider;
 import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 
@@ -42,31 +44,13 @@ import static org.awaitility.Awaitility.await;
 public abstract class AbstractRegelManuellTest extends RegelTestBase
 {
 
-   private static final String oulRequestsChannel = "operativt-uppgiftslager-requests";
-   private static final String oulResponsesChannel = "operativt-uppgiftslager-responses";
    private static final String oulStatusNotificationChannel = "operativt-uppgiftslager-status-notification";
-   private static final String oulStatusControlChannel = "operativt-uppgiftslager-status-control";
 
    // Add protected getters so subclasses can access them
-
-   protected static String getOulRequestsChannel()
-   {
-      return oulRequestsChannel;
-   }
-
-   protected static String getOulResponsesChannel()
-   {
-      return oulResponsesChannel;
-   }
 
    protected static String getOulStatusNotificationChannel()
    {
       return oulStatusNotificationChannel;
-   }
-
-   protected static String getOulStatusControlChannel()
-   {
-      return oulStatusControlChannel;
    }
 
    /**
@@ -81,12 +65,6 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    {
       return basePath;
    }
-
-   /**
-    * Mapper used to convert between domain and API ID types for OUL messages.
-    */
-   @Inject
-   OulKafkaMapper oulKafkaMapper;
 
    /**
     * Adapter for handling case/handling operations in test scenarios.
@@ -132,12 +110,11 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       server.resetRequests();
       if (oulKafkaConnector == null)
       {
-         oulKafkaConnector = new OulKafkaConnector(inMemoryConnector, oulKafkaMapper);
+         oulKafkaConnector = new OulKafkaConnector(inMemoryConnector);
       }
       //
       // Have to clear even when connectors are new, since the inMemoryConnector is not necessarily empty
       //
-      oulKafkaConnector.clear();
       storageTestCleaner.clearAll();
    }
 
