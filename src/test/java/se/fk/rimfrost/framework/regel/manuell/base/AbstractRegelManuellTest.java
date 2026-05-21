@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Disabled;
 
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
-import se.fk.rimfrost.framework.oul.presentation.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.RegelTestBase;
 import se.fk.rimfrost.framework.regel.manuell.helpers.OulKafkaConnector;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
@@ -68,12 +67,6 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    }
 
    /**
-    * Mapper used to convert between domain and API ID types for OUL messages.
-    */
-   @Inject
-   OulKafkaMapper oulKafkaMapper;
-
-   /**
     * Adapter for handling case/handling operations in test scenarios.
     */
    @SuppressWarnings("unused")
@@ -86,13 +79,6 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
     */
    @Inject
    StorageTestCleaner storageTestCleaner;
-
-   /**
-    * Provides the local uppgift status IDs (planerad / tilldelad / avslutad) used by both the
-    * production code under test and the test scenarios that simulate OUL status notifications.
-    */
-   @Inject
-   protected UppgiftStatusProvider uppgiftStatusProvider;
 
    /**
     * Resets external system state before each test execution.
@@ -124,12 +110,11 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       server.resetRequests();
       if (oulKafkaConnector == null)
       {
-         oulKafkaConnector = new OulKafkaConnector(inMemoryConnector, oulKafkaMapper);
+         oulKafkaConnector = new OulKafkaConnector(inMemoryConnector);
       }
       //
       // Have to clear even when connectors are new, since the inMemoryConnector is not necessarily empty
       //
-      oulKafkaConnector.clear();
       storageTestCleaner.clearAll();
    }
 

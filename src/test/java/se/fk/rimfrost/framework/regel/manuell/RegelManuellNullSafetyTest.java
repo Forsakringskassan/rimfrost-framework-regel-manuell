@@ -14,6 +14,7 @@ import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.oul.model.OperativUppgift;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
+import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -39,9 +40,14 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
                .handlaggningId(req.getHandlaggningId())
-               .status("NY")
+               .status(RegelManuellTestStatus.PLANERAD.name())
                .build();
       });
+      Mockito.when(oulAdapter.endOperativUppgift(any(), any())).thenAnswer(invocation -> ImmutableOperativUppgift.builder()
+            .uppgiftId(UUID.randomUUID())
+            .handlaggningId(UUID.randomUUID())
+            .status(RegelManuellTestStatus.AVSLUTAD.name())
+            .build());
    }
 
    @ParameterizedTest
@@ -62,7 +68,7 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
 
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId,
-            uppgiftStatusProvider.getPlaneradId(), null);
+            RegelManuellTestStatus.PLANERAD, null);
       Thread.sleep(1000);
 
       sendPostRegelManuellHandlaggningDone(handlaggningId);
@@ -93,7 +99,7 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
 
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId,
-            uppgiftStatusProvider.getPlaneradId());
+            RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000);
 
       sendPostRegelManuellHandlaggningDone(handlaggningId);

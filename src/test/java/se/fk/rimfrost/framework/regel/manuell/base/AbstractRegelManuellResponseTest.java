@@ -33,9 +33,14 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
                .handlaggningId(req.getHandlaggningId())
-               .status("NY")
+               .status(RegelManuellTestStatus.PLANERAD.name())
                .build();
       });
+      Mockito.when(oulAdapter.endOperativUppgift(any(), any())).thenAnswer(invocation -> ImmutableOperativUppgift.builder()
+            .uppgiftId(UUID.randomUUID())
+            .handlaggningId(UUID.randomUUID())
+            .status(RegelManuellTestStatus.AVSLUTAD.name())
+            .build());
    }
 
    @ParameterizedTest
@@ -48,7 +53,7 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            uppgiftStatusProvider.getPlaneradId());
+            RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -65,7 +70,7 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            uppgiftStatusProvider.getPlaneradId());
+            RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();

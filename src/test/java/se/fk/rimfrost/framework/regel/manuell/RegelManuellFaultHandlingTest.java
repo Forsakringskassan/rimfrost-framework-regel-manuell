@@ -1,17 +1,27 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
+
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
+import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
+import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+
+import java.util.UUID;
 
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -20,13 +30,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 })
 public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
 {
+
+@InjectMock
+   OulAdapter oulAdapter;
+
+private void stubOulAdapter(UUID handlaggningId) throws Exception
+   {
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenReturn(
+            ImmutableOperativUppgift.builder()
+                  .uppgiftId(UUID.randomUUID())
+                  .handlaggningId(handlaggningId)
+                  .status("NY")
+                  .build());
+   }
+
    @ParameterizedTest
    @CsvSource(
    {
          "5367f6b8-cc4a-11f0-8de9-199901014444, ERROR"
    })
-   void should_send_error_response_on_initial_handlaggning_read_failure(String handlaggningId, Utfall expectedUtfall)
+   void should_send_error_response_on_initial_handlaggning_read_failure(String handlaggningId, Utfall expectedUtfall) throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -38,8 +63,9 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901015555, ERROR"
    })
-   void should_send_error_response_on_initial_handlaggning_write_failure(String handlaggningId, Utfall expectedUtfall)
+   void should_send_error_response_on_initial_handlaggning_write_failure(String handlaggningId, Utfall expectedUtfall) throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -66,7 +92,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
       //
       // verify response
       //
@@ -85,8 +111,9 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
          String uppgiftId,
          String idtypTypId,
          String idtypVarde,
-         Utfall expectedUtfall) throws JsonProcessingException
+         Utfall expectedUtfall) throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       //
       // mock status update from OUL
@@ -95,7 +122,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
       //
       // verify response
       //

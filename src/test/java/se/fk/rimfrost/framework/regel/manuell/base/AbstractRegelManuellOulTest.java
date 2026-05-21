@@ -106,14 +106,14 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
       //
       // verify PUT handlaggning
       //
       var handlaggningPutUpdate = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
       assertEquals(handlaggningId, handlaggningPutUpdate.getHandlaggning().getId().toString());
       assertEquals(1, handlaggningPutUpdate.getHandlaggning().getVersion());
-      assertEquals(uppgiftStatusProvider.getPlaneradId(),
+      assertEquals(RegelManuellTestStatus.PLANERAD.name(),
             handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
       assertEquals(2, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
    }

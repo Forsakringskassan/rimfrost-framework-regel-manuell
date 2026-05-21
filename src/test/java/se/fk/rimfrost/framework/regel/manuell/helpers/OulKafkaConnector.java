@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.UUID;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
 import se.fk.rimfrost.framework.oul.logic.dto.Idtyp;
-import se.fk.rimfrost.framework.oul.presentation.kafka.OulKafkaMapper;
 import se.fk.rimfrost.framework.regel.KafkaConnector;
+import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 
 /**
  * Test utility connector for interacting with Operativt Uppgiftslager (OUL)
@@ -33,20 +33,12 @@ import se.fk.rimfrost.framework.regel.KafkaConnector;
 public class OulKafkaConnector extends KafkaConnector
 {
 
-   private final OulKafkaMapper oulKafkaMapper;
-
-   public OulKafkaConnector(InMemoryConnector inMemoryConnector,
-         OulKafkaMapper oulKafkaMapper)
+   public OulKafkaConnector(InMemoryConnector inMemoryConnector)
    {
       super(inMemoryConnector);
-      this.oulKafkaMapper = oulKafkaMapper;
    }
 
    public static final String oulStatusNotificationChannel = "operativt-uppgiftslager-status-notification";
-
-   public void clear()
-   {
-   }
 
    /**
     * Simulates an OUL status notification message with default test CloudEvent attributes.
@@ -56,7 +48,7 @@ public class OulKafkaConnector extends KafkaConnector
     * @param utforarId      utforare identifier
     * @param status         current status
     */
-   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, String status)
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, RegelManuellTestStatus status)
    {
       simulateOulStatus(handlaggningId, uppgiftId, utforarId, status, testCloudeventAttributes());
    }
@@ -74,11 +66,11 @@ public class OulKafkaConnector extends KafkaConnector
     * @param status              current status
     * @param cloudeventAttributes CloudEvent correlation attributes to embed in the message
     */
-   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, String status,
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, RegelManuellTestStatus status,
          Map<String, String> cloudeventAttributes)
    {
       var msg = new OperativtUppgiftslagerStatusMessage();
-      msg.setStatus(status);
+      msg.setStatus(status.name());
       msg.setUppgiftId(uppgiftId);
       msg.setHandlaggningId(handlaggningId);
       msg.setUtforarId(toMessageIdtyp(utforarId));

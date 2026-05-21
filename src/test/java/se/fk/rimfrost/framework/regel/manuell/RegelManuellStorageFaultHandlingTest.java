@@ -18,6 +18,7 @@ import se.fk.rimfrost.framework.regel.RegelTestData;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
+import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
@@ -68,7 +69,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .aktivitetId(UUID.randomUUID())
             .skapadTs(OffsetDateTime.now())
             .planeradTs(OffsetDateTime.now())
-            .uppgiftStatus(uppgiftStatusProvider.getPlaneradId())
+            .uppgiftStatus(RegelManuellTestStatus.PLANERAD.name())
             .fSSAinformation("FSSAinformation.HANDLAGGNING_PAGAR")
             .uppgiftSpecifikation(uppgiftSpecification)
             .build();
@@ -84,7 +85,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          "5367f6b8-cc4a-11f0-8de9-199901011234, ERROR"
    })
    void should_send_error_response_on_write_failure_during_initial_storage_write(String handlaggningId, Utfall expectedUtfall)
+         throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       regelKafkaConnector.sendRegelRequest(handlaggningId);
@@ -112,7 +115,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -141,7 +144,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -170,7 +173,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -204,7 +207,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId("Idtyp_typId")
             .varde("Idtyp_varde")
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId(),
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD,
             cloudeventAttributes);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
 

@@ -37,9 +37,14 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
                .handlaggningId(req.getHandlaggningId())
-               .status("NY")
+               .status(RegelManuellTestStatus.PLANERAD.name())
                .build();
       });
+      Mockito.when(oulAdapter.endOperativUppgift(any(), any())).thenAnswer(invocation -> ImmutableOperativUppgift.builder()
+            .uppgiftId(UUID.randomUUID())
+            .handlaggningId(UUID.randomUUID())
+            .status(RegelManuellTestStatus.AVSLUTAD.name())
+            .build());
    }
 
    @ParameterizedTest
@@ -64,10 +69,10 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            uppgiftStatusProvider.getPlaneradId());
+            RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
-      Assertions.assertEquals(uppgiftStatusProvider.getPlaneradId(), uppgift.getUppgiftStatus());
+      Assertions.assertEquals(RegelManuellTestStatus.PLANERAD.name(), uppgift.getUppgiftStatus());
    }
 
    @ParameterizedTest
@@ -80,11 +85,11 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            uppgiftStatusProvider.getTilldeladId());
+            RegelManuellTestStatus.TILLDELAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
-      Assertions.assertEquals(uppgiftStatusProvider.getAvslutadId(), uppgift.getUppgiftStatus());
+      Assertions.assertEquals(RegelManuellTestStatus.AVSLUTAD.name(), uppgift.getUppgiftStatus());
    }
 
    @ParameterizedTest
@@ -97,7 +102,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            uppgiftStatusProvider.getPlaneradId());
+            RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
