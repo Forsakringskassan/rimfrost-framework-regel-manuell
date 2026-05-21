@@ -6,12 +6,15 @@ import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
+import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
+import se.fk.rimfrost.framework.regel.RegelTestData;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
@@ -73,6 +76,21 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       manuellRegelCommonDataStorage = ImmutableManuellRegelCommonData.builder()
             .uppgift(uppgift)
             .build();
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, ERROR"
+   })
+   void should_send_error_response_on_write_failure_during_initial_storage_write(String handlaggningId, Utfall expectedUtfall)
+   {
+      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+            Mockito.any());
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var regelResponse = regelKafkaConnector.waitForRegelResponse();
+      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
+      assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
    @ParameterizedTest
@@ -159,7 +177,6 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
    }
 
-   /*  TODO fix
    @ParameterizedTest
    @CsvSource(
    {
@@ -168,26 +185,27 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    void should_use_cloudevent_attributes_from_oul_status_in_error_response(
          String handlaggningId,
          String uppgiftId,
-         Utfall expectedUtfall) throws InterruptedException
+         Utfall expectedUtfall) throws Exception
    {
+      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
             .thenReturn(manuellRegelCommonDataStorage);
       // Allow initial write from handleRegelRequest, throw on the subsequent write from handleOulStatus
       Mockito.doNothing().doThrow(new IllegalStateException())
             .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
-   
+
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-   
-      var cloudeventAttributes =RegelTestData.newRegelRequestMessagePayload(handlaggningId);
-   
-      var oulRequest = oulKafkaConnector.waitForOulRequestMessage();
-   
+
+      var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
+      Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
+      var cloudeventAttributes = oulRequestCaptor.getValue().getCloudeventAttributes();
+
       var utforarId = ImmutableIdtyp.builder()
             .typId("Idtyp_typId")
             .varde("Idtyp_varde")
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, Status.NY,
-            oulRequest.getCloudeventAttributes());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId(),
+            cloudeventAttributes);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
    
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -197,5 +215,4 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
             regelResponse.getKogitoprocinstanceid());
    }
-            */
 }
