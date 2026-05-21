@@ -32,8 +32,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    @BeforeEach
    void stubOulAdapter() throws Exception
    {
-      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation ->
-      {
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation -> {
          CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
@@ -64,7 +63,8 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
+            uppgiftStatusProvider.getPlaneradId());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals(uppgiftStatusProvider.getPlaneradId(), uppgift.getUppgiftStatus());
@@ -79,7 +79,8 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), uppgiftStatusProvider.getTilldeladId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
+            uppgiftStatusProvider.getTilldeladId());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
@@ -95,7 +96,8 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
+            uppgiftStatusProvider.getPlaneradId());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);

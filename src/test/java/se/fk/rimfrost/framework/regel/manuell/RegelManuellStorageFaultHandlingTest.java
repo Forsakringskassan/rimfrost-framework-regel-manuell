@@ -207,7 +207,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, uppgiftStatusProvider.getPlaneradId(),
             cloudeventAttributes);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
-   
+
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());

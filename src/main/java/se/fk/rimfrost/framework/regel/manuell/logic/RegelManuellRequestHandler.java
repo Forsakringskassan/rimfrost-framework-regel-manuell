@@ -92,9 +92,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
 
          var updatedCommonRegelData = ImmutableManuellRegelCommonData.builder()
-         .from(commonRegelData)
-         .oulUppgiftId(operativUppgift.getUppgiftId())
-         .build();
+               .from(commonRegelData)
+               .oulUppgiftId(operativUppgift.getUppgiftId())
+               .build();
 
          writeManuellRegelCommonData(operativUppgift.getHandlaggningId(), updatedCommonRegelData);
       }

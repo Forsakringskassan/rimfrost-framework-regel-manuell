@@ -33,8 +33,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    @BeforeEach
    void stubOulAdapter() throws Exception
    {
-      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation ->
-      {
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation -> {
          CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
@@ -114,7 +113,8 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       var handlaggningPutUpdate = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
       assertEquals(handlaggningId, handlaggningPutUpdate.getHandlaggning().getId().toString());
       assertEquals(1, handlaggningPutUpdate.getHandlaggning().getVersion());
-      assertEquals(uppgiftStatusProvider.getPlaneradId(), handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
+      assertEquals(uppgiftStatusProvider.getPlaneradId(),
+            handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
       assertEquals(2, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
    }
 }

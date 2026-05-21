@@ -28,8 +28,7 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    @BeforeEach
    void stubOulAdapter() throws Exception
    {
-      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation ->
-      {
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation -> {
          CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
@@ -48,7 +47,8 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
+            uppgiftStatusProvider.getPlaneradId());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -64,7 +64,8 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
          throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(), uppgiftStatusProvider.getPlaneradId());
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
+            uppgiftStatusProvider.getPlaneradId());
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
