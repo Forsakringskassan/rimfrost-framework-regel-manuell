@@ -28,6 +28,10 @@ public class CloudEventAttributesMapper
 
    public static CloudEventData toCloudEventData(Map<String, String> attributes)
    {
+      if (attributes == null)
+      {
+         throw new IllegalArgumentException("attributes must not be null");
+      }
       return ImmutableCloudEventData.builder()
             .id(UUID.fromString(attributes.get("id")))
             .kogitorootprociid(UUID.fromString(attributes.get("kogitorootprociid")))
