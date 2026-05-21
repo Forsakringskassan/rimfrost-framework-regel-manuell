@@ -31,10 +31,10 @@ import java.util.UUID;
 public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
 {
 
-@InjectMock
+   @InjectMock
    OulAdapter oulAdapter;
 
-private void stubOulAdapter(UUID handlaggningId) throws Exception
+   private void stubOulAdapter(UUID handlaggningId) throws Exception
    {
       Mockito.when(oulAdapter.createOperativUppgift(any())).thenReturn(
             ImmutableOperativUppgift.builder()
@@ -49,7 +49,8 @@ private void stubOulAdapter(UUID handlaggningId) throws Exception
    {
          "5367f6b8-cc4a-11f0-8de9-199901014444, ERROR"
    })
-   void should_send_error_response_on_initial_handlaggning_read_failure(String handlaggningId, Utfall expectedUtfall) throws Exception
+   void should_send_error_response_on_initial_handlaggning_read_failure(String handlaggningId, Utfall expectedUtfall)
+         throws Exception
    {
       stubOulAdapter(UUID.fromString(handlaggningId));
       regelKafkaConnector.sendRegelRequest(handlaggningId);
@@ -63,7 +64,8 @@ private void stubOulAdapter(UUID handlaggningId) throws Exception
    {
          "5367f6b8-cc4a-11f0-8de9-199901015555, ERROR"
    })
-   void should_send_error_response_on_initial_handlaggning_write_failure(String handlaggningId, Utfall expectedUtfall) throws Exception
+   void should_send_error_response_on_initial_handlaggning_write_failure(String handlaggningId, Utfall expectedUtfall)
+         throws Exception
    {
       stubOulAdapter(UUID.fromString(handlaggningId));
       regelKafkaConnector.sendRegelRequest(handlaggningId);

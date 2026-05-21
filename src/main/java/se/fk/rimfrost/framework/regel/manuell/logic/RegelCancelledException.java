@@ -35,7 +35,8 @@ public class RegelCancelledException extends RuntimeException
       this.regelErrorInformation = regelErrorInformation;
    }
 
-   public RegelCancelledException(UUID handlaggningId, UUID uppgiftId, CloudEventData cloudEventData, RegelErrorInformation regelErrorInformation,
+   public RegelCancelledException(UUID handlaggningId, UUID uppgiftId, CloudEventData cloudEventData,
+         RegelErrorInformation regelErrorInformation,
          String message)
    {
       super(message);

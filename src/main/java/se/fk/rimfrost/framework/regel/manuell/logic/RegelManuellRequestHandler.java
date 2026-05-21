@@ -61,20 +61,20 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var handlaggning = getHandlaggning(request.handlaggningId(), cloudevent);
 
          var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
-            .handlaggningId(request.handlaggningId())
-            .version("1")
-            .individer(
-                  handlaggning.yrkande().individYrkandeRoller().stream()
-                        .map(r -> toIdtyp(r.individ()))
-                        .toList())
-            .regel(regelConfig.getSpecifikation().getNamn())
-            .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
-            .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
-            .roll(regelConfig.getSpecifikation().getRoll())
-            .url(regelConfig.getUppgift().getPath())
-            .subTopic(oulReplyToSubTopic)
-            .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
-            .build();
+               .handlaggningId(request.handlaggningId())
+               .version("1")
+               .individer(
+                     handlaggning.yrkande().individYrkandeRoller().stream()
+                           .map(r -> toIdtyp(r.individ()))
+                           .toList())
+               .regel(regelConfig.getSpecifikation().getNamn())
+               .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
+               .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
+               .roll(regelConfig.getSpecifikation().getRoll())
+               .url(regelConfig.getUppgift().getPath())
+               .subTopic(oulReplyToSubTopic)
+               .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
+               .build();
 
          var operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
 
@@ -102,8 +102,10 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       {
          LOGGER.error("Regel run cancelled due to error", e);
 
-         if(e.getUppgiftId() != null) {
-            endOperativUppgift(e.getUppgiftId(), e.getHandlaggningId(), e.getRegelErrorInformation().getFelmeddelande(), e.getCloudEventData());
+         if (e.getUppgiftId() != null)
+         {
+            endOperativUppgift(e.getUppgiftId(), e.getHandlaggningId(), e.getRegelErrorInformation().getFelmeddelande(),
+                  e.getCloudEventData());
          }
          sendErrorResponse(e.getHandlaggningId(), e.getCloudEventData(), e.getRegelErrorInformation());
          return;
@@ -118,10 +120,14 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .build();
    }
 
-   private void endOperativUppgift(UUID uppgiftId, UUID handlaggningId, String reason, CloudEventData cloudEventData){
-      try {
+   private void endOperativUppgift(UUID uppgiftId, UUID handlaggningId, String reason, CloudEventData cloudEventData)
+   {
+      try
+      {
          oulAdapter.endOperativUppgift(uppgiftId, reason);
-      } catch (OulException e){
+      }
+      catch (OulException e)
+      {
          var message = String.format(
                "Failed to end operativ uppgift. uppgiftId: %s, kogitoprocId: %s",
                uppgiftId, cloudEventData.kogitoprocinstanceid());
@@ -167,8 +173,10 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       catch (RegelCancelledException e)
       {
          LOGGER.error("Regel run in handleOulStatus cancelled due to error", e);
-         if(e.getUppgiftId() != null){
-            endOperativUppgift(e.getUppgiftId(), e.getHandlaggningId(), e.getRegelErrorInformation().getFelmeddelande(), cloudEventData);
+         if (e.getUppgiftId() != null)
+         {
+            endOperativUppgift(e.getUppgiftId(), e.getHandlaggningId(), e.getRegelErrorInformation().getFelmeddelande(),
+                  cloudEventData);
          }
          sendErrorResponse(e.getHandlaggningId(), cloudEventData, e.getRegelErrorInformation());
          return;
@@ -209,7 +217,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (OulException e)
       {
-         LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}", handlaggningId, e);
+         LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}", handlaggningId,
+               e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
 
@@ -237,7 +246,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          delayedException.addSuppressed(e);
       }
 
-      try{
+      try
+      {
          var uppgift = commonRegelData.uppgift();
          var updatedUppgift = ImmutableUppgift.builder()
                .from(uppgift)
