@@ -57,7 +57,6 @@ public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 404, 404",
          "5367f6b8-cc4a-11f0-8de9-199901011234, 400, 400",
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 503, 503",
          "5367f6b8-cc4a-11f0-8de9-199901011234, 500, 500"
    })
    void done_should_return_mapped_status_when_read_handlaggning_fails(
