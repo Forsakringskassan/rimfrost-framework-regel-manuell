@@ -55,9 +55,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
+      CloudEventData cloudevent = null;
+      OperativUppgift operativUppgift = null;
       try
       {
-         var cloudevent = createCloudEvent(request);
+         cloudevent = createCloudEvent(request);
          var handlaggning = getHandlaggning(request.handlaggningId(), cloudevent);
 
          var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
@@ -76,7 +78,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
                .build();
 
-         var operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
+         operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
          var uppgift = createUppgift(request.aktivitetId(), operativUppgift.getStatus());
 
          var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
@@ -91,15 +93,23 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
          writeManuellRegelCommonData(request.handlaggningId(), operativUppgift.getUppgiftId(), commonRegelData);
       }
-      catch (RegelCancelledException e)
+      catch (Exception e)
       {
          LOGGER.error("Regel run cancelled due to error", e);
 
-         if (e.getUppgiftId() != null)
+         RegelErrorInformation regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER,
+               "Regel failed due to unexpected internal error. Handlaggning id: " + request.handlaggningId());
+         if (e instanceof RegelCancelledException ex)
          {
-            tryEndOperativUppgift(e.getUppgiftId(), "Internal error");
+            regelErrorInformation = ex.getRegelErrorInformation();
          }
-         sendErrorResponse(e.getHandlaggningId(), e.getCloudEventData(), e.getRegelErrorInformation());
+
+         if (operativUppgift != null)
+         {
+            tryEndOperativUppgift(operativUppgift.getUppgiftId(), "Internal error");
+         }
+
+         sendErrorResponse(request.handlaggningId(), cloudevent, regelErrorInformation);
          return;
       }
    }
@@ -155,11 +165,19 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
          updateHandlaggning(handlaggningUpdate, cloudEventData, commonRegelData.oulUppgiftId());
       }
-      catch (RegelCancelledException e)
+      catch (Exception e)
       {
          LOGGER.error("Regel run in handleOulStatus cancelled due to error", e);
+
+         RegelErrorInformation regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER,
+               "Regel failed due to unexpected internal error. Handlaggning id: " + oulStatus.handlaggningId());
+         if (e instanceof RegelCancelledException ex)
+         {
+            regelErrorInformation = ex.getRegelErrorInformation();
+         }
+
          tryEndOperativUppgift(oulStatus.uppgiftId(), "Internal error");
-         sendErrorResponse(e.getHandlaggningId(), cloudEventData, e.getRegelErrorInformation());
+         sendErrorResponse(oulStatus.handlaggningId(), cloudEventData, regelErrorInformation);
          return;
       }
    }
@@ -168,6 +186,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    public void handleUppgiftDone(UUID handlaggningId, Utfall utfall)
    {
       var cloudEventData = readCloudEventData(handlaggningId);
+
+      if (cloudEventData == null)
+      {
+         LOGGER.error("Failed to read cloudEventData in handleUppgiftDone for handlaggningId: {}", handlaggningId);
+         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read cloudEventData");
+      }
 
       ManuellRegelCommonData commonRegelData;
       try
@@ -347,10 +371,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                "Failed to read handlaggning. handlaggningId: %s, kogitoprocId: %s", handlaggningId,
                cloudEventData.kogitoprocinstanceid());
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, message);
-         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
-         exception.addSuppressed(e);
-
-         throw exception;
+         throw new RegelCancelledException(regelErrorInformation, message, e);
       }
    }
 
@@ -367,11 +388,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                "Failed to write handlaggning update. handlaggningId: %s, kogitoprocId: %s",
                handlaggningUpdate.id(), cloudEventData.kogitoprocinstanceid());
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, message);
-         var exception = new RegelCancelledException(handlaggningUpdate.id(), uppgiftId, cloudEventData, regelErrorInformation,
-               message);
-         exception.addSuppressed(e);
-
-         throw exception;
+         throw new RegelCancelledException(regelErrorInformation, message, e);
       }
    }
 
@@ -388,10 +405,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                "Failed to write CloudEventData to correlation storage. handlaggningId: %s, kogitoprocId: %s",
                handlaggningId, cloudEventData.kogitoprocinstanceid());
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_CLOUD_EVENT_DATA_WRITE_FAILURE, message);
-         var exception = new RegelCancelledException(handlaggningId, uppgiftId, cloudEventData, regelErrorInformation, message);
-         exception.addSuppressed(e);
-
-         throw exception;
+         throw new RegelCancelledException(regelErrorInformation, message, e);
       }
    }
 
@@ -416,16 +430,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (Exception e)
       {
-         var cloudEventData = readCloudEventData(handlaggningId);
          var message = String.format(
                "Failed to write ManuellRegelCommonData update to data storage. handlaggningId: %s",
                handlaggningId);
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE,
                message);
-         var exception = new RegelCancelledException(handlaggningId, uppgiftId, cloudEventData, regelErrorInformation, message);
-         exception.addSuppressed(e);
-
-         throw exception;
+         throw new RegelCancelledException(regelErrorInformation, message, e);
       }
    }
 
@@ -437,16 +447,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (Exception e)
       {
-         var cloudEventData = readCloudEventData(handlaggningId);
          var message = String.format(
                "Failed to read ManuellRegelCommonData from data storage. handlaggningId: %s",
                handlaggningId);
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_READ_FAILURE,
                message);
-         var exception = new RegelCancelledException(handlaggningId, cloudEventData, regelErrorInformation, message);
-         exception.addSuppressed(e);
-
-         throw exception;
+         throw new RegelCancelledException(regelErrorInformation, message, e);
       }
    }
 
@@ -462,11 +468,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                "Failed to create operativ uppgift. handlaggningId: %s, kogitoprocId: %s reason: %s",
                oulRequest.getHandlaggningId(), cloudEventData.kogitoprocinstanceid(), e.getMessage());
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER, message);
-         var exception = new RegelCancelledException(oulRequest.getHandlaggningId(), cloudEventData, regelErrorInformation,
-               message);
-         exception.addSuppressed(e);
-
-         throw exception;
+         throw new RegelCancelledException(regelErrorInformation, message, e);
       }
    }
 }
