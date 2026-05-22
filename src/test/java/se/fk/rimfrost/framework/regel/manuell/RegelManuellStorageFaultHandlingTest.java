@@ -134,18 +134,17 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypVarde,
          Utfall expectedUtfall) throws Exception
    {
-      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
             .thenReturn(manuellRegelCommonDataStorage);
       Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
-      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
+      Mockito.verify(storage, Mockito.timeout(5000)).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+            Mockito.any());
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
@@ -163,18 +162,17 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypVarde,
          Utfall expectedUtfall) throws Exception
    {
-      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
             .thenReturn(manuellRegelCommonDataStorage);
-      Mockito.doNothing().doThrow(new IllegalStateException())
+      Mockito.doThrow(new IllegalStateException())
             .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
-      Thread.sleep(1000);
+      Mockito.verify(storage, Mockito.timeout(5000)).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+            Mockito.any());
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
