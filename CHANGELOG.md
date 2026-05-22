@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.9 (2026-05-22)
+
+### Bug Fixes
+
+-  add OUL REST WireMock stubs to WireMockRegelManuell ([c43c3](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c43c3833a990bc7) Ulf Slunga)  
+
 ## 1.0.8 (2026-05-21)
 
 ### Bug Fixes
