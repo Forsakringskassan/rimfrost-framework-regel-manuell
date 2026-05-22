@@ -4,9 +4,23 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import se.fk.rimfrost.framework.regel.WireMockHandlaggning;
 import java.util.HashMap;
 import java.util.Map;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class WireMockRegelManuell extends WireMockHandlaggning
 {
+
+   public static final String DEFAULT_UPPGIFT_ID = "11e53b18-e9ac-4707-825b-a1cb80689c29";
+
+   @Override
+   public Map<String, String> start()
+   {
+      var map = super.start();
+      server.stubFor(post(urlPathEqualTo("/uppgifter"))
+            .willReturn(okJson("{\"uppgiftId\":\"" + DEFAULT_UPPGIFT_ID + "\",\"status\":\"NY\"}")));
+      server.stubFor(post(urlPathMatching("/uppgifter/.+/end"))
+            .willReturn(okJson("{\"uppgiftId\":\"" + DEFAULT_UPPGIFT_ID + "\",\"status\":\"AVSLUTAD\"}")));
+      return map;
+   }
 
    /**
     * Defines wiremock mappings for manual rules.
