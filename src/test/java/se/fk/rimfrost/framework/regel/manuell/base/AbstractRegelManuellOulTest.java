@@ -1,6 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.quarkus.test.InjectMock;
 
@@ -116,5 +117,39 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       assertEquals(RegelManuellTestStatus.PLANERAD.name(),
             handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
       assertEquals(2, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
+   })
+   void oul_status_should_increment_uppgift_version_across_multiple_updates(
+         String handlaggningId,
+         String uppgiftId,
+         String idtypTypId,
+         String idtypVarde) throws JsonProcessingException
+   {
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var utforarId = ImmutableIdtyp.builder()
+            .typId(idtypTypId)
+            .varde(idtypVarde)
+            .build();
+
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 2);
+
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.TILLDELAD);
+      var puts = WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 3);
+
+      assertEquals(3, puts.size(), "Expected three PUTs: NY + PLANERAD + TILLDELAD");
+
+      var lastPut = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
+      assertEquals(1, lastPut.getHandlaggning().getVersion(),
+            "handlaggning.version should remain unchanged across OUL status updates");
+      assertEquals(3, lastPut.getHandlaggning().getUppgift().getVersion(),
+            "uppgift.version should increment to 3 after two OUL status updates");
+      assertEquals(RegelManuellTestStatus.TILLDELAD.name(),
+            lastPut.getHandlaggning().getUppgift().getUppgiftStatus());
    }
 }

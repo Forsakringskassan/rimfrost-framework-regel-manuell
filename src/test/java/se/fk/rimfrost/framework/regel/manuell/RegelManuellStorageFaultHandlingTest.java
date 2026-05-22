@@ -1,5 +1,6 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -8,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
@@ -192,7 +194,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
             .thenReturn(manuellRegelCommonDataStorage);
       // Allow initial write from handleRegelRequest, throw on the subsequent write from handleOulStatus
-      Mockito.doNothing().doThrow(new IllegalStateException())
+      Mockito.doThrow(new IllegalStateException())
             .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
 
       regelKafkaConnector.sendRegelRequest(handlaggningId);
@@ -215,5 +217,103 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       // Verify the error response carries the kogitoprocinstanceid from the embedded OUL status attributes
       assertEquals(RegelTestData.newRegelRequestMessagePayload(handlaggningId).getKogitoprocinstanceid(),
             regelResponse.getKogitoprocinstanceid());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   void should_try_to_end_operativ_uppgift_when_initial_storage_write_fails(String handlaggningId) throws Exception
+   {
+      var oulUppgiftId = UUID.randomUUID();
+      Mockito.when(oulAdapter.createOperativUppgift(any())).thenReturn(
+            ImmutableOperativUppgift.builder()
+                  .uppgiftId(oulUppgiftId)
+                  .handlaggningId(UUID.fromString(handlaggningId))
+                  .status(RegelManuellTestStatus.PLANERAD.name())
+                  .build());
+      Mockito.doThrow(new IllegalStateException()).when(storage)
+            .setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.waitForRegelResponse();
+
+      Mockito.verify(oulAdapter).endOperativUppgift(oulUppgiftId, "Internal error");
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   void should_not_try_to_end_operativ_uppgift_when_get_handlaggning_fails(String handlaggningId) throws Exception
+   {
+      var server = WireMockRegelManuell.getWireMockServer();
+      var failureStub = server.stubFor(
+            WireMock.get(WireMock.urlPathMatching("/handlaggning/.*" + handlaggningId + ".*"))
+                  .atPriority(1)
+                  .willReturn(WireMock.serverError()));
+      try
+      {
+         regelKafkaConnector.sendRegelRequest(handlaggningId);
+         regelKafkaConnector.waitForRegelResponse();
+
+         Mockito.verify(oulAdapter, Mockito.never()).endOperativUppgift(Mockito.any(), Mockito.any());
+      }
+      finally
+      {
+         server.removeStub(failureStub);
+      }
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
+   })
+   void should_try_to_end_operativ_uppgift_when_oul_status_update_storage_read_fails(
+         String handlaggningId,
+         String uppgiftId,
+         String idtypTypId,
+         String idtypVarde) throws Exception
+   {
+      Mockito.doThrow(new IllegalStateException())
+            .when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
+
+      var utforarId = ImmutableIdtyp.builder()
+            .typId(idtypTypId)
+            .varde(idtypVarde)
+            .build();
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      regelKafkaConnector.waitForRegelResponse();
+
+      Mockito.verify(oulAdapter).endOperativUppgift(UUID.fromString(uppgiftId), "Internal error");
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
+   })
+   void should_try_to_end_operativ_uppgift_when_oul_status_update_storage_write_fails(
+         String handlaggningId,
+         String uppgiftId,
+         String idtypTypId,
+         String idtypVarde) throws Exception
+   {
+      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(manuellRegelCommonDataStorage);
+      Mockito.doThrow(new IllegalStateException())
+            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+
+      var utforarId = ImmutableIdtyp.builder()
+            .typId(idtypTypId)
+            .varde(idtypVarde)
+            .build();
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      regelKafkaConnector.waitForRegelResponse();
+
+      Mockito.verify(oulAdapter).endOperativUppgift(UUID.fromString(uppgiftId), "Internal error");
    }
 }
