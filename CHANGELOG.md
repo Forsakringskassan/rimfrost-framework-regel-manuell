@@ -2,6 +2,31 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.8 (2026-05-21)
+
+### Bug Fixes
+
+-  switch to tryEndOperativUppgift and send uppgiftid ([162ad](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/162ad644de802e1) Nils Elveros)  
+-  spotless ([25222](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2522220340a0acb) Nils Elveros)  
+-  added fault handling when oul is down ([8699d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/8699d259b326f72) Nils Elveros)  
+-  comments ([15cf8](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/15cf8eed79647e6) Nils Elveros)  
+-  make null-safety tests properly reproduce bugs 1 and 2 ([43f29](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/43f29250c8ab9a1) Ulf Slunga)  
+-  spotless ([ed1d9](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ed1d93fa304f37d) Nils Elveros)  
+-  fix final tests ([c0244](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c02448b9f67bd7d) Nils Elveros)  
+-  update oul asyncapi spec ([2cf0c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2cf0c6148224408) Nils Elveros)  
+-  more test fixes ([2afc3](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2afc3d5c8195e14) Nils Elveros)  
+-  update some tests ([cee51](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/cee51a68cfcb00a) Nils Elveros)  
+-  add version to oulrequest ([2b75f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2b75f7154dc990d) Nils Elveros)  
+-  Use ouladapter ([26866](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/268664c370788ec) Nils Elveros)  
+
+### Other changes
+
+**Merge branch 'main' into fix/bump-oul**
+
+
+[dd3c8](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/dd3c898ca44e2f7) Nils Elveros *2026-05-19 13:12:23*
+
+
 ## 1.0.7 (2026-05-19)
 
 ### Bug Fixes
