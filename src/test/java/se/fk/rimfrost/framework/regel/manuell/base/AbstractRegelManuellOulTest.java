@@ -29,7 +29,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
 {
 
    @InjectMock
-   OulAdapter oulAdapter;
+   protected OulAdapter oulAdapter;
 
    @BeforeEach
    void stubOulAdapter() throws Exception
@@ -61,6 +61,9 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       Assertions.assertEquals("C", oulRequest.getVerksamhetslogik());
       Assertions.assertEquals("ANSVARIG_HANDLAGGARE", oulRequest.getRoll());
       Assertions.assertTrue(oulRequest.getUrl().contains(basePath()));
+      Assertions.assertNotNull(oulRequest.getErbjudande());
+      Assertions.assertNotNull(oulRequest.getErbjudande().getId());
+      Assertions.assertNotNull(oulRequest.getErbjudande().getNamn());
    }
 
    @ParameterizedTest

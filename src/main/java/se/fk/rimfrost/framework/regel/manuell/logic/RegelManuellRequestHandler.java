@@ -17,10 +17,13 @@ import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.exception.OulException;
 import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.oul.model.Erbjudande;
 import se.fk.rimfrost.framework.oul.model.ImmutableCreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.oul.model.ImmutableErbjudande;
 import se.fk.rimfrost.framework.oul.model.OperativUppgift;
 import se.fk.rimfrost.framework.oul.logic.OulHandlerInterface;
 import se.fk.rimfrost.framework.oul.presentation.kafka.OulMessageHandler;
+import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
@@ -52,6 +55,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Inject
    OulAdapter oulAdapter;
 
+   @Inject
+   ErbjudandeReferensdataInterface erbjudandeReferensdata;
+
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
@@ -61,6 +67,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       {
          cloudevent = createCloudEvent(request);
          var handlaggning = getHandlaggning(request.handlaggningId(), cloudevent);
+
+         var erbjudandeNamn = erbjudandeReferensdata.getErbjudandeNamn(handlaggning.yrkande().erbjudandeId());
 
          var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
                .handlaggningId(request.handlaggningId())
@@ -76,6 +84,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .url(regelConfig.getUppgift().getPath())
                .subTopic(oulReplyToSubTopic)
                .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
+               .erbjudande(createErbjudande(handlaggning.yrkande().erbjudandeId(), erbjudandeNamn))
                .build();
 
          operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
@@ -470,5 +479,13 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER, message);
          throw new RegelCancelledException(regelErrorInformation, message, e);
       }
+   }
+
+   private Erbjudande createErbjudande(String id, String namn)
+   {
+      return ImmutableErbjudande.builder()
+            .id(id)
+            .namn(namn)
+            .build();
    }
 }
