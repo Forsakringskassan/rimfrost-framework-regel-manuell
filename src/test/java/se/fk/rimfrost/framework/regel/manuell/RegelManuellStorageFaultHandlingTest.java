@@ -280,11 +280,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypTypId,
          String idtypVarde) throws Exception
    {
-      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.doThrow(new IllegalStateException())
             .when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
             .varde(idtypVarde)
@@ -306,13 +304,11 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypTypId,
          String idtypVarde) throws Exception
    {
-      stubOulAdapter(UUID.fromString(handlaggningId));
       Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
             .thenReturn(manuellRegelCommonDataStorage);
       Mockito.doThrow(new IllegalStateException())
             .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
             .varde(idtypVarde)
