@@ -2,6 +2,20 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.10 (2026-05-22)
+
+### Bug Fixes
+
+-  Send erbjudande information with OUL create request ([7ce95](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7ce95c544c8ee51) Lars Persson)  
+-  corrected test ([5ea4d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5ea4d2563e440db) Nils Elveros)  
+-  test ([b36e0](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b36e05b848f0d92) Nils Elveros)  
+-  add more tests ([3abf9](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3abf9eb96fb924a) Nils Elveros)  
+-  Improve error handling robustness for non-interactive cases ([5fdda](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5fdda64e7bb9918) Lars Persson)  
+-  add tests for endOperativUppgift ([968bb](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/968bbc456f89737) Nils Elveros)  
+
+### Dependency updates
+
+- update dependency org.immutables:value-processor to v2.12.2 ([8ce86](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/8ce866f0c4899e5) renovate[bot])  
 ## 1.0.9 (2026-05-22)
 
 ### Bug Fixes
