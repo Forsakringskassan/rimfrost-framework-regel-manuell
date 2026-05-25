@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.11 (2026-05-25)
+
+### Bug Fixes
+
+-  Remove OUL Kafka messaging channels from application properties ([84edf](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/84edf866b119b40) Ulf Slunga)  
+
 ## 1.0.10 (2026-05-22)
 
 ### Bug Fixes
