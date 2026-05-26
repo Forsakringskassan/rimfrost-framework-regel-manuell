@@ -22,6 +22,7 @@ import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+import se.fk.rimfrost.framework.regel.manuell.storage.CloudEventDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
@@ -42,6 +43,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
 
    @InjectMock
    ManuellRegelCommonDataStorage storage;
+
+   @InjectMock
+   CloudEventDataStorage cloudEventDataStorage;
 
    @InjectMock
    OulAdapter oulAdapter;
@@ -315,5 +319,52 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
       regelKafkaConnector.waitForRegelResponse();
 
       Mockito.verify(oulAdapter).endOperativUppgift(UUID.fromString(uppgiftId), "Internal error");
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   void should_try_to_delete_cloud_event_data_on_write_failure_during_initial_storage_write(String handlaggningId)
+         throws Exception
+   {
+      stubOulAdapter(UUID.fromString(handlaggningId));
+      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+            Mockito.any());
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      Mockito.verify(cloudEventDataStorage, Mockito.timeout(5000)).deleteCloudEventData(eq(UUID.fromString(handlaggningId)));
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
+   })
+   void should_try_to_delete_storage_data_when_get_handlaggning_fails_on_oul_status_update(
+         String handlaggningId,
+         String uppgiftId,
+         String idtypTypId,
+         String idtypVarde) throws Exception
+   {
+      var server = WireMockRegelManuell.getWireMockServer();
+      var failureStub = server.stubFor(
+            WireMock.get(WireMock.urlPathMatching("/handlaggning/.*" + handlaggningId + ".*"))
+                  .atPriority(1)
+                  .willReturn(WireMock.serverError()));
+      try
+      {
+         var utforarId = ImmutableIdtyp.builder()
+               .typId(idtypTypId)
+               .varde(idtypVarde)
+               .build();
+         oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+         Mockito.verify(cloudEventDataStorage, Mockito.timeout(5000)).deleteCloudEventData(eq(UUID.fromString(handlaggningId)));
+         Mockito.verify(storage, Mockito.timeout(5000)).deleteManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
+      }
+      finally
+      {
+         server.removeStub(failureStub);
+      }
    }
 }
