@@ -118,6 +118,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             tryEndOperativUppgift(operativUppgift.getUppgiftId(), "Internal error");
          }
 
+         if (cloudevent != null)
+         {
+            tryDeleteCloudEventData(request.handlaggningId());
+         }
+
          sendErrorResponse(request.handlaggningId(), cloudevent, regelErrorInformation);
          return;
       }
@@ -186,6 +191,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          }
 
          tryEndOperativUppgift(oulStatus.uppgiftId(), "Internal error");
+         tryDeleteCloudEventData(oulStatus.handlaggningId());
+         tryDeleteManuellRegelCommonData(oulStatus.handlaggningId());
          sendErrorResponse(oulStatus.handlaggningId(), cloudEventData, regelErrorInformation);
          return;
       }
@@ -431,6 +438,18 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
    }
 
+   private void tryDeleteCloudEventData(UUID handlaggningId)
+   {
+      try
+      {
+         this.cloudEventDataStorage.deleteCloudEventData(handlaggningId);
+      }
+      catch (Exception e)
+      {
+         LOGGER.error("Could not delete cloud event data. handlaggningId: {}", handlaggningId, e);
+      }
+   }
+
    private void writeManuellRegelCommonData(UUID handlaggningId, UUID uppgiftId, ManuellRegelCommonData manuellRegelCommonData)
    {
       try
@@ -462,6 +481,18 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_MANUELL_REGEL_COMMON_DATA_READ_FAILURE,
                message);
          throw new RegelCancelledException(regelErrorInformation, message, e);
+      }
+   }
+
+   private void tryDeleteManuellRegelCommonData(UUID handlaggningId)
+   {
+      try
+      {
+         this.dataStorage.deleteManuellRegelCommonData(handlaggningId);
+      }
+      catch (Exception e)
+      {
+         LOGGER.error("Could not delete ManuellRegelCommonData from data storage. handlaggningId: {}", handlaggningId, e);
       }
    }
 
