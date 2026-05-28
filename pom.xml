@@ -99,17 +99,6 @@
       <version>1.0.5</version>
     </dependency>
     <dependency>
-      <groupId>se.fk.rimfrost.framework.uppgiftstatusprovider</groupId>
-      <artifactId>rimfrost-framework-uppgift-status-provider-interface</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>se.fk.rimfrost.framework.uppgiftstatusprovider</groupId>
-      <artifactId>rimfrost-framework-uppgift-status-provider</artifactId>
-      <version>1.0.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.wiremock</groupId>
       <artifactId>wiremock</artifactId>
       <version>3.13.2</version>
