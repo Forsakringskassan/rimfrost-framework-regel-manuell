@@ -2,6 +2,14 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.12 (2026-05-28)
+
+### Bug Fixes
+
+-  bump rimfrost-framework-regel to 1.0.5 ([deeb0](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/deeb0d748caeec1) Ulf Slunga)  
+-  Replace deprecated configuration property ([b0c0d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b0c0d6c5f3d75e2) Lars Persson)  
+-  Attempt to cleanup storage on non-interactive cases ([978e4](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/978e40e6713aff6) Lars Persson)  
+
 ## 1.0.11 (2026-05-25)
 
 ### Bug Fixes
