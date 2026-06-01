@@ -2,6 +2,14 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.13 (2026-06-01)
+
+### Bug Fixes
+
+-  bump framework.regel version ([36ecb](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/36ecb88fb340baa) Nils Elveros)  
+-  **deps**  update dependency org.immutables:value to v2.12.2 ([01a5a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/01a5a76192e914d) renovate[bot])  
+-  Remove unnecessary dependency ([7c8d5](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7c8d5f82085f529) Lars Persson)  
+
 ## 1.0.12 (2026-05-28)
 
 ### Bug Fixes
