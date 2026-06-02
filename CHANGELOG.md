@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.14 (2026-06-02)
+
+### Bug Fixes
+
+-  bump framework regel version ([ac0fd](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ac0fd3c9bba11d9) Nils Elveros)  
+-  Add support for setting planeradTs from OUL status update ([003e5](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/003e5637612a91e) Lars Persson)  
+
 ## 1.0.13 (2026-06-01)
 
 ### Bug Fixes
