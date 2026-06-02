@@ -110,7 +110,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       //
       // verify PUT handlaggning
       //
@@ -139,10 +139,10 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
             .varde(idtypVarde)
             .build();
 
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 2);
 
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.TILLDELAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.TILLDELAD);
       var puts = WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 3);
 
       assertEquals(3, puts.size(), "Expected three PUTs: NY + PLANERAD + TILLDELAD");

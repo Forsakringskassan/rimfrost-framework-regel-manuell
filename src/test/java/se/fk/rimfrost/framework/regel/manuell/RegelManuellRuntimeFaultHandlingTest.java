@@ -110,7 +110,7 @@ public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTe
             .varde("Idtyp_varde")
             .build();
       oulKafkaConnector.simulateOulStatus(handlaggningId.toString(), uppgiftId.toString(), utforarId,
-            RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(Utfall.ERROR, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_OTHER, regelResponse.getData().getError().getFelkod());

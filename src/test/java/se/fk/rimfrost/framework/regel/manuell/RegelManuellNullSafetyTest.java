@@ -68,7 +68,7 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
 
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId,
-            RegelManuellTestStatus.PLANERAD, null);
+            null, RegelManuellTestStatus.PLANERAD, null);
       Thread.sleep(1000);
 
       sendPostRegelManuellHandlaggningDone(handlaggningId);
@@ -99,7 +99,7 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
 
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId,
-            RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000);
 
       sendPostRegelManuellHandlaggningDone(handlaggningId);

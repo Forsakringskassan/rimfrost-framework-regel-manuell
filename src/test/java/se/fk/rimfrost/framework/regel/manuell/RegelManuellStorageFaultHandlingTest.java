@@ -121,7 +121,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -148,7 +148,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       Mockito.verify(storage, Mockito.timeout(5000)).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -176,7 +176,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       Mockito.verify(storage, Mockito.timeout(5000)).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -211,7 +211,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId("Idtyp_typId")
             .varde("Idtyp_varde")
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD,
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
             cloudeventAttributes);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
 
@@ -289,7 +289,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       regelKafkaConnector.waitForRegelResponse();
 
       Mockito.verify(oulAdapter).endOperativUppgift(UUID.fromString(uppgiftId), "Internal error");
@@ -315,7 +315,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       regelKafkaConnector.waitForRegelResponse();
 
       Mockito.verify(oulAdapter).endOperativUppgift(UUID.fromString(uppgiftId), "Internal error");
@@ -358,7 +358,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
                .typId(idtypTypId)
                .varde(idtypVarde)
                .build();
-         oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+         oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
          Mockito.verify(cloudEventDataStorage, Mockito.timeout(5000)).deleteCloudEventData(eq(UUID.fromString(handlaggningId)));
          Mockito.verify(storage, Mockito.timeout(5000)).deleteManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
       }
