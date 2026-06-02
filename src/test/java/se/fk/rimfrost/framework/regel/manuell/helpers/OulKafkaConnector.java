@@ -1,6 +1,8 @@
 package se.fk.rimfrost.framework.regel.manuell.helpers;
 
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
+
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
@@ -48,9 +50,10 @@ public class OulKafkaConnector extends KafkaConnector
     * @param utforarId      utforare identifier
     * @param status         current status
     */
-   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, RegelManuellTestStatus status)
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, OffsetDateTime planeradTill,
+         RegelManuellTestStatus status)
    {
-      simulateOulStatus(handlaggningId, uppgiftId, utforarId, status, testCloudeventAttributes());
+      simulateOulStatus(handlaggningId, uppgiftId, utforarId, planeradTill, status, testCloudeventAttributes());
    }
 
    /**
@@ -66,14 +69,15 @@ public class OulKafkaConnector extends KafkaConnector
     * @param status              current status
     * @param cloudeventAttributes CloudEvent correlation attributes to embed in the message
     */
-   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, RegelManuellTestStatus status,
-         Map<String, String> cloudeventAttributes)
+   public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, OffsetDateTime planeradTill,
+         RegelManuellTestStatus status, Map<String, String> cloudeventAttributes)
    {
       var msg = new OperativtUppgiftslagerStatusMessage();
       msg.setStatus(status.name());
       msg.setUppgiftId(uppgiftId);
       msg.setHandlaggningId(handlaggningId);
       msg.setUtforarId(toMessageIdtyp(utforarId));
+      msg.setPlaneradTill(planeradTill);
       msg.setCloudeventAttributes(cloudeventAttributes);
       inMemoryConnector.source(oulStatusNotificationChannel).send(msg);
    }

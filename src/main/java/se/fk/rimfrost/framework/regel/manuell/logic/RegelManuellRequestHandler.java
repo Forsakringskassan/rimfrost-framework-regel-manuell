@@ -22,7 +22,6 @@ import se.fk.rimfrost.framework.oul.model.ImmutableCreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableErbjudande;
 import se.fk.rimfrost.framework.oul.model.OperativUppgift;
 import se.fk.rimfrost.framework.oul.logic.OulHandlerInterface;
-import se.fk.rimfrost.framework.oul.presentation.kafka.OulMessageHandler;
 import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
@@ -164,6 +163,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .from(uppgift)
                .version(uppgift.version() + 1)
                .utforarId(toHandlaggningModelIdtyp(Objects.requireNonNull(oulStatus.utforarId())))
+               .planeradTs(oulStatus.planeradTill())
                .uppgiftStatus(oulStatus.uppgiftStatus())
                .build();
 
@@ -329,7 +329,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             .version(1)
             .aktivitetId(aktivitetId)
             .skapadTs(OffsetDateTime.now())
-            .planeradTs(OffsetDateTime.now()) // TODO: Figure out when this should be set and to what this should be set to
             .uppgiftStatus(status)
             .fSSAinformation("FSSAinformation.HANDLAGGNING_PAGAR") // TODO
             .uppgiftSpecifikation(createUppgiftSpecifikation())

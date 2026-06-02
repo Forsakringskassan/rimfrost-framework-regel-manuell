@@ -53,7 +53,7 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -70,7 +70,7 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();

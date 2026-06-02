@@ -48,7 +48,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5-mockito</artifactId>
+      <artifactId>quarkus-junit-mockito</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -79,7 +79,7 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.oul</groupId>
       <artifactId>rimfrost-framework-oul</artifactId>
-      <version>1.0.4</version>
+      <version>1.0.5</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
@@ -92,11 +92,6 @@
       <version>1.0.6</version>
       <classifier>tests</classifier>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>se.fk.rimfrost</groupId>
-      <artifactId>rimfrost-service-oul-asyncapi</artifactId>
-      <version>1.0.5</version>
     </dependency>
     <dependency>
       <groupId>org.wiremock</groupId>

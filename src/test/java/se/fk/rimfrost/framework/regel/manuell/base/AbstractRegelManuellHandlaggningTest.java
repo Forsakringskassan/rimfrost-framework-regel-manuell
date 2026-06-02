@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.quarkus.test.InjectMock;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Assertions;
@@ -69,7 +70,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals(RegelManuellTestStatus.PLANERAD.name(), uppgift.getUppgiftStatus());
@@ -85,7 +86,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            RegelManuellTestStatus.TILLDELAD);
+            null, RegelManuellTestStatus.TILLDELAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
@@ -102,10 +103,27 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals(newHandlaggningApiIdtyp(), uppgift.getUtforarId());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
+   })
+   void should_put_handlaggning_with_uppgift_correct_planerad_till_value(String handlaggningId, String uppgiftId)
+         throws Exception
+   {
+      var planeradTill = OffsetDateTime.now();
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
+            planeradTill, RegelManuellTestStatus.PLANERAD);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
+      var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
+      Assertions.assertEquals(planeradTill.toInstant(), uppgift.getPlaneradTs().toInstant());
    }
 }

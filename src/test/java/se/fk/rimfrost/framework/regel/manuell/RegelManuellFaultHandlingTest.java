@@ -94,7 +94,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       //
       // verify response
       //
@@ -124,7 +124,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
       //
       // verify response
       //
