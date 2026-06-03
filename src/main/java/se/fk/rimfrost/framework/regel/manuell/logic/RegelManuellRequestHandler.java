@@ -246,9 +246,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       sendResponse(handlaggningId, cloudEventData, utfall);
 
       DelayedException delayedException = new DelayedException();
-      // We do this before cleaning up CloudEvent and RegelData instances
-      // since the rule could possibly have dependency on them during
-      // callback execution.
       try
       {
          dataStorage.deleteManuellRegelCommonData(handlaggningId);
@@ -274,6 +271,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .from(uppgift)
                .version(uppgift.version() + 1)
                .uppgiftStatus(operativUppgift.getStatus())
+               .utfordTs(OffsetDateTime.now())
                .build();
          var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
                handlaggning.version());
