@@ -126,4 +126,19 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
       var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
       Assertions.assertEquals(planeradTill.toInstant(), uppgift.getPlaneradTs().toInstant());
    }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   void should_put_handlaggning_with_utford_ts(String handlaggningId)
+         throws Exception
+   {
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages are processed
+      sendPostRegelManuellHandlaggningDone(handlaggningId);
+      var uppgift = getUppgiftFromLastPutHandlaggning(handlaggningId);
+      Assertions.assertNotNull(uppgift.getUtfordTs());
+   }
 }

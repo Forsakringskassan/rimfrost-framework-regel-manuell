@@ -1,11 +1,11 @@
 package se.fk.rimfrost.framework.regel.manuell.storage.internal;
 
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
-public class RegelManuellPhysicalNamingStrategy extends CamelCaseToUnderscoresNamingStrategy
+public class RegelManuellPhysicalNamingStrategy extends PhysicalNamingStrategySnakeCaseImpl
 {
    @Override
    public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment context)
