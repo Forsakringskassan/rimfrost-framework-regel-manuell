@@ -1,13 +1,15 @@
 package se.fk.rimfrost.framework.regel.manuell.storage.internal;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.UUID;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableIdtyp;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
-import java.util.UUID;
 
 @ApplicationScoped
 class ManuellRegelCommonDataMapper
@@ -54,7 +56,7 @@ class ManuellRegelCommonDataMapper
       var builder = ImmutableUppgift.builder()
             .id(entity.uppgiftId)
             .version(entity.uppgiftVersion)
-            .skapadTs(entity.uppgiftSkapadTs.atOffset(java.time.ZoneOffset.UTC))
+            .skapadTs(OffsetDateTime.ofInstant(entity.uppgiftSkapadTs, ZoneId.systemDefault()))
             .uppgiftStatus(entity.uppgiftStatus)
             .aktivitetId(entity.uppgiftAktivitetId)
             .fSSAinformation(entity.uppgiftFssaInformation)
@@ -65,11 +67,11 @@ class ManuellRegelCommonDataMapper
 
       if (entity.uppgiftUtfordTs != null)
       {
-         builder.utfordTs(entity.uppgiftUtfordTs.atOffset(java.time.ZoneOffset.UTC));
+         builder.utfordTs(OffsetDateTime.ofInstant(entity.uppgiftUtfordTs, ZoneId.systemDefault()));
       }
       if (entity.uppgiftPlaneradTs != null)
       {
-         builder.planeradTs(entity.uppgiftPlaneradTs.atOffset(java.time.ZoneOffset.UTC));
+         builder.planeradTs(OffsetDateTime.ofInstant(entity.uppgiftPlaneradTs, ZoneId.systemDefault()));
       }
       if (entity.uppgiftUtforarIdTypId != null)
       {
