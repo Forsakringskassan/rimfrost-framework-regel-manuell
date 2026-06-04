@@ -2,6 +2,14 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.0.15 (2026-06-04)
+
+### Bug Fixes
+
+-  Bump dependency versions ([782ea](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/782ea8fc189723b) Lars Persson)  
+-  Use consistent timezone for uppgift timestamps ([b7e38](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b7e38e8e99c4ac5) Lars Persson)  
+-  Set utfordTs on done handlaggning PUT ([1d40f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/1d40f39964d7da0) Lars Persson)  
+
 ## 1.0.14 (2026-06-02)
 
 ### Bug Fixes
