@@ -20,6 +20,7 @@ import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.Erbjudande;
 import se.fk.rimfrost.framework.oul.model.ImmutableCreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableErbjudande;
+import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.oul.model.OperativUppgift;
 import se.fk.rimfrost.framework.oul.logic.OulHandlerInterface;
 import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
@@ -31,8 +32,11 @@ import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
 import se.fk.rimfrost.framework.regel.manuell.storage.CloudEventDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
+import se.fk.rimfrost.framework.regel.manuell.storage.ProcessTopicInfoStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
+import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableProcessTopicInfo;
+import se.fk.rimfrost.framework.regel.manuell.storage.entity.ProcessTopicInfo;
 import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
 
 @SuppressWarnings("unused")
@@ -52,6 +56,9 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    CloudEventDataStorage cloudEventDataStorage;
 
    @Inject
+   ProcessTopicInfoStorage processTopicInfoStorage;
+
+   @Inject
    OulAdapter oulAdapter;
 
    @Inject
@@ -61,6 +68,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    public void handleRegelRequest(RegelDataRequest request)
    {
       CloudEventData cloudevent = null;
+      ProcessTopicInfo processTopicInfo = null;
       OperativUppgift operativUppgift = null;
       try
       {
@@ -82,8 +90,11 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                .roll(regelConfig.getSpecifikation().getRoll())
                .url(regelConfig.getUppgift().getPath())
                .subTopic(oulReplyToSubTopic)
-               .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
                .erbjudande(createErbjudande(handlaggning.yrkande().erbjudandeId(), erbjudandeNamn))
+               .processInfo(ImmutableProcessInfo.builder()
+                     .replyTopic(request.replyTo())
+                     .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
+                     .build())
                .build();
 
          operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
@@ -93,6 +104,10 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
                handlaggning.version() + 1);
          updateHandlaggning(handlaggningUpdate, cloudevent, operativUppgift.getUppgiftId());
          writeCloudEventData(request.handlaggningId(), cloudevent, operativUppgift.getUppgiftId());
+
+         processTopicInfo = ImmutableProcessTopicInfo.builder().replyTopic(request.replyTo()).build();
+
+         writeProcessTopicInfo(request.handlaggningId(), processTopicInfo);
 
          var commonRegelData = ImmutableManuellRegelCommonData.builder()
                .uppgift(uppgift)
@@ -122,7 +137,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
             tryDeleteCloudEventData(request.handlaggningId());
          }
 
-         sendErrorResponse(request.handlaggningId(), cloudevent, regelErrorInformation);
+         if (processTopicInfo != null)
+         {
+            tryDeleteProcessTopicInfo(request.handlaggningId());
+         }
+
+         sendErrorResponse(request.handlaggningId(), cloudevent, regelErrorInformation, request.replyTo());
          return;
       }
    }
@@ -153,7 +173,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       CloudEventData cloudEventData = null;
       try
       {
-         cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulStatus.cloudeventAttributes());
+         cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulStatus.processInfo().cloudeventAttributes());
 
          ManuellRegelCommonData commonRegelData = readManuellRegelCommonData(oulStatus.handlaggningId());
          var uppgift = commonRegelData.uppgift();
@@ -192,8 +212,10 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
 
          tryEndOperativUppgift(oulStatus.uppgiftId(), "Internal error");
          tryDeleteCloudEventData(oulStatus.handlaggningId());
+         tryDeleteProcessTopicInfo(oulStatus.handlaggningId());
          tryDeleteManuellRegelCommonData(oulStatus.handlaggningId());
-         sendErrorResponse(oulStatus.handlaggningId(), cloudEventData, regelErrorInformation);
+         sendErrorResponse(oulStatus.handlaggningId(), cloudEventData, regelErrorInformation,
+               oulStatus.processInfo().replyTopic());
          return;
       }
    }
@@ -207,6 +229,14 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       {
          LOGGER.error("Failed to read cloudEventData in handleUppgiftDone for handlaggningId: {}", handlaggningId);
          throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read cloudEventData");
+      }
+
+      var processTopicInfo = readProcessTopicInfo(handlaggningId);
+
+      if (processTopicInfo == null)
+      {
+         LOGGER.error("Failed to read processTopicInfo in handleUppgiftDone for handlaggningId: {}", handlaggningId);
+         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read processTopicInfo");
       }
 
       ManuellRegelCommonData commonRegelData;
@@ -243,12 +273,21 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
 
-      sendResponse(handlaggningId, cloudEventData, utfall);
+      sendResponse(handlaggningId, cloudEventData, utfall, processTopicInfo.replyTopic());
 
       DelayedException delayedException = new DelayedException();
       try
       {
          dataStorage.deleteManuellRegelCommonData(handlaggningId);
+      }
+      catch (Exception e)
+      {
+         delayedException.addSuppressed(e);
+      }
+
+      try
+      {
+         processTopicInfoStorage.deleteProcessTopicInfo(handlaggningId);
       }
       catch (Exception e)
       {
@@ -350,7 +389,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    private void sendErrorResponse(UUID handlaggningId, CloudEventData cloudEventData,
-         RegelErrorInformation regelErrorInformation)
+         RegelErrorInformation regelErrorInformation, String replyTo)
    {
       if (handlaggningId == null || cloudEventData == null || regelErrorInformation == null)
       {
@@ -360,7 +399,7 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          return;
       }
 
-      sendResponse(handlaggningId, cloudEventData, regelErrorInformation);
+      sendResponse(handlaggningId, cloudEventData, regelErrorInformation, replyTo);
    }
 
    private RegelErrorInformation createRegelErrorInformation(String felkod, String meddelande)
@@ -490,6 +529,48 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       catch (Exception e)
       {
          LOGGER.error("Could not delete ManuellRegelCommonData from data storage. handlaggningId: {}", handlaggningId, e);
+      }
+   }
+
+   private void writeProcessTopicInfo(UUID handlaggningId,
+         ProcessTopicInfo processTopicInfo)
+   {
+      try
+      {
+         this.processTopicInfoStorage.setProcessTopicInfo(handlaggningId, processTopicInfo);
+      }
+      catch (Exception e)
+      {
+         var message = String.format(
+               "Failed to write ProcessTopicInfo to correlation storage. handlaggningId: %s",
+               handlaggningId);
+         var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_PROCESS_TOPIC_INFO_WRITE_FAILURE, message);
+         throw new RegelCancelledException(regelErrorInformation, message, e);
+      }
+   }
+
+   private ProcessTopicInfo readProcessTopicInfo(UUID handlaggningId)
+   {
+      try
+      {
+         return processTopicInfoStorage.getProcessTopicInfo(handlaggningId);
+      }
+      catch (Exception e)
+      {
+         LOGGER.error("Failed to read ProcessTopicInfo from correlation storage. handlaggningId: {}", handlaggningId, e);
+         return null;
+      }
+   }
+
+   private void tryDeleteProcessTopicInfo(UUID handlaggningId)
+   {
+      try
+      {
+         this.processTopicInfoStorage.deleteProcessTopicInfo(handlaggningId);
+      }
+      catch (Exception e)
+      {
+         LOGGER.error("Could not delete process topic info. handlaggningId: {}", handlaggningId, e);
       }
    }
 

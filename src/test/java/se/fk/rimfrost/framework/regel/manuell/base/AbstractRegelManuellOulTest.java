@@ -5,8 +5,10 @@ import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.quarkus.test.InjectMock;
 
+import java.util.Map;
 import java.util.UUID;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -18,6 +20,7 @@ import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
 import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
+import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.regel.RegelTestData;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 
@@ -31,15 +34,23 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    @InjectMock
    protected OulAdapter oulAdapter;
 
+   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
+   String responseTopic;
+
    @BeforeEach
    void stubOulAdapter() throws Exception
    {
+      var processInfo = ImmutableProcessInfo.builder()
+            .replyTopic(responseTopic)
+            .cloudeventAttributes(Map.of())
+            .build();
       Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation -> {
          CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
                .handlaggningId(req.getHandlaggningId())
                .status("NY")
+               .processInfo(processInfo)
                .build();
       });
    }
@@ -51,7 +62,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    })
    void should_create_correct_oul_request(String handlaggningId) throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
       Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
       var oulRequest = oulRequestCaptor.getValue();
@@ -73,11 +84,11 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    })
    void should_include_cloudevent_attributes_in_oul_request(String handlaggningId) throws Exception
    {
-      var testRequest = RegelTestData.newRegelRequestMessagePayload(handlaggningId);
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      var testRequest = RegelTestData.newRegelRequestMessagePayload(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
       Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
-      var attributes = oulRequestCaptor.getValue().getCloudeventAttributes();
+      var attributes = oulRequestCaptor.getValue().getProcessInfo().getCloudeventAttributes();
       Assertions.assertNotNull(attributes);
       Assertions.assertEquals(testRequest.getId(), attributes.get("id"));
       Assertions.assertEquals(testRequest.getKogitoprocinstanceid(), attributes.get("kogitoprocinstanceid"));
@@ -102,7 +113,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
          String idtypTypId,
          String idtypVarde) throws JsonProcessingException
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       //
       // mock status update from OUL
       //
@@ -110,7 +121,8 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
+            responseTopic);
       //
       // verify PUT handlaggning
       //
@@ -133,16 +145,18 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
          String idtypTypId,
          String idtypVarde) throws JsonProcessingException
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
 
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
+            responseTopic);
       WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 2);
 
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.TILLDELAD);
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.TILLDELAD,
+            responseTopic);
       var puts = WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 3);
 
       assertEquals(3, puts.size(), "Expected three PUTs: NY + PLANERAD + TILLDELAD");

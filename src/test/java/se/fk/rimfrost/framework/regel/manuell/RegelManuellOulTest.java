@@ -2,6 +2,7 @@ package se.fk.rimfrost.framework.regel.manuell;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -18,6 +19,9 @@ import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 })
 public class RegelManuellOulTest extends AbstractRegelManuellOulTest
 {
+   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
+   String responseTopic;
+
    @ParameterizedTest
    @CsvSource(
    {
@@ -25,7 +29,7 @@ public class RegelManuellOulTest extends AbstractRegelManuellOulTest
    })
    public void should_send_correct_erbjudande_values_with_oul_create_request(String handlaggningId) throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
       Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
       var oulRequest = oulRequestCaptor.getValue();

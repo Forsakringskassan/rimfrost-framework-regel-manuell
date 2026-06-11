@@ -3,13 +3,18 @@ package se.fk.rimfrost.framework.regel.manuell;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+
+import java.util.Map;
 import java.util.UUID;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.exception.OulException;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
+import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
@@ -31,13 +36,21 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
    @InjectMock
    OulAdapter oulAdapter;
 
+   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
+   String responseTopic;
+
    private void stubCreateOperativUppgiftSuccess(UUID handlaggningId) throws Exception
    {
+      var processInfo = ImmutableProcessInfo.builder()
+            .replyTopic(responseTopic)
+            .cloudeventAttributes(Map.of())
+            .build();
       Mockito.when(oulAdapter.createOperativUppgift(any())).thenReturn(
             ImmutableOperativUppgift.builder()
                   .uppgiftId(UUID.randomUUID())
                   .handlaggningId(handlaggningId)
                   .status(RegelManuellTestStatus.PLANERAD.name())
+                  .processInfo(processInfo)
                   .build());
    }
 
@@ -51,7 +64,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
       Mockito.when(oulAdapter.createOperativUppgift(any()))
             .thenThrow(new OulException(OulException.ErrorType.SERVICE_UNAVAILABLE, "OUL is down"));
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
 
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -69,7 +82,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
       Mockito.when(oulAdapter.endOperativUppgift(any(), any()))
             .thenThrow(new OulException(OulException.ErrorType.UNEXPECTED_ERROR, "OUL is broken"));
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
 
       given()
             .when()

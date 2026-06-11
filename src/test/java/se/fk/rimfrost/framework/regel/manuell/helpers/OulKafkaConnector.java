@@ -6,6 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 import se.fk.rimfrost.OperativtUppgiftslagerStatusMessage;
+import se.fk.rimfrost.ProcessInfo;
 import se.fk.rimfrost.framework.oul.logic.dto.Idtyp;
 import se.fk.rimfrost.framework.regel.KafkaConnector;
 import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
@@ -48,12 +49,14 @@ public class OulKafkaConnector extends KafkaConnector
     * @param handlaggningId identifier for the handlaggning
     * @param uppgiftId      identifier for the task
     * @param utforarId      utforare identifier
+    * @param planeradTill   planned date of task execution
     * @param status         current status
+    * @param replyTo        process reply topic
     */
    public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, OffsetDateTime planeradTill,
-         RegelManuellTestStatus status)
+         RegelManuellTestStatus status, String replyTo)
    {
-      simulateOulStatus(handlaggningId, uppgiftId, utforarId, planeradTill, status, testCloudeventAttributes());
+      simulateOulStatus(handlaggningId, uppgiftId, utforarId, planeradTill, status, testCloudeventAttributes(), replyTo);
    }
 
    /**
@@ -66,19 +69,25 @@ public class OulKafkaConnector extends KafkaConnector
     * @param handlaggningId      identifier for the handlaggning
     * @param uppgiftId           identifier for the task
     * @param utforarId           utforare identifier
+    * @param planeradTill        planned date of task execution
     * @param status              current status
     * @param cloudeventAttributes CloudEvent correlation attributes to embed in the message
+    * @param replyTo             process reply topic
     */
    public void simulateOulStatus(String handlaggningId, String uppgiftId, Idtyp utforarId, OffsetDateTime planeradTill,
-         RegelManuellTestStatus status, Map<String, String> cloudeventAttributes)
+         RegelManuellTestStatus status, Map<String, String> cloudeventAttributes, String replyTo)
    {
+      var processInfo = new ProcessInfo();
+      processInfo.setReplyTopic(replyTo);
+      processInfo.setCloudeventAttributes(cloudeventAttributes);
+
       var msg = new OperativtUppgiftslagerStatusMessage();
       msg.setStatus(status.name());
       msg.setUppgiftId(uppgiftId);
       msg.setHandlaggningId(handlaggningId);
       msg.setUtforarId(toMessageIdtyp(utforarId));
       msg.setPlaneradTill(planeradTill);
-      msg.setCloudeventAttributes(cloudeventAttributes);
+      msg.setProcessInfo(processInfo);
       inMemoryConnector.source(oulStatusNotificationChannel).send(msg);
    }
 
