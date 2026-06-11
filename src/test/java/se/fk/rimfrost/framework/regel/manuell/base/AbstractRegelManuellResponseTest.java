@@ -2,8 +2,10 @@ package se.fk.rimfrost.framework.regel.manuell.base;
 
 import io.quarkus.test.InjectMock;
 
+import java.util.Map;
 import java.util.UUID;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -13,6 +15,7 @@ import org.mockito.Mockito;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
+import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.regel.Utfall;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -25,21 +28,30 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    @InjectMock
    OulAdapter oulAdapter;
 
+   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
+   String responseTopic;
+
    @BeforeEach
    void stubOulAdapter() throws Exception
    {
+      var processInfo = ImmutableProcessInfo.builder()
+            .replyTopic(responseTopic)
+            .cloudeventAttributes(Map.of())
+            .build();
       Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation -> {
          CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
          return ImmutableOperativUppgift.builder()
                .uppgiftId(UUID.randomUUID())
                .handlaggningId(req.getHandlaggningId())
                .status(RegelManuellTestStatus.PLANERAD.name())
+               .processInfo(processInfo)
                .build();
       });
       Mockito.when(oulAdapter.endOperativUppgift(any(), any())).thenAnswer(invocation -> ImmutableOperativUppgift.builder()
             .uppgiftId(UUID.randomUUID())
             .handlaggningId(UUID.randomUUID())
             .status(RegelManuellTestStatus.AVSLUTAD.name())
+            .processInfo(processInfo)
             .build());
    }
 
@@ -51,9 +63,9 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    void should_return_correct_regel_response_utfall(Utfall expectedUtfall, String handlaggningId, String uppgiftId)
          throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            null, RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD, responseTopic);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -68,9 +80,9 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    void should_return_correct_regel_response_handlaggning_id(String handlaggningId, String uppgiftId)
          throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, newHandlaggningIdtyp(),
-            null, RegelManuellTestStatus.PLANERAD);
+            null, RegelManuellTestStatus.PLANERAD, responseTopic);
       Thread.sleep(1000); // Sleep 1 second to ensure that kafka messages is processed
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();

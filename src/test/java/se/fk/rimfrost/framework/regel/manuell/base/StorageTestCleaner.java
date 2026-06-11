@@ -16,5 +16,6 @@ public class StorageTestCleaner
    {
       em.createQuery("DELETE FROM ManuellRegelCommonDataEntity").executeUpdate();
       em.createQuery("DELETE FROM CloudEventDataEntity").executeUpdate();
+      em.createQuery("DELETE FROM ProcessTopicInfoEntity").executeUpdate();
    }
 }
