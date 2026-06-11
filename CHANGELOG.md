@@ -2,7 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
-## 1.0.15 (2026-06-04)
+## 1.1.1 (2026-06-11)
+
+### Bug Fixes
+
+-  Add support for replyTo ([a9481](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a94817408427cd9) Lars Persson)  
+
+## rimfrost-1.1 (2026-06-04)
 
 ### Bug Fixes
 
