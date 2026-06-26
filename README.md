@@ -6,14 +6,14 @@ Innehåller både framework-logik och hjälpklasser vid test av regler.
 
 ```text
 root
-├── src/main
+├── src/main/java
 │   └── (framework implementation)
-├── src/test
-│   └── (tester av ramverket)
-├── src/test/base
-│   └── (abstrakta testklasser)
-├── src/test/helpers
-    └── (helpers för testklasser)
+└── src/test/java
+    ├── (tester av ramverket)
+    ├── base/
+    │   └── (abstrakta testklasser)
+    └── helpers/
+        └── (helpers för testklasser)
 ```
 
 # src/main
