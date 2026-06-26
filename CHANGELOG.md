@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.1.3 (2026-06-26)
+
+### Bug Fixes
+
+-  Enable quarkus-hibernate-validator validation ([69a79](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/69a792ef754ee84) Lars Persson)  
+-  **deps**  update dependency se.fk.rimfrost.framework.regel:rimfrost-framework-regel to v1.1.4 ([e3fbc](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/e3fbc65ca927f30) renovate[bot])  
+
 ## 1.1.2 (2026-06-15)
 
 ### Bug Fixes
