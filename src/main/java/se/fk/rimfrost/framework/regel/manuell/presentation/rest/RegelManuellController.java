@@ -2,6 +2,8 @@ package se.fk.rimfrost.framework.regel.manuell.presentation.rest;
 
 import java.util.UUID;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
@@ -45,7 +47,7 @@ public abstract class RegelManuellController<T, Y> implements RegelManuellContro
 
    @PATCH
    @Path("/{handlaggningId}")
-   public void patch(@PathParam("handlaggningId") UUID handlaggningId, Y request)
+   public void patch(@PathParam("handlaggningId") UUID handlaggningId, @Valid @NotNull Y request)
    {
       regelManuellMiddlewareService.update(handlaggningId, request);
    }
