@@ -27,8 +27,10 @@
   statusnotifieringar till ramverket.
 - **FRMM-FR-02.6** Ramverket ska efter skapandet lagra uppgiftens metadata (uppgifts-ID, OUL:s
   uppgifts-ID) persistent.
-- **FRMM-FR-02.7** Ramverket ska uppdatera handläggningsärendet med uppgiftsreferens och
+- **FRMM-FR-02.8** Ramverket ska uppdatera handläggningsärendet med uppgiftsreferens och
   uppgiftsspecifikation efter skapandet.
+- **FRMM-FR-02.9** Ramverket ska inte inkludera individer i OUL-skapandeförfrågan. OUL hämtar
+  individinformation internt vid behov via det `handlaggningId` som uppgiften är knuten till.
 
 ### FRMM-FR-03 — Hantera OUL-statusnotifieringar
 
