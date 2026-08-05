@@ -77,6 +77,11 @@ automatiskt följande ändpunkter:
 | `/{handlaggningId}` | PATCH | Uppdatera regelspecifikt underlag |
 | `/{handlaggningId}/done` | POST | Markera uppgift som klar |
 
+Vid `GET /{handlaggningId}` kontrollerar ramverket automatiskt om någon av ärendets individer
+har skyddad identitet via SID-tjänsten. Om så är fallet returneras HTTP 403 och
+`readData()` anropas inte. Konfigurationsegenskapen `sid.api.base-url` måste sättas i alla
+regelimplementationer.
+
 Ramverket hanterar även följande Kafka-kanaler:
 
 | Kanal | Riktning | Beskrivning |
@@ -101,6 +106,9 @@ regel.persistence.table-prefix=min_regel
 
 # OUL-subtopic för statusnotifieringar till denna regel
 kafka.subtopic=min-regel-reply
+
+# Bas-URL till SID-tjänsten (krävs — används för skyddad identitet-kontroll vid GET)
+sid.api.base-url=https://<sid-service-host>
 ```
 
 ---

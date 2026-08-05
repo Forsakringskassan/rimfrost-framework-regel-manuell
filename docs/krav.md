@@ -88,6 +88,22 @@
   ett konfigurerbart generellt felmeddelande. Standardvärdet ska vara `Internal Server Error`.
 - **FRMM-FR-06.6** Valideringsfel från REST-gränssnittet ska resultera i HTTP 400.
 
+### FRMM-FR-08 — Kontroll av skyddad identitet (SID)
+
+- **FRMM-FR-08.1** Innan `readData()` anropas vid `GET /{handlaggningId}` ska ramverket kontrollera
+  om någon av handläggningsärendets individer har skyddad identitet via SID-tjänsten.
+- **FRMM-FR-08.2** Individerna hämtas från `handlaggning.yrkande().individYrkandeRoller()` och
+  skickas i en `POST /sid/status`-förfrågan till SID-tjänsten.
+- **FRMM-FR-08.3** Om en eller flera individer har skyddad identitet ska ramverket returnera
+  HTTP 403 och `readData()` ska inte anropas.
+- **FRMM-FR-08.4** Fel från SID-tjänsten ska resultera i väldefinierade HTTP-statuskoder på samma
+  sätt som fel mot handläggningstjänsten: 404, 400, 503 respektive 500.
+- **FRMM-FR-08.5** SID-kontrollen ska ingå i ramverket och gälla automatiskt för alla
+  regelimplementationer utan kodändringar. Varje regelimplementation måste konfigurera `sid.api.base-url` 
+  med adressen till SID-tjänsten.
+
+
+
 ### FRMM-FR-07 — Kontraktsdefinierade gränssnitt för regelimplementationer
 
 - **FRMM-FR-07.1** Ramverket ska definiera `RegelManuellServiceInterface<T, Y>` som

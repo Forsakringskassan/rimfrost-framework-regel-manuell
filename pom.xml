@@ -106,11 +106,16 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.oul</groupId>
       <artifactId>rimfrost-framework-oul-adapter</artifactId>
-      <version>1.1.3</version>
+      <version>1.1.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.referensdata</groupId>
       <artifactId>rimfrost-framework-referensdata-interface</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.framework.sid</groupId>
+      <artifactId>rimfrost-framework-sid-adapter</artifactId>
       <version>0.0.1</version>
     </dependency>
     <dependency>
