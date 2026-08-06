@@ -5,6 +5,7 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -61,6 +62,7 @@ public class RegelManuellSidCheckTest
    OulAdapter oulAdapter;
 
    @Test
+   @DisplayName("FRMM-FR-08.3: HTTP 403 returneras och readData() anropas inte när SID-träff detekteras")
    void read_should_throw_forbidden_when_sid_detected() throws Exception
    {
       var oulUppgiftId = UUID.randomUUID();
@@ -75,6 +77,7 @@ public class RegelManuellSidCheckTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-08.6: OUL-uppgiften tilldelningsavbokas innan HTTP 403 returneras vid SID-träff")
    void read_should_unassign_uppgift_when_sid_detected() throws Exception
    {
       var oulUppgiftId = UUID.randomUUID();
@@ -89,6 +92,7 @@ public class RegelManuellSidCheckTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-08.1: Tilldelningsavbokning utförs inte när ingen SID detekteras")
    void read_should_not_unassign_when_no_sid() throws Exception
    {
       var handlaggning = handlaggningWithIndivider();
@@ -102,6 +106,7 @@ public class RegelManuellSidCheckTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-08.8: Fel vid tilldelningsavbokning loggas men påverkar inte HTTP 403-svaret")
    void read_should_still_throw_forbidden_when_unassign_fails() throws Exception
    {
       var oulUppgiftId = UUID.randomUUID();
@@ -118,6 +123,7 @@ public class RegelManuellSidCheckTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-08.7: Tilldelningsavbokning hoppas över utan fel när inget uppgifts-ID finns lagrat")
    void read_should_skip_unassign_when_oul_uppgift_id_is_null() throws Exception
    {
       var handlaggning = handlaggningWithIndivider();
@@ -132,6 +138,7 @@ public class RegelManuellSidCheckTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-08.1: Anropet fortsätter till readData() när ingen SID detekteras")
    void read_should_proceed_when_no_sid() throws Exception
    {
       var handlaggning = handlaggningWithIndivider();
@@ -144,6 +151,7 @@ public class RegelManuellSidCheckTest
 
    @ParameterizedTest
    @EnumSource(SidException.ErrorType.class)
+   @DisplayName("FRMM-FR-08.4: Fel från SID-tjänsten mappas till väldefinierade HTTP-statuskoder")
    void read_should_throw_with_mapped_status_when_sid_throws(SidException.ErrorType errorType)
          throws Exception
    {
@@ -157,6 +165,7 @@ public class RegelManuellSidCheckTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-08.2: SID-kontrollen hanterar tom individlista i yrkande utan fel")
    void read_should_proceed_when_individYrkandeRoller_is_empty() throws Exception
    {
       var handlaggning = handlaggningWithoutIndivider();

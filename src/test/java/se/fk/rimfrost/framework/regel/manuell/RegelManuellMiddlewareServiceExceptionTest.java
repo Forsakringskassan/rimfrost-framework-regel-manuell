@@ -5,6 +5,7 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -48,6 +49,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    @ParameterizedTest
    @EnumSource(HandlaggningException.ErrorType.class)
+   @DisplayName("FRMM-FR-06.4: HandlaggningException vid GET mappas till väldefinierad HTTP-statuskod")
    void read_should_throw_with_mapped_status_when_getHandlaggning_throws(HandlaggningException.ErrorType errorType)
          throws HandlaggningException
    {
@@ -61,6 +63,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    @ParameterizedTest
    @EnumSource(HandlaggningException.ErrorType.class)
+   @DisplayName("FRMM-FR-06.4: HandlaggningException vid PATCH mappas till väldefinierad HTTP-statuskod")
    void update_should_throw_with_mapped_status_when_getHandlaggning_throws(HandlaggningException.ErrorType errorType)
          throws HandlaggningException
    {
@@ -74,6 +77,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    @ParameterizedTest
    @EnumSource(HandlaggningException.ErrorType.class)
+   @DisplayName("FRMM-FR-06.4: HandlaggningException vid uppdatering av handläggningsärende under GET mappas till väldefinierad HTTP-statuskod")
    void read_should_throw_with_mapped_status_when_updateHandlaggning_throws(HandlaggningException.ErrorType errorType)
          throws Exception
    {
@@ -89,6 +93,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    @ParameterizedTest
    @EnumSource(HandlaggningException.ErrorType.class)
+   @DisplayName("FRMM-FR-06.4: HandlaggningException vid uppdatering av handläggningsärende under PATCH mappas till väldefinierad HTTP-statuskod")
    void update_should_throw_with_mapped_status_when_updateHandlaggning_throws(HandlaggningException.ErrorType errorType)
          throws HandlaggningException
    {
@@ -114,6 +119,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-06.5: HTTP 500 returneras när läsning av lagrad uppgiftsdata misslyckas under done")
    void done_should_return_internal_server_error_when_readManuellRegelCommonData_fails()
    {
       doThrow(new IllegalStateException("storage failure"))

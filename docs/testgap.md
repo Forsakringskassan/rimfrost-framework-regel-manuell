@@ -1,0 +1,13 @@
+# Testgap — rimfrost-framework-regel-manuell
+
+## Infrastruktur- och konfigurationsnivå — rimligt att lämna utan test
+
+| Krav          | Kommentar                                                                                                                                                                                                                                                                   |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| FRMM-PR-01.3  | Uppstartsavvisning vid saknat tabellprefix valideras av konfigurationsramverket                                                                                                                                                                                             |
+| FRMM-PR-01.4  | Flyway-migrationer täcks av dev/test-databasuppsättningen, inte som enhetstester                                                                                                                                                                                            |
+| FRMM-NFR-04.1 | Utbyggbarhet utan ramverksändringar demonstreras av befintliga regelimplementationer                                                                                                                                                                                        |
+| FRMM-FR-07.1  | Kontraktsdefinition — verifieras vid kompilering av implementationer                                                                                                                                                                                                        |
+| FRMM-FR-07.2  | Kontraktsdefinition — verifieras vid kompilering av implementationer                                                                                                                                                                                                        |
+| FRMM-FR-04.5  | `@Valid @NotNull` på generisk typparameter `Y` i abstrakt klass aktiveras inte av Quarkus valideringsinterceptorn via den raderade brygmetoden — kan ej testas via HTTP-lagret med nuvarande testarkitektur; verifieras via kodinspektion att annotationerna finns på plats |
+| FRMM-FR-06.6  | Samma tekniska begränsning som FR-04.5 — se ovan                                                                                                                                                                                                                            |

@@ -5,6 +5,7 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -24,11 +25,9 @@ import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
-
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -96,6 +95,7 @@ public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTe
    }
 
    @Test
+   @DisplayName("FRMM-FR-06.5: Felrespons skickas vid oväntad exception under initial uppdatering av handläggningsärende")
    public void should_send_error_response_on_unexpected_exception_during_initial_handlaggning_update() throws Exception
    {
       var handlaggningId = UUID.randomUUID();
@@ -109,6 +109,7 @@ public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTe
    }
 
    @Test
+   @DisplayName("FRMM-FR-06.5: Felrespons skickas vid oväntad exception under OUL-statusuppdatering")
    public void should_send_error_response_on_unexpected_exception_during_oul_status_update() throws Exception
    {
       var handlaggningId = UUID.randomUUID();

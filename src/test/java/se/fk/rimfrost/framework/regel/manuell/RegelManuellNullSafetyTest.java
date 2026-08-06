@@ -3,12 +3,11 @@ package se.fk.rimfrost.framework.regel.manuell;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-
 import java.util.Map;
 import java.util.UUID;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
@@ -21,7 +20,6 @@ import se.fk.rimfrost.framework.oul.model.OperativUppgift;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-
 import static org.mockito.ArgumentMatchers.any;
 
 /**
@@ -69,6 +67,7 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901021234, 11e53b18-e9ac-4707-825b-a1cb80689c30, Idtyp_typId, Idtyp_varde"
    })
+   @DisplayName("FRMM-FR-01.4: Null CloudEvent-attribut i OUL-statusnotifiering hanteras utan fel")
    void done_succeeds_when_oul_status_has_null_cloudevent_attributes(
          String handlaggningId,
          String uppgiftId,
@@ -94,6 +93,7 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901021234, 11e53b18-e9ac-4707-825b-a1cb80689c30, Idtyp_typId, Idtyp_varde"
    })
+   @DisplayName("FRMM-FR-01.5: Null replyTo-ämne i OUL-statusnotifiering hanteras utan fel")
    void done_succeeds_when_oul_status_has_null_reply_topic(
          String handlaggningId,
          String uppgiftId,
@@ -119,6 +119,7 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901031234, 11e53b18-e9ac-4707-825b-a1cb80689c31, Idtyp_typId, Idtyp_varde"
    })
+   @DisplayName("Null OUL-uppgifts-ID hanteras utan fel under hela livscykeln")
    void done_succeeds_when_oul_uppgift_id_is_null(
          String handlaggningId,
          String uppgiftId,

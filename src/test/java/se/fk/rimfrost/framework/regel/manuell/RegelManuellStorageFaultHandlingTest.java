@@ -6,11 +6,11 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
@@ -33,7 +33,6 @@ import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonD
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
-
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -109,6 +108,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, ERROR"
    })
+   @DisplayName("FRMM-FR-06.3: Felrespons skickas när lagring av uppgiftsmetadata misslyckas efter OUL-skapande")
    void should_send_error_response_on_write_failure_during_initial_storage_write(String handlaggningId, Utfall expectedUtfall)
          throws Exception
    {
@@ -126,6 +126,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
    })
+   @DisplayName("FRMM-FR-06.3: Felrespons skickas när läsning från lagring misslyckas under OUL-statusuppdatering")
    void should_send_error_response_on_read_failure_during_oul_status_update(
          String handlaggningId,
          String uppgiftId,
@@ -153,6 +154,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
    })
+   @DisplayName("FRMM-FR-06.3: Felrespons skickas när skrivning till lagring misslyckas under OUL-statusuppdatering")
    void should_send_error_response_on_write_failure_during_oul_status_update(
          String handlaggningId,
          String uppgiftId,
@@ -182,6 +184,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
    })
+   @DisplayName("FRMM-FR-06.3: Felrespons skickas vid lagringsfel under OUL-statusuppdatering även vid AVBRUTEN-status")
    void should_send_error_response_on_write_failure_during_oul_status_update_alongside_avbruten(
          String handlaggningId,
          String uppgiftId,
@@ -211,6 +214,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, ERROR"
    })
+   @DisplayName("FRMM-FR-01.4: CloudEvent-attributen från OUL-statusnotifiering bevaras och används i felrespons")
    void should_use_process_info_attributes_from_oul_status_in_error_response(
          String handlaggningId,
          String uppgiftId,
@@ -251,6 +255,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-05.4, FRMM-FR-05.5: OUL-uppgiften avslutas vid lagringsfel efter OUL-skapande")
    void should_try_to_end_operativ_uppgift_when_initial_storage_write_fails(String handlaggningId) throws Exception
    {
       var processInfo = ImmutableProcessInfo.builder()
@@ -279,6 +284,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-06.1: OUL-uppgiften avslutas inte när läsning av handläggningsärende misslyckas vid start")
    void should_not_try_to_end_operativ_uppgift_when_get_handlaggning_fails(String handlaggningId) throws Exception
    {
       var server = WireMockRegelManuell.getWireMockServer();
@@ -304,6 +310,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
    })
+   @DisplayName("FRMM-FR-05.5: OUL-uppgiften avslutas vid lagringsläsningsfel under OUL-statusuppdatering")
    void should_try_to_end_operativ_uppgift_when_oul_status_update_storage_read_fails(
          String handlaggningId,
          String uppgiftId,
@@ -329,6 +336,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
    })
+   @DisplayName("FRMM-FR-05.5: OUL-uppgiften avslutas vid lagringsskriv-fel under OUL-statusuppdatering")
    void should_try_to_end_operativ_uppgift_when_oul_status_update_storage_write_fails(
          String handlaggningId,
          String uppgiftId,
@@ -356,6 +364,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-05.4: CloudEvent-data rensas vid lagringsfel under initial lagringsskrivning")
    void should_try_to_delete_cloud_event_data_on_write_failure_during_initial_storage_write(String handlaggningId)
          throws Exception
    {
@@ -371,6 +380,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-05.4: CloudEvent-data rensas vid fel under skrivning av processroutingdata")
    void should_try_to_delete_cloud_event_data_on_write_failure_during_initial_process_topic_info_write(String handlaggningId)
          throws Exception
    {
@@ -387,6 +397,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-05.4: Processroutingdata rensas vid lagringsfel under initial lagringsskrivning")
    void should_try_to_delete_process_topic_info_on_write_failure_during_initial_storage_write(String handlaggningId)
          throws Exception
    {
@@ -402,6 +413,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
    })
+   @DisplayName("FRMM-FR-05.4: All korrelationsdata rensas när läsning av handläggningsärende misslyckas under OUL-statusuppdatering")
    void should_try_to_delete_storage_data_when_get_handlaggning_fails_on_oul_status_update(
          String handlaggningId,
          String uppgiftId,
@@ -437,6 +449,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-06.5: HTTP 500 returneras vid fel vid läsning av CloudEvent-data under done")
    void should_return_500_status_on_cloud_event_data_read_failure_during_done_request(String handlaggningId)
    {
       Mockito.doThrow(new IllegalStateException()).when(cloudEventDataStorage)
@@ -459,6 +472,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-06.5: HTTP 500 returneras vid fel vid läsning av processroutingdata under done")
    void should_return_500_status_on_process_topic_info_read_failure_during_done_request(String handlaggningId)
    {
       CloudEventData cloudEventData = Mockito.mock(CloudEventData.class);
