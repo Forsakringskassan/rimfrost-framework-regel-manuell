@@ -14,6 +14,7 @@ import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.regel.logic.RegelUtils;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
@@ -42,11 +43,18 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    @Inject
    SidAdapter sidAdapter;
 
+   @Inject
+   OulAdapter oulAdapter;
+
    @Override
    public T read(UUID handlaggningId)
    {
       var handlaggning = getHandlaggning(handlaggningId);
-      checkSid(handlaggning);
+      if (checkSid(handlaggning))
+      {
+         unassignUppgift(handlaggningId);
+         throw new RegelManuellException(Response.Status.FORBIDDEN, "Skyddad identitet");
+      }
       var result = regelService.readData(handlaggning);
       var underlag = RegelUtils.createUnderlag("GetResponse", 1, result, objectMapper);
       var handlaggningUpdate = createHandlaggningUpdate(handlaggning, underlag);
@@ -116,22 +124,41 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    /**
     * Checks whether any individ on the handläggning has a protected identity (SID).
-    * Throws {@link RegelManuellException} with HTTP 403 if SID is detected, or maps
-    * {@link SidException} to an appropriate HTTP status on service errors.
+    * Returns {@code true} if SID is detected, {@code false} otherwise.
+    * Maps {@link SidException} to an appropriate HTTP status on service errors.
     */
-   private void checkSid(Handlaggning handlaggning)
+   private boolean checkSid(Handlaggning handlaggning)
    {
       try
       {
-         if (sidAdapter.containsSid(extractIndivider(handlaggning)))
-         {
-            throw new RegelManuellException(Response.Status.FORBIDDEN, "Skyddad identitet");
-         }
+         return sidAdapter.containsSid(extractIndivider(handlaggning));
       }
       catch (SidException e)
       {
          LOGGER.error("Error checking SID for handlaggningsId: {}", handlaggning.id(), e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+      }
+   }
+
+   /**
+    * Unassigns the OUL uppgift for the given handläggning so it returns to an unassigned state.
+    * Best-effort: errors are logged and swallowed so they never affect the HTTP response.
+    */
+   private void unassignUppgift(UUID handlaggningId)
+   {
+      var oulUppgiftId = dataStorage.getManuellRegelCommonData(handlaggningId).oulUppgiftId();
+      if (oulUppgiftId == null)
+      {
+         LOGGER.warn("No oulUppgiftId found for handlaggningId: {}, skipping unassign", handlaggningId);
+         return;
+      }
+      try
+      {
+         oulAdapter.unassignOperativUppgift(oulUppgiftId);
+      }
+      catch (Exception e)
+      {
+         LOGGER.error("Failed to unassign uppgift {} for handlaggningId: {}", oulUppgiftId, handlaggningId, e);
       }
    }
 
