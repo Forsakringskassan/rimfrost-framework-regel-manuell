@@ -19,6 +19,7 @@ import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
 import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
 import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
+import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +42,9 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    @InjectMock
    ManuellRegelCommonDataStorage dataStorage;
+
+   @InjectMock
+   SidAdapter sidAdapter;
 
    @ParameterizedTest
    @EnumSource(HandlaggningException.ErrorType.class)
