@@ -146,7 +146,13 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
     */
    private void unassignUppgift(UUID handlaggningId)
    {
-      var oulUppgiftId = dataStorage.getManuellRegelCommonData(handlaggningId).oulUppgiftId();
+      var commonData = dataStorage.getManuellRegelCommonData(handlaggningId);
+      if (commonData == null)
+      {
+         LOGGER.warn("No common data found for handlaggningId: {}, skipping unassign", handlaggningId);
+         return;
+      }
+      var oulUppgiftId = commonData.oulUppgiftId();
       if (oulUppgiftId == null)
       {
          LOGGER.warn("No oulUppgiftId found for handlaggningId: {}, skipping unassign", handlaggningId);
