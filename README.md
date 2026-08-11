@@ -1,79 +1,141 @@
 # rimfrost-framework-regel-manuell
 
-Ramverkskomponent med definitioner gemensamma för alla manuella regler.
-Innehåller både framework-logik och hjälpklasser vid test av regler.
+Quarkus-baserat ramverk för manuella regler i Rimfrost. Tillhandahåller gemensam
+infrastruktur för Kafka-hantering, OUL-integration, hantering av statusnotifieringar,
+persistent mellanlagring och REST-gränssnitt mot handläggarportalen.
 
+Manuella regler delar ett gemensamt integrationsmönster: ta emot regelförfrågan via Kafka,
+skapa en uppgift i OUL, hantera statusuppdateringar och skicka ett regelsvar när handläggaren
+är klar. Ramverket centraliserar denna logik så att regelimplementationer enbart behöver
+bidra med regelspecifik affärslogik — all övrig orkestrering hanteras av ramverket.
+
+## Aktörer
+
+| Aktör | Roll |
+|---|---|
+| Regelimplementationer | Konsumerar ramverket genom att ärva basklasser och implementera definierade gränssnitt |
+| Handläggarportalen | Anropar regelns REST-gränssnitt för att läsa underlag, registrera uppdateringar och markera uppgifter som klara |
+| Kundbehovsflödet | Initierar regelkörningen via Kafka och tar emot regelsvaret |
+| OUL (Operativt Uppgiftslager) | Tar emot uppgifter, hanterar tilldelning och publicerar statusnotifieringar |
+| Handläggningstjänsten | Förvaltar ärendets livscykel och lagrar handläggningsunderlag |
 
 ```text
 root
-├── src/main/java
-│   └── (framework implementation)
+├── src/main/java       (ramverksimplementation)
 └── src/test/java
-    ├── (tester av ramverket)
-    ├── base/
-    │   └── (abstrakta testklasser)
-    └── helpers/
-        └── (helpers för testklasser)
+    ├── (ramverkstester)
+    ├── base/           (abstrakta testbasklasser — ingår i test-JAR)
+    └── helpers/        (hjälpklasser för test — ingår i test-JAR)
 ```
 
-# src/main
+---
 
-## RegelManuellService
+## Implementera en manuell regel
 
-Implementerar en service som en basklass där den specifika regeln gör _extends_ på denna
- basservice med regel-specifik logik. <br>
+En regelimplementation behöver tillhandahålla tre saker:
 
-Notera att basservicen INTE annoteras som @ApplicationScoped, <br>
-det måste servicen som _extendar_ basservice göra. t.ex:
+### 1. Serviceklass
 
-```
+Ärv `RegelManuellServiceBase` och implementera `RegelManuellServiceInterface<T, Y>` där
+`T` är regelns GET-response-typ och `Y` är regelns PATCH-request-typ.
+
+Klassen **måste** annoteras med `@ApplicationScoped` — ramverket tillhandahåller inte
+denna annotering.
+
+```java
 @ApplicationScoped
 @Startup
-public class BekraftaBeslutService extends RegelManuellService
-{
-```
+public class MinRegelService extends RegelManuellServiceBase
+    implements RegelManuellServiceInterface<MinRegelResponse, MinRegelRequest> {
 
-### Interface implementation
+    @Override
+    public MinRegelResponse readData(Handlaggning handlaggning) {
+        // returnera regelspecifikt underlag baserat på ärendet
+    }
 
-Implementerar _RegelRequestHandlerInterface_ eftersom alla manuella regler kan implementera samma logik
-för _handleRegelRequest_.<br>
-Implementerar även _OulHandlerInterface_ och _OulUppgiftDoneHandler_ som även de har samma logik för alla manuella regler.<br>
+    @Override
+    public HandlaggningUpdate updateData(Handlaggning handlaggning, MinRegelRequest request) {
+        // returnera HandlaggningUpdate med de ändringar som ska persisteras
+    }
 
-# src/test
-
-Innehåller tester av ramverket, men även abstrakta testklasser som är byggda för att kunna användas och köras i den färdiga regeln.<br>
-Ramverkstestklasserna _Regel*Test.java_ extendar de abstrakta testklasserna i _src/test/base_ för att kunna köras även för verifiering av ramverket.
-
-Note: Vid bygge av test-jar-filen (som sedan används av de färdiga reglerna) inkluderas endast /base och /helpers.<br>
-Övriga testklasser används bara vid verifiering av ramverket.
-
-## src/test/base
-
-Abstrakta testklasser _Abstract*Test.java_ som innehåller tester som behöver extendas och annoteras med QuarkusTest för att kunna köras.
-T.ex. genom:
-```
-@QuarkusTest
-@QuarkusTestResource.List(
-{
-      @QuarkusTestResource(WireMockRegelManuell.class)
-})
-public class RegelManuellHandlaggningTest extends AbstractRegelManuellHandlaggningTest
-{
+    @Override
+    public void done(UUID handlaggningId) {
+        sendRegelResponse(handlaggningId, Utfall.JA);
+    }
 }
 ```
 
-### RegelManuellTestData
+### 2. REST-kontroller
 
-Utility-klass som skapar testdata.
+Ärv `RegelManuellController<T, Y>` och annoteras med `@Path`. Ramverket tillhandahåller
+automatiskt följande ändpunkter:
 
-## src/test/helpers
+| Ändpunkt | Metod | Beskrivning |
+|---|---|---|
+| `/utokadUppgiftsbeskrivning` | GET | Utökad uppgiftsbeskrivning |
+| `/{handlaggningId}` | GET | Hämta regelspecifikt underlag |
+| `/{handlaggningId}` | PATCH | Uppdatera regelspecifikt underlag |
+| `/{handlaggningId}/done` | POST | Markera uppgift som klar |
 
-Innehåller hjälpkomponenter för OUL-kafka-kommunikation och Wiremock för manuella regler. 
+Ramverket hanterar även följande Kafka-kanaler:
 
-### OulKafkaConnector
+| Kanal | Riktning | Beskrivning |
+|---|---|---|
+| `{regel-name}-in` | Inkommande | Regelförfrågan från kundbehovsflödet |
+| `{subtopic}-status` | Inkommande | OUL-statusnotifieringar |
+| `{replyTo}` | Utgående | Regelresultat till kundbehovsflödet |
 
-Extendar _KafkaConnector_ för att hantera kommunikation med OUL.
+Fullständiga API-specifikationer definieras i regelimplementationens OpenAPI- och AsyncAPI-repon.
 
-### WireMockRegelManuell
+```java
+@Path("/min-regel")
+public class MinRegelController extends RegelManuellController<MinRegelResponse, MinRegelRequest> {
+}
+```
 
-Utility-klass för hantering av manuella reglers Wiremock-setup.
+### 3. Konfiguration
+
+```properties
+# Unikt prefix per regel — styr tabellnamn i databasen
+regel.persistence.table-prefix=min_regel
+
+# OUL-subtopic för statusnotifieringar till denna regel
+kafka.subtopic=min-regel-reply
+```
+
+---
+
+## Test-JAR
+
+Ramverket levererar en test-JAR med abstrakta basklasser och hjälpklasser för
+regelimplementationernas tester.
+
+### Abstrakta basklasser för test
+
+Ärv och annoteras med `@QuarkusTest` och `@QuarkusTestResource` för att aktivera testerna:
+
+| Klass                                               | Täcker                                    |
+|-----------------------------------------------------|-------------------------------------------|
+| `AbstractRegelManuellTest`                          | Grundkonfiguration med Kafka och WireMock |
+| `AbstractRegelManuellHandlaggningTest`              | REST-gränssnittets grundflöden            |
+| `AbstractRegelManuellOulTest`                       | OUL-integration och statusnotifieringar   |
+| `AbstractRegelManuellResponseTest`                  | Regelsvar                                 |
+| `AbstractRegelManuellUtokadUppgiftsbeskrivningTest` | Utökad uppgiftsbekrivning                 |
+
+```java
+@QuarkusTest
+@QuarkusTestResource.List({
+    @QuarkusTestResource(WireMockRegelManuell.class)
+})
+public class MinRegelHandlaggningTest extends AbstractRegelManuellHandlaggningTest {
+}
+```
+
+### Hjälpklasser
+
+| Klass                  | Användning                                        |
+|------------------------|---------------------------------------------------|
+| `RegelManuellTestData` | Metoder för testdata                              |
+| `OulKafkaConnector`    | In-memory Kafka för OUL-kommunikation i tester    |
+| `WireMockRegelManuell` | WireMock-setup för externa HTTP-beroenden         |
+| `StorageTestCleaner`   | Rensar ramverkets lagrade tillstånd mellan tester |
