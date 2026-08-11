@@ -14,6 +14,8 @@ import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.IndividYrkandeRoll;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
+import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
+import se.fk.rimfrost.framework.oul.exception.OulException;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
@@ -29,8 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -52,16 +57,78 @@ public class RegelManuellSidCheckTest
    @InjectMock
    ManuellRegelCommonDataStorage dataStorage;
 
+   @InjectMock
+   OulAdapter oulAdapter;
+
    @Test
    void read_should_throw_forbidden_when_sid_detected() throws Exception
    {
+      var oulUppgiftId = UUID.randomUUID();
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
+      givenStoredOulUppgiftId(oulUppgiftId);
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
       assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
+   }
+
+   @Test
+   void read_should_unassign_uppgift_when_sid_detected() throws Exception
+   {
+      var oulUppgiftId = UUID.randomUUID();
+      var handlaggning = handlaggningWithIndivider();
+      when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
+      when(sidAdapter.containsSid(any())).thenReturn(true);
+      givenStoredOulUppgiftId(oulUppgiftId);
+
+      assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
+
+      verify(oulAdapter).unassignOperativUppgift(eq(oulUppgiftId));
+   }
+
+   @Test
+   void read_should_not_unassign_when_no_sid() throws Exception
+   {
+      var handlaggning = handlaggningWithIndivider();
+      when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
+      when(sidAdapter.containsSid(any())).thenReturn(false);
+      givenSuccessfulDataStorage();
+
+      assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
+
+      verify(oulAdapter, never()).unassignOperativUppgift(any());
+   }
+
+   @Test
+   void read_should_still_throw_forbidden_when_unassign_fails() throws Exception
+   {
+      var oulUppgiftId = UUID.randomUUID();
+      var handlaggning = handlaggningWithIndivider();
+      when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
+      when(sidAdapter.containsSid(any())).thenReturn(true);
+      givenStoredOulUppgiftId(oulUppgiftId);
+      doThrow(new OulException(OulException.ErrorType.SERVICE_UNAVAILABLE, "oul down"))
+            .when(oulAdapter).unassignOperativUppgift(any());
+
+      var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
+
+      assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
+   }
+
+   @Test
+   void read_should_skip_unassign_when_oul_uppgift_id_is_null() throws Exception
+   {
+      var handlaggning = handlaggningWithIndivider();
+      when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
+      when(sidAdapter.containsSid(any())).thenReturn(true);
+      givenStoredOulUppgiftId(null);
+
+      var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
+
+      assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
+      verify(oulAdapter, never()).unassignOperativUppgift(any());
    }
 
    @Test
@@ -133,6 +200,13 @@ public class RegelManuellSidCheckTest
    {
       var data = mock(ManuellRegelCommonData.class);
       when(data.uppgift()).thenReturn(mock(Uppgift.class));
+      when(dataStorage.getManuellRegelCommonData(any())).thenReturn(data);
+   }
+
+   private void givenStoredOulUppgiftId(UUID oulUppgiftId)
+   {
+      var data = mock(ManuellRegelCommonData.class);
+      when(data.oulUppgiftId()).thenReturn(oulUppgiftId);
       when(dataStorage.getManuellRegelCommonData(any())).thenReturn(data);
    }
 
