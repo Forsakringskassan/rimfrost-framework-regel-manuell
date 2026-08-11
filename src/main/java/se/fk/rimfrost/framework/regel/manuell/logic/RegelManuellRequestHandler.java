@@ -80,10 +80,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
                .handlaggningId(request.handlaggningId())
                .version("1")
-               .individer(
-                     handlaggning.yrkande().individYrkandeRoller().stream()
-                           .map(r -> toIdtyp(r.individ()))
-                           .toList())
                .regel(regelConfig.getSpecifikation().getNamn())
                .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
                .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
@@ -145,14 +141,6 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          sendErrorResponse(request.handlaggningId(), cloudevent, regelErrorInformation, request.replyTo());
          return;
       }
-   }
-
-   private se.fk.rimfrost.framework.oul.model.Idtyp toIdtyp(Idtyp idtyp)
-   {
-      return se.fk.rimfrost.framework.oul.model.ImmutableIdtyp.builder()
-            .typId(idtyp.typId())
-            .varde(idtyp.varde())
-            .build();
    }
 
    private void tryEndOperativUppgift(UUID uppgiftId, String reason)
