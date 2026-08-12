@@ -1,15 +1,14 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
-
 import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
@@ -19,10 +18,8 @@ import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,6 +57,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901014444, ERROR"
    })
+   @DisplayName("FRMM-FR-06.1: Felrespons skickas via Kafka när läsning av handläggningsärende misslyckas vid start")
    void should_send_error_response_on_initial_handlaggning_read_failure(String handlaggningId, Utfall expectedUtfall)
          throws Exception
    {
@@ -75,6 +73,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901015555, ERROR"
    })
+   @DisplayName("FRMM-FR-06.1: Felrespons skickas via Kafka när uppdatering av handläggningsärende misslyckas vid start")
    void should_send_error_response_on_initial_handlaggning_write_failure(String handlaggningId, Utfall expectedUtfall)
          throws Exception
    {
@@ -90,6 +89,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901014444, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
    })
+   @DisplayName("FRMM-FR-06.2: Felrespons skickas när läsning av handläggningsärende misslyckas under OUL-statusuppdatering")
    void should_send_error_response_on_handlaggning_read_failure_during_oul_status_with_status_new(
          String handlaggningId,
          String uppgiftId,
@@ -120,6 +120,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901015555, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
    })
+   @DisplayName("FRMM-FR-06.2: Felrespons skickas när uppdatering av handläggningsärende misslyckas under OUL-statusuppdatering")
    void should_send_error_response_on_handlaggning_write_failure_during_oul_status_with_status_new(
          String handlaggningId,
          String uppgiftId,

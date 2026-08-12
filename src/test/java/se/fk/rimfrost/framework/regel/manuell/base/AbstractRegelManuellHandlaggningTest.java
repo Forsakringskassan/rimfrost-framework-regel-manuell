@@ -1,17 +1,15 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import com.github.tomakehurst.wiremock.http.RequestMethod;
-
 import io.quarkus.test.InjectMock;
-
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
@@ -20,7 +18,6 @@ import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-
 import static org.mockito.ArgumentMatchers.any;
 import static se.fk.rimfrost.framework.regel.WireMockHandlaggning.getUppgiftFromLastPutHandlaggning;
 import static se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestData.newHandlaggningApiIdtyp;
@@ -65,6 +62,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-01.2: GET-anrop skickas mot handläggningstjänsten vid inkommande RegelDataRequest")
    void should_create_initial_handlaggning_request(String handlaggningId)
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
@@ -77,6 +75,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
+   @DisplayName("FRMM-FR-03.2, FRMM-FR-03.3: Handläggningsärendet uppdateras med uppgiftsstatus PLANERAD vid OUL-statusnotifiering")
    void should_put_handlaggning_with_uppgiftstatus_planerad(String handlaggningId, String uppgiftId)
          throws Exception
    {
@@ -93,6 +92,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
+   @DisplayName("FRMM-FR-05.2, FRMM-FR-05.6: Handläggningsärendet uppdateras med slutstatus AVSLUTAD och utfordTs vid avslutning")
    void should_put_handlaggning_with_uppgiftstatus_avslutad(String handlaggningId, String uppgiftId)
          throws Exception
    {
@@ -110,6 +110,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
+   @DisplayName("FRMM-FR-03.2: Utförar-ID från OUL-statusnotifiering synkroniseras till handläggningsärendet")
    void should_put_handlaggning_with_uppgift_correct_utforar_id(String handlaggningId, String uppgiftId)
          throws Exception
    {
@@ -127,6 +128,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234 , 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
+   @DisplayName("FRMM-FR-03.2: Planerat tidsstämpel från OUL-statusnotifiering synkroniseras till handläggningsärendet")
    void should_put_handlaggning_with_uppgift_correct_planerad_till_value(String handlaggningId, String uppgiftId)
          throws Exception
    {
@@ -144,6 +146,7 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
+   @DisplayName("FRMM-FR-05.6: Utföringstidsstämpel sätts på handläggningsärendet vid avslutning")
    void should_put_handlaggning_with_utford_ts(String handlaggningId)
          throws Exception
    {

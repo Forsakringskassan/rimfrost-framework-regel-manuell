@@ -1,14 +1,13 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import io.quarkus.test.InjectMock;
-
 import java.util.Map;
 import java.util.UUID;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
@@ -17,7 +16,6 @@ import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
 import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.regel.Utfall;
-
 import static org.mockito.ArgumentMatchers.any;
 import static se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestData.newHandlaggningIdtyp;
 
@@ -60,6 +58,7 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    {
          "JA, 5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
+   @DisplayName("FRMM-FR-05.1, FRMM-FR-05.3: Korrekt utfall (JA) skickas i RegelResponse till replyTo-ämnet vid avslutning")
    void should_return_correct_regel_response_utfall(Utfall expectedUtfall, String handlaggningId, String uppgiftId)
          throws Exception
    {
@@ -77,6 +76,7 @@ public abstract class AbstractRegelManuellResponseTest extends AbstractRegelManu
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29"
    })
+   @DisplayName("FRMM-FR-05.3: Handläggnings-ID inkluderas i RegelResponse till replyTo-ämnet")
    void should_return_correct_regel_response_handlaggning_id(String handlaggningId, String uppgiftId)
          throws Exception
    {

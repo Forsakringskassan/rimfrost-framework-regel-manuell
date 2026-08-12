@@ -3,12 +3,14 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import se.fk.rimfrost.framework.regel.logic.entity.ImmutableCloudEventData;
 
 class CloudEventAttributesMapperTest
 {
    @Test
+   @DisplayName("FRMM-FR-01.4: CloudEvent-attribut mappas korrekt från nyckel-värdekarta till CloudEventData")
    void to_cloud_event_data_maps_all_fields_correctly()
    {
       var id = UUID.randomUUID();
@@ -43,6 +45,7 @@ class CloudEventAttributesMapperTest
    }
 
    @Test
+   @DisplayName("FRMM-FR-01.4: CloudEventData kan konverteras till attributkarta och tillbaka utan informationsförlust")
    void to_attributes_roundtrip_through_to_cloud_event_data()
    {
       var original = ImmutableCloudEventData.builder()
@@ -65,6 +68,7 @@ class CloudEventAttributesMapperTest
    }
 
    @Test
+   @DisplayName("IllegalArgumentException kastas när null skickas till CloudEventAttributesMapper")
    void to_cloud_event_data_throws_for_null_attributes()
    {
       assertThrows(IllegalArgumentException.class, () -> CloudEventAttributesMapper.toCloudEventData(null));
