@@ -143,6 +143,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       //
       // verify PUT handlaggning
       //
+      WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 2);
       var handlaggningPutUpdate = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
       assertEquals(handlaggningId, handlaggningPutUpdate.getHandlaggning().getId().toString());
       assertEquals(1, handlaggningPutUpdate.getHandlaggning().getVersion());
