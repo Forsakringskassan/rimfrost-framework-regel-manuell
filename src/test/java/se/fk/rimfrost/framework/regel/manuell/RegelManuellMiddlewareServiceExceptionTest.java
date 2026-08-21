@@ -18,8 +18,8 @@ import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
-import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
-import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
+import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
+import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -42,7 +42,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
    HandlaggningAdapter handlaggningAdapter;
 
    @InjectMock
-   ManuellRegelCommonDataStorage dataStorage;
+   RegelCommonDataStorage dataStorage;
 
    @InjectMock
    SidAdapter sidAdapter;
@@ -123,7 +123,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
    void done_should_return_internal_server_error_when_readManuellRegelCommonData_fails()
    {
       doThrow(new IllegalStateException("storage failure"))
-            .when(dataStorage).getManuellRegelCommonData(any());
+            .when(dataStorage).getRegelCommonData(any());
 
       var ex = assertThrows(RegelManuellException.class, () -> service.done(UUID.randomUUID()));
 
@@ -144,9 +144,9 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    private void givenSuccessfulDataStorage()
    {
-      var data = mock(ManuellRegelCommonData.class);
+      var data = mock(RegelCommonData.class);
       when(data.uppgift()).thenReturn(mock(Uppgift.class));
-      when(dataStorage.getManuellRegelCommonData(any())).thenReturn(data);
+      when(dataStorage.getRegelCommonData(any())).thenReturn(data);
    }
 
    private static Response.Status expectedStatus(HandlaggningException.ErrorType errorType)

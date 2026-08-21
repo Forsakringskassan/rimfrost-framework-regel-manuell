@@ -1,11 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
-import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
-
-import java.util.UUID;
 
 @SuppressFBWarnings(value =
 {
