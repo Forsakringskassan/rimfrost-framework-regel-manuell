@@ -233,7 +233,8 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    }
 
    @Override
-   public void handleOulStatus(OulStatus oulStatus) {
+   public void handleOulStatus(OulStatus oulStatus)
+   {
       CloudEventData cloudEventData = null;
       try
       {
