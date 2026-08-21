@@ -8,8 +8,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
@@ -22,9 +20,9 @@ import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
-import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
-import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
+import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
+import se.fk.rimfrost.framework.regel.storage.entity.ImmutableRegelCommonData;
+import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -40,7 +38,7 @@ import static org.mockito.ArgumentMatchers.eq;
 })
 public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTest
 {
-   private static ManuellRegelCommonData manuellRegelCommonDataStorage;
+   private static RegelCommonData manuellRegelCommonDataStorage;
 
    @InjectMock
    HandlaggningAdapter handlaggningAdapter;
@@ -49,7 +47,7 @@ public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTe
    OulAdapter oulAdapter;
 
    @InjectMock
-   ManuellRegelCommonDataStorage storage;
+   RegelCommonDataStorage storage;
 
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
    String responseTopic;
@@ -74,7 +72,7 @@ public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTe
             .uppgiftSpecifikation(uppgiftSpecification)
             .build();
 
-      manuellRegelCommonDataStorage = ImmutableManuellRegelCommonData.builder()
+      manuellRegelCommonDataStorage = ImmutableRegelCommonData.builder()
             .uppgift(uppgift)
             .build();
    }
@@ -114,7 +112,7 @@ public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTe
    {
       var handlaggningId = UUID.randomUUID();
       var uppgiftId = UUID.randomUUID();
-      Mockito.when(storage.getManuellRegelCommonData(eq(handlaggningId)))
+      Mockito.when(storage.getRegelCommonData(eq(handlaggningId)))
             .thenReturn(manuellRegelCommonDataStorage);
       Mockito.doThrow(new RuntimeException()).when(handlaggningAdapter).updateHandlaggning(Mockito.any());
       var utforarId = ImmutableIdtyp.builder()

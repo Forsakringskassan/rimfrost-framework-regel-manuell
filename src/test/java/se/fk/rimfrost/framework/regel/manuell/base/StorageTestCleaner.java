@@ -14,7 +14,7 @@ public class StorageTestCleaner
    @Transactional
    public void clearAll()
    {
-      em.createQuery("DELETE FROM ManuellRegelCommonDataEntity").executeUpdate();
+      em.createQuery("DELETE FROM RegelCommonDataEntity").executeUpdate();
       em.createQuery("DELETE FROM CloudEventDataEntity").executeUpdate();
       em.createQuery("DELETE FROM ProcessTopicInfoEntity").executeUpdate();
    }

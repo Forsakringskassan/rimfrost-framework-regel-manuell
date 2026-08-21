@@ -25,11 +25,11 @@ import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-import se.fk.rimfrost.framework.regel.manuell.storage.CloudEventDataStorage;
-import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
-import se.fk.rimfrost.framework.regel.manuell.storage.ProcessTopicInfoStorage;
-import se.fk.rimfrost.framework.regel.manuell.storage.entity.ImmutableManuellRegelCommonData;
-import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
+import se.fk.rimfrost.framework.regel.storage.CloudEventDataStorage;
+import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
+import se.fk.rimfrost.framework.regel.storage.ProcessTopicInfoStorage;
+import se.fk.rimfrost.framework.regel.storage.entity.ImmutableRegelCommonData;
+import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -46,10 +46,10 @@ import static org.mockito.ArgumentMatchers.eq;
 })
 public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTest
 {
-   private static ManuellRegelCommonData manuellRegelCommonDataStorage;
+   private static RegelCommonData regelCommonDataStorage;
 
    @InjectMock
-   ManuellRegelCommonDataStorage storage;
+   RegelCommonDataStorage storage;
 
    @InjectMock
    CloudEventDataStorage cloudEventDataStorage;
@@ -98,7 +98,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .uppgiftSpecifikation(uppgiftSpecification)
             .build();
 
-      manuellRegelCommonDataStorage = ImmutableManuellRegelCommonData.builder()
+      regelCommonDataStorage = ImmutableRegelCommonData.builder()
             .uppgift(uppgift)
             .build();
    }
@@ -113,7 +113,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          throws Exception
    {
       stubOulAdapter(UUID.fromString(handlaggningId));
-      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+      Mockito.doThrow(new IllegalStateException()).when(storage).setRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
@@ -135,7 +135,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          Utfall expectedUtfall) throws Exception
    {
       stubOulAdapter(UUID.fromString(handlaggningId));
-      Mockito.doThrow(new IllegalStateException()).when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
+      Mockito.doThrow(new IllegalStateException()).when(storage).getRegelCommonData(eq(UUID.fromString(handlaggningId)));
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
@@ -162,9 +162,9 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypVarde,
          Utfall expectedUtfall) throws Exception
    {
-      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
-            .thenReturn(manuellRegelCommonDataStorage);
-      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+      Mockito.when(storage.getRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(regelCommonDataStorage);
+      Mockito.doThrow(new IllegalStateException()).when(storage).setRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
@@ -172,7 +172,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
             .build();
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
             responseTopic);
-      Mockito.verify(storage, Mockito.timeout(5000)).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+      Mockito.verify(storage, Mockito.timeout(5000)).setRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -192,17 +192,17 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypVarde,
          Utfall expectedUtfall) throws Exception
    {
-      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
-            .thenReturn(manuellRegelCommonDataStorage);
+      Mockito.when(storage.getRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(regelCommonDataStorage);
       Mockito.doThrow(new IllegalStateException())
-            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+            .when(storage).setRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
             .varde(idtypVarde)
             .build();
       oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
             responseTopic);
-      Mockito.verify(storage, Mockito.timeout(5000)).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+      Mockito.verify(storage, Mockito.timeout(5000)).setRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -221,11 +221,11 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          Utfall expectedUtfall) throws Exception
    {
       stubOulAdapter(UUID.fromString(handlaggningId));
-      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
-            .thenReturn(manuellRegelCommonDataStorage);
+      Mockito.when(storage.getRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(regelCommonDataStorage);
       // Allow initial write from handleRegelRequest, throw on the subsequent write from handleOulStatus
       Mockito.doNothing().doThrow(new IllegalStateException())
-            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+            .when(storage).setRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
 
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
 
@@ -271,7 +271,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
                   .processInfo(processInfo)
                   .build());
       Mockito.doThrow(new IllegalStateException()).when(storage)
-            .setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+            .setRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
 
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       regelKafkaConnector.waitForRegelResponse();
@@ -318,7 +318,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypVarde) throws Exception
    {
       Mockito.doThrow(new IllegalStateException())
-            .when(storage).getManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
+            .when(storage).getRegelCommonData(eq(UUID.fromString(handlaggningId)));
 
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
@@ -343,10 +343,10 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypTypId,
          String idtypVarde) throws Exception
    {
-      Mockito.when(storage.getManuellRegelCommonData(eq(UUID.fromString(handlaggningId))))
-            .thenReturn(manuellRegelCommonDataStorage);
+      Mockito.when(storage.getRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(regelCommonDataStorage);
       Mockito.doThrow(new IllegalStateException())
-            .when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
+            .when(storage).setRegelCommonData(eq(UUID.fromString(handlaggningId)), Mockito.any());
 
       var utforarId = ImmutableIdtyp.builder()
             .typId(idtypTypId)
@@ -369,7 +369,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          throws Exception
    {
       stubOulAdapter(UUID.fromString(handlaggningId));
-      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+      Mockito.doThrow(new IllegalStateException()).when(storage).setRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       Mockito.verify(cloudEventDataStorage, Mockito.timeout(5000)).deleteCloudEventData(eq(UUID.fromString(handlaggningId)));
@@ -402,7 +402,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          throws Exception
    {
       stubOulAdapter(UUID.fromString(handlaggningId));
-      Mockito.doThrow(new IllegalStateException()).when(storage).setManuellRegelCommonData(eq(UUID.fromString(handlaggningId)),
+      Mockito.doThrow(new IllegalStateException()).when(storage).setRegelCommonData(eq(UUID.fromString(handlaggningId)),
             Mockito.any());
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       Mockito.verify(processTopicInfoStorage, Mockito.timeout(5000)).deleteProcessTopicInfo(eq(UUID.fromString(handlaggningId)));
@@ -436,7 +436,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          Mockito.verify(processTopicInfoStorage, Mockito.timeout(5000))
                .deleteProcessTopicInfo(eq(UUID.fromString(handlaggningId)));
          Mockito.verify(cloudEventDataStorage, Mockito.timeout(5000)).deleteCloudEventData(eq(UUID.fromString(handlaggningId)));
-         Mockito.verify(storage, Mockito.timeout(5000)).deleteManuellRegelCommonData(eq(UUID.fromString(handlaggningId)));
+         Mockito.verify(storage, Mockito.timeout(5000)).deleteRegelCommonData(eq(UUID.fromString(handlaggningId)));
       }
       finally
       {

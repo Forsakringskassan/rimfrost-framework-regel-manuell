@@ -18,8 +18,8 @@ import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
-import se.fk.rimfrost.framework.regel.manuell.storage.ManuellRegelCommonDataStorage;
-import se.fk.rimfrost.framework.regel.manuell.storage.entity.ManuellRegelCommonData;
+import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
+import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,7 +47,7 @@ public class RegelManuellReadDelegationTest
    SidAdapter sidAdapter;
 
    @InjectMock
-   ManuellRegelCommonDataStorage dataStorage;
+   RegelCommonDataStorage dataStorage;
 
    @InjectMock
    RegelManuellTestService regelService;
@@ -104,8 +104,8 @@ public class RegelManuellReadDelegationTest
 
    private void givenSuccessfulDataStorage()
    {
-      var data = mock(ManuellRegelCommonData.class);
+      var data = mock(RegelCommonData.class);
       when(data.uppgift()).thenReturn(mock(Uppgift.class));
-      when(dataStorage.getManuellRegelCommonData(any())).thenReturn(data);
+      when(dataStorage.getRegelCommonData(any())).thenReturn(data);
    }
 }
