@@ -4,10 +4,10 @@ on: [workflow_dispatch, workflow_call, push, pull_request]
 
 jobs:
   call-maven-ci:
-    uses: Forsakringskassan/.github/.github/workflows/maven-ci.yaml@main
+    uses: Forsakringskassan/.github/.github/workflows/maven-ci.yaml@3d07e5561c26a363c95b9ec7cd58405f82e044f4 # main
     secrets:
       PACKAGES_RW_ACTOR: ${{ secrets.PACKAGES_RW_ACTOR }}
       PACKAGES_RW_TOKEN: ${{ secrets.PACKAGES_RW_TOKEN }}
 
   call-pnr-scan:
-    uses: Forsakringskassan/.github/.github/workflows/pnr-scanner.yaml@main
+    uses: Forsakringskassan/.github/.github/workflows/pnr-scanner.yaml@3d07e5561c26a363c95b9ec7cd58405f82e044f4 # main
