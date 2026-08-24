@@ -131,6 +131,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
          String idtypVarde) throws JsonProcessingException
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 1);
       //
       // mock status update from OUL
       //
