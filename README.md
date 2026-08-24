@@ -42,6 +42,13 @@ En regelimplementation behöver tillhandahålla tre saker:
 Klassen **måste** annoteras med `@ApplicationScoped` — ramverket tillhandahåller inte
 denna annotering.
 
+Eftersom `RegelManuellServiceInterface` utökar `KompletteringKontrollInterface` löser CDI
+automatiskt upp ramverkets beroende av `KompletteringKontrollInterface` via serviceklassen.
+Det förutsätter att exakt **en** `@ApplicationScoped`-bean implementerar
+`RegelManuellServiceInterface` i applikationen. Standardimplementationen av
+`checkKomplettering()` returnerar en tom lista — ingen komplettering initieras om inte
+regelimplementationen åsidosätter metoden.
+
 ```java
 @ApplicationScoped
 @Startup

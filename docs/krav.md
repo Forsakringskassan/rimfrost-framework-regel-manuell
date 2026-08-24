@@ -17,7 +17,8 @@
 
 ### FRMM-FR-02 — Skapa OUL-uppgift
 
-- **FRMM-FR-02.1** Ramverket ska skapa en ny operativ uppgift i OUL när en `RegelDataRequest` tas emot.
+- **FRMM-FR-02.1** Ramverket ska skapa en regel-OUL-uppgift när en `RegelDataRequest` tas emot,
+  förutsatt att kompletteringskontroll inte resulterar i att komplettering initieras (se FRMM-FR-09).
 - **FRMM-FR-02.2** OUL-uppgiften ska innehålla regelns namn, beskrivning, affärslogiktyp och roll.
 - **FRMM-FR-02.3** OUL-uppgiften ska innehålla URL till regelns REST-gränssnitt för användning av
   handläggarportalen.
@@ -120,6 +121,28 @@
   och avslutningslogik.
 - **FRMM-FR-07.2** Ramverket ska definiera `RegelManuellController<T, Y>` som
   regelimplementationer ärver för att exponera REST-gränssnittet under regelns sökväg.
+- **FRMM-FR-07.3** `RegelManuellServiceInterface<T, Y>` ska utöka `KompletteringKontrollInterface`
+  för att ge regelimplementationer möjlighet att deklarera ett kompletterings villkor.
+
+### FRMM-FR-09 — Kompletteringskontroll vid regelförfrågan
+
+- **FRMM-FR-09.1** Innan det normala regelflödet startar, men efter att handläggningsärendet
+  hämtats och erbjudandets namn slagits upp, ska ramverket anropa `checkKomplettering()` på
+  regelimplementationens service-bean.
+- **FRMM-FR-09.2** Om `checkKomplettering()` returnerar en icke-tom lista ska ramverket initiera en
+  kompletteringsuppgift via `KompletteringOulHandler.initiate()` och pausa det normala regelflödet —
+  ingen regel-OUL-uppgift skapas.
+- **FRMM-FR-09.3** Om `checkKomplettering()` returnerar en tom lista ska det normala regelflödet
+  fortsätta oförändrat och en regel-OUL-uppgift skapas som vanligt.
+- **FRMM-FR-09.4** Om `KompletteringOulHandler.initiate()` kastar `OulException` ska ramverket
+  konvertera felet till ett `RegelCancelledException` och skicka ett felsvar via Kafka utan att
+  lämna öppna OUL-uppgifter.
+
+> **Avgränsning:** Vad som sker efter att kompletteringen är avslutad — hur regelflödet återupptas
+> och regel-OUL-uppgiften så småningom skapas — är inte ett krav på detta ramverk. Det beteendet
+> ägs och implementeras helt av `KompletteringOulHandler` i `rimfrost-framework-regel`.
+> `rimfrost-framework-regel-manuell` ansvarar enbart för att avgöra om komplettering ska initieras
+> och att delegera till `KompletteringOulHandler.initiate()`.
 
 ---
 
@@ -142,7 +165,9 @@
 
 - **FRMM-NFR-01.1** Ramverket ska garantera att ett regelsvar alltid skickas för varje mottagen
   regelförfrågan — antingen med utfall eller med felinformation.
-- **FRMM-NFR-01.2** Optimistisk låsning ska förhindra att samtida anrop mot samma
+- **FRMM-NFR-01.2** Om komplettering initieras ska regelsvaret skickas när kompletteringen är
+  avslutad — inte direkt vid mottagandet av regelförfrågan.
+- **FRMM-NFR-01.3** Optimistisk låsning ska förhindra att samtida anrop mot samma
   handläggningsärende skriver över varandra.
 
 ### FRMM-NFR-02 — Testbarhet
