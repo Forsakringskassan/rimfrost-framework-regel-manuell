@@ -2,6 +2,32 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.2.0 (2026-08-24)
+
+### Features
+
+-  add SID check before readData ([d6074](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d607484ece81ed1) Ulf Slunga)  
+
+### Bug Fixes
+
+-  spotless and cleanup ([9011d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/9011dbce3a65eb8) Nils Elveros)  
+-  update tests etc ([6a07a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/6a07a313257f142) Nils Elveros)  
+-  use new framework version ([ee1dd](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ee1dd3fc54be192) Nils Elveros)  
+-  add FR-04.3 test ([94f59](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/94f590041054048) Ulf Slunga)  
+-  wait for 2 PUT requests before asserting on OUL status update ([2899d](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2899df4e94fde12) Ulf Slunga)  
+-  bump oul adapter ([326f7](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/326f77e32541809) Ulf Slunga)  
+-  null-check getManuellRegelCommonData return before dereferencing ([7c255](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7c2555416e21ac6) Ulf Slunga)  
+-  unassign OUL uppgift when SID detected on read ([69ec7](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/69ec7a3810f1b77) Ulf Slunga)  
+-  bump oul-adapter from 1.1.3-SNAPSHOT to 1.1.3 ([ddd43](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ddd43d38c330c8e) Ulf Slunga)  
+-  remove individer from OUL create request ([4600f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/4600f1111be2069) Ulf Slunga)  
+-  **deps**  update dependency se.fk.rimfrost.framework.oul:rimfrost-framework-oul-adapter to v1.1.2 ([1df5b](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/1df5b579b24de2f) renovate[bot])  
+
+### Dependency updates
+
+- update dependency org.apache.maven.plugins:maven-jar-plugin to v3.5.1 ([b82fa](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b82fae6a4d4992f) renovate[bot])  
+### Other changes
+
+
 ## 1.1.5 (2026-06-26)
 
 ### Bug Fixes
