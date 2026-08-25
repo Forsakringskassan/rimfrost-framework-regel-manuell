@@ -19,7 +19,6 @@ import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
 import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.Erbjudande;
 import se.fk.rimfrost.framework.oul.model.ImmutableCreateOperativUppgiftRequest;
-import se.fk.rimfrost.framework.oul.model.ImmutableErbjudande;
 import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.oul.model.OperativUppgift;
 import se.fk.rimfrost.framework.oul.logic.OulHandlerInterface;
@@ -27,6 +26,8 @@ import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
+import se.fk.rimfrost.framework.regel.logic.KompletteringKontrollInterface;
+import se.fk.rimfrost.framework.regel.logic.KompletteringOulHandler;
 import se.fk.rimfrost.framework.regel.logic.RegelCancelledException;
 import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
@@ -47,6 +48,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
    @Inject
    ErbjudandeReferensdataInterface erbjudandeReferensdata;
 
+   @Inject
+   KompletteringKontrollInterface kompletteringKontroll;
+
+   @Inject
+   KompletteringOulHandler kompletteringOulHandler;
+
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
@@ -59,6 +66,28 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          var handlaggning = getHandlaggning(request.handlaggningId(), cloudevent);
 
          var erbjudandeNamn = erbjudandeReferensdata.getErbjudandeNamn(handlaggning.yrkande().erbjudandeId());
+
+         var kompletteringar = kompletteringKontroll.checkKomplettering(handlaggning);
+         if (!kompletteringar.isEmpty())
+         {
+            var erbjudande = createErbjudande(handlaggning.yrkande().erbjudandeId(), erbjudandeNamn);
+            try
+            {
+               kompletteringOulHandler.initiate(
+                     request,
+                     CloudEventAttributesMapper.toAttributes(cloudevent),
+                     regelConfig,
+                     erbjudande);
+            }
+            catch (OulException e)
+            {
+               var message = String.format(
+                     "Failed to initiate komplettering. handlaggningId: %s", request.handlaggningId());
+               var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER, message);
+               throw new RegelCancelledException(regelErrorInformation, message, e);
+            }
+            return;
+         }
 
          var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
                .handlaggningId(request.handlaggningId())

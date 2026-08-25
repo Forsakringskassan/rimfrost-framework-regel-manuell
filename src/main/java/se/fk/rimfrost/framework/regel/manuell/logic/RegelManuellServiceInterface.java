@@ -3,8 +3,9 @@ package se.fk.rimfrost.framework.regel.manuell.logic;
 import java.util.UUID;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
+import se.fk.rimfrost.framework.regel.logic.KompletteringKontrollInterface;
 
-public interface RegelManuellServiceInterface<T, Y>
+public interface RegelManuellServiceInterface<T, Y> extends KompletteringKontrollInterface
 {
    T readData(Handlaggning handlaggning);
 
