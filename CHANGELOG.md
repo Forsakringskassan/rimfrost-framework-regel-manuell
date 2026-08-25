@@ -2,6 +2,16 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.3.0 (2026-08-25)
+
+### Features
+
+-  Wire komplettering pre-check into manuell regel request handler ([ffdc8](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ffdc8969255fea8) Ulf Slunga)  
+
+### Bug Fixes
+
+-  wait for initial PUT before simulating OUL status to prevent race condition ([1a394](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/1a3942318de5807) Ulf Slunga)  
+
 ## 1.2.0 (2026-08-24)
 
 ### Features
