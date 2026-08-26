@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.3.1 (2026-08-26)
+
+### Bug Fixes
+
+-  stub RegelCommonData in OUL status cleanup test ([f2023](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/f2023f7b4b9c271) Ulf Slunga)  
+-  ignore OUL status for handlaggningar without RegelCommonData ([d9d66](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d9d66434f52ae57) Ulf Slunga)  
+
 ## 1.3.0 (2026-08-25)
 
 ### Features
