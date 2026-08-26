@@ -420,6 +420,8 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
          String idtypTypId,
          String idtypVarde) throws Exception
    {
+      Mockito.when(storage.getRegelCommonData(eq(UUID.fromString(handlaggningId))))
+            .thenReturn(regelCommonDataStorage);
       var server = WireMockRegelManuell.getWireMockServer();
       var failureStub = server.stubFor(
             WireMock.get(WireMock.urlPathMatching("/handlaggning/.*" + handlaggningId + ".*"))
