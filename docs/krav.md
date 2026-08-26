@@ -41,6 +41,9 @@
 - **FRMM-FR-03.3** Ramverket ska synkronisera uppdaterad uppgiftsstatus till handläggningstjänsten.
 - **FRMM-FR-03.4** Statusuppdatering ska ske utan att handläggningsärendets egen version
   inkrementeras.
+- **FRMM-FR-03.5** Om en OUL-statusnotifiering tas emot för en handläggning utan lagrad
+  `RegelCommonData` (t.ex. en kompletteringsuppgift hanterad av `KompletteringOulHandler`) ska
+  ramverket ignorera notifieringen utan att avsluta uppgiften eller skicka ett felmeddelande.
 
 ### FRMM-FR-04 — REST-gränssnitt mot handläggarportalen
 

@@ -270,6 +270,12 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
          cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulStatus.processInfo().cloudeventAttributes());
 
          RegelCommonData commonRegelData = readRegelCommonData(oulStatus.handlaggningId());
+         if (commonRegelData == null)
+         {
+            // No RegelCommonData for this handlaggningId — komplettering tasks are managed by
+            // KompletteringOulHandler and have no RegelCommonData row; skip OUL status update.
+            return;
+         }
          var uppgift = commonRegelData.uppgift();
          Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), cloudEventData);
 
