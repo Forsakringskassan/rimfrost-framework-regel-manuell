@@ -21,6 +21,8 @@ import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
  * Regression tests for null-safety in the OUL Kafka message pipeline.
@@ -112,6 +114,32 @@ public class RegelManuellNullSafetyTest extends AbstractRegelManuellTest
 
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       regelKafkaConnector.waitForRegelResponse();
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "7f000001-dead-beef-0000-000000000099, 7f000001-dead-beef-0000-000000000098, Idtyp_typId, Idtyp_varde"
+   })
+   @DisplayName("FRMM-FR-03.5: OUL-statusnotifiering för handläggning utan RegelCommonData ignoreras utan att uppgiften avslutas")
+   void oul_status_for_unknown_handlaggning_is_ignored_without_ending_task(
+         String handlaggningId,
+         String uppgiftId,
+         String idtypTypId,
+         String idtypVarde) throws Exception
+   {
+      var utforarId = ImmutableIdtyp.builder()
+            .typId(idtypTypId)
+            .varde(idtypVarde)
+            .build();
+
+      // No regelKafkaConnector.sendRegelRequest() — RegelCommonData is never created for this
+      // handlaggningId, simulating a komplettering OUL task being assigned.
+      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId,
+            null, RegelManuellTestStatus.PLANERAD, responseTopic);
+      Thread.sleep(1000);
+
+      verify(oulAdapter, never()).endOperativUppgift(any(), any());
    }
 
    @ParameterizedTest
