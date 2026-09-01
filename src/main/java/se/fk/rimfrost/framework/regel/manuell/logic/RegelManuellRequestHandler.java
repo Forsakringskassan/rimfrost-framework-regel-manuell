@@ -26,6 +26,7 @@ import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
+import se.fk.rimfrost.framework.regel.logic.CloudEventAttributesMapper;
 import se.fk.rimfrost.framework.regel.logic.KompletteringKontrollInterface;
 import se.fk.rimfrost.framework.regel.logic.KompletteringOulHandler;
 import se.fk.rimfrost.framework.regel.logic.RegelCancelledException;
