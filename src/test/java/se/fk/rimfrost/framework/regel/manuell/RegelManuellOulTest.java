@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
+import se.fk.rimfrost.framework.regel.ErbjudandeReferensdataTestService;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellOulTest;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 
@@ -36,6 +37,7 @@ public class RegelManuellOulTest extends AbstractRegelManuellOulTest
       Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
       var oulRequest = oulRequestCaptor.getValue();
       Assertions.assertEquals("f35c574d-e2a3-42ac-9ccb-835a24e692fe", oulRequest.getErbjudande().getId());
-      Assertions.assertEquals("Test", oulRequest.getErbjudande().getNamn());
+      Assertions.assertEquals(ErbjudandeReferensdataTestService.DEFAULT_ERBJUDANDE_NAMN,
+            oulRequest.getErbjudande().getNamn());
    }
 }
