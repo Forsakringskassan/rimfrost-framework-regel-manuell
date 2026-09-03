@@ -1,5 +1,8 @@
 # Krav — rimfrost-framework-regel-manuell
 
+Kraven här beskriver endast det som är implementerat i detta ramverk. Ärvda krav från
+underliggande ramverk upprepas inte.
+
 ## Funktionella krav
 
 ### FRMM-FR-01 — Konsumera RegelDataRequest
@@ -10,40 +13,11 @@
   handläggningstjänsten.
 - **FRMM-FR-01.3** Ramverket ska slå upp erbjudandets namn från referensdata och använda det vid
   skapande av OUL-uppgiften.
-- **FRMM-FR-01.4** CloudEvent-attribut från inkommande meddelande ska bevaras och lagras
-  persistent för korrelation under hela livscykeln.
-- **FRMM-FR-01.5** `replyTo` från inkommande Kafka-meddelande ska lagras persistent för
-  återkoppling vid regelkörningens avslut.
 
 ### FRMM-FR-02 — Skapa OUL-uppgift
 
 - **FRMM-FR-02.1** Ramverket ska skapa en regel-OUL-uppgift när en `RegelDataRequest` tas emot,
-  förutsatt att kompletteringskontroll inte resulterar i att komplettering initieras (se FRMM-FR-09).
-- **FRMM-FR-02.2** OUL-uppgiften ska innehålla regelns namn, beskrivning, affärslogiktyp och roll.
-- **FRMM-FR-02.3** OUL-uppgiften ska innehålla URL till regelns REST-gränssnitt för användning av
-  handläggarportalen.
-- **FRMM-FR-02.4** OUL-uppgiften ska innehålla CloudEvent-attributen från den inkommande
-  regelförfrågan, för att möjliggöra korrelation.
-- **FRMM-FR-02.5** OUL-uppgiften ska ange ett reply-subtopic som OUL använder för
-  statusnotifieringar till ramverket.
-- **FRMM-FR-02.6** Ramverket ska efter skapandet lagra uppgiftens metadata (uppgifts-ID, OUL:s
-  uppgifts-ID) persistent.
-- **FRMM-FR-02.8** Ramverket ska uppdatera handläggningsärendet med uppgiftsreferens och
-  uppgiftsspecifikation efter skapandet.
-- **FRMM-FR-02.9** Ramverket ska inte inkludera individer i OUL-skapandeförfrågan. OUL hämtar
-  individinformation internt vid behov via det `handlaggningId` som uppgiften är knuten till.
-
-### FRMM-FR-03 — Hantera OUL-statusnotifieringar
-
-- **FRMM-FR-03.1** Ramverket ska prenumerera på OUL's statusnotifieringar via Kafka.
-- **FRMM-FR-03.2** Vid statusnotifiering ska ramverket uppdatera uppgiftens version, status,
-  utförar-ID och planerat tidsstämpel i den lagrade uppgiften.
-- **FRMM-FR-03.3** Ramverket ska synkronisera uppdaterad uppgiftsstatus till handläggningstjänsten.
-- **FRMM-FR-03.4** Statusuppdatering ska ske utan att handläggningsärendets egen version
-  inkrementeras.
-- **FRMM-FR-03.5** Om en OUL-statusnotifiering tas emot för en handläggning utan lagrad
-  `RegelCommonData` (t.ex. en kompletteringsuppgift hanterad av `KompletteringOulHandler`) ska
-  ramverket ignorera notifieringen utan att avsluta uppgiften eller skicka ett felmeddelande.
+  via `createOperativUppgift` som tillhandahålls av `rimfrost-framework-regel-oul`.
 
 ### FRMM-FR-04 — REST-gränssnitt mot handläggarportalen
 
@@ -67,13 +41,12 @@
 - **FRMM-FR-05.1** Regelimplementationen ska kunna signalera regelkörningens utfall via
   `sendRegelResponse(handlaggningId, utfall)`.
 - **FRMM-FR-05.2** Ramverket ska avsluta OUL-uppgiften med orsak "Uppgift klar" vid
-  avslutning.
-- **FRMM-FR-05.3** Ramverket ska skicka ett `RegelResponse` med regelns utfall till det `replyTo`-ämne
-  som angavs i den ursprungliga regelförfrågan.
+  avslutning, via `tryEndOperativUppgift` som tillhandahålls av `rimfrost-framework-regel-oul`.
+- **FRMM-FR-05.3** Ramverket ska skicka ett `RegelResponse` med regelns utfall till den
+  `replyTo`-topic som angavs i den ursprungliga regelförfrågan.
 - **FRMM-FR-05.4** Ramverket ska rensa samtliga lagrade korrelationsdata, processroutingdata och
-  uppgiftsmetadata efter avslutad regelkörning.
-- **FRMM-FR-05.5** Rensningsoperationerna ska genomföras med bästa möjliga ansträngning —
-  fel i enskilda rensningar ska inte hindra övriga rensningar eller avsändande av regelsvaret.
+  uppgiftsmetadata efter avslutad regelkörning, via rensningsoperationen som tillhandahålls av
+  `rimfrost-framework-regel-oul`.
 - **FRMM-FR-05.6** Ramverket ska uppdatera handläggningsärendet med uppgiftens slutstatus och
   utföringstidsstämpel efter avslutning.
 
@@ -92,6 +65,14 @@
   ett konfigurerbart generellt felmeddelande. Standardvärdet ska vara `Internal Server Error`.
 - **FRMM-FR-06.6** Valideringsfel från REST-gränssnittet ska resultera i HTTP 400.
 
+### FRMM-FR-07 — Kontraktsdefinierade gränssnitt för regelimplementationer
+
+- **FRMM-FR-07.1** Ramverket ska definiera `RegelManuellServiceInterface<T, Y>` som
+  regelimplementationer implementerar för att tillhandahålla regelspecifik läs-, uppdaterings-
+  och avslutningslogik.
+- **FRMM-FR-07.2** Ramverket ska definiera `RegelManuellController<T, Y>` som
+  regelimplementationer ärver för att exponera REST-gränssnittet under regelns sökväg.
+
 ### FRMM-FR-08 — Kontroll av skyddad identitet (SID)
 
 - **FRMM-FR-08.1** Innan `readData()` anropas vid `GET /{handlaggningId}` ska ramverket kontrollera
@@ -103,7 +84,7 @@
 - **FRMM-FR-08.4** Fel från SID-tjänsten ska resultera i väldefinierade HTTP-statuskoder på samma
   sätt som fel mot handläggningstjänsten: 404, 400, 503 respektive 500.
 - **FRMM-FR-08.5** SID-kontrollen ska ingå i ramverket och gälla automatiskt för alla
-  regelimplementationer utan kodändringar. Varje regelimplementation måste konfigurera `sid.api.base-url` 
+  regelimplementationer utan kodändringar. Varje regelimplementation måste konfigurera `sid.api.base-url`
   med adressen till SID-tjänsten.
 - **FRMM-FR-08.6** Om en eller flera individer har skyddad identitet ska ramverket ta bort tilldelningen av OUL-uppgiften
   (via `POST /uppgifter/{uppgiftId}/unassign`) innan HTTP 403 returneras, så att uppgiften
@@ -115,51 +96,6 @@
 - **FRMM-FR-08.8** Fel vid unassign av OUL-uppgiften ska loggas men ska inte påverka det
   returnerade HTTP 403-svaret.
 
-
-
-### FRMM-FR-07 — Kontraktsdefinierade gränssnitt för regelimplementationer
-
-- **FRMM-FR-07.1** Ramverket ska definiera `RegelManuellServiceInterface<T, Y>` som
-  regelimplementationer implementerar för att tillhandahålla regelspecifik läs-, uppdaterings-
-  och avslutningslogik.
-- **FRMM-FR-07.2** Ramverket ska definiera `RegelManuellController<T, Y>` som
-  regelimplementationer ärver för att exponera REST-gränssnittet under regelns sökväg.
-- **FRMM-FR-07.3** `RegelManuellServiceInterface<T, Y>` ska utöka `KompletteringKontrollInterface`
-  för att ge regelimplementationer möjlighet att deklarera ett kompletterings villkor.
-
-### FRMM-FR-09 — Kompletteringskontroll vid regelförfrågan
-
-- **FRMM-FR-09.1** Innan det normala regelflödet startar, men efter att handläggningsärendet
-  hämtats och erbjudandets namn slagits upp, ska ramverket anropa `checkKomplettering()` på
-  regelimplementationens service-bean.
-- **FRMM-FR-09.2** Om `checkKomplettering()` returnerar en icke-tom lista ska ramverket initiera en
-  kompletteringsuppgift via `KompletteringOulHandler.initiate()` och pausa det normala regelflödet —
-  ingen regel-OUL-uppgift skapas.
-- **FRMM-FR-09.3** Om `checkKomplettering()` returnerar en tom lista ska det normala regelflödet
-  fortsätta oförändrat och en regel-OUL-uppgift skapas som vanligt.
-- **FRMM-FR-09.4** Om `KompletteringOulHandler.initiate()` kastar `OulException` ska ramverket
-  konvertera felet till ett `RegelCancelledException` och skicka ett felsvar via Kafka utan att
-  lämna öppna OUL-uppgifter.
-
-> **Avgränsning:** Vad som sker efter att kompletteringen är avslutad — hur regelflödet återupptas
-> och regel-OUL-uppgiften så småningom skapas — är inte ett krav på detta ramverk. Det beteendet
-> ägs och implementeras helt av `KompletteringOulHandler` i `rimfrost-framework-regel`.
-> `rimfrost-framework-regel-manuell` ansvarar enbart för att avgöra om komplettering ska initieras
-> och att delegera till `KompletteringOulHandler.initiate()`.
-
----
-
-## Persistenskrav
-
-### FRMM-PR-01 — Tabeller och namngivning
-
-- **FRMM-PR-01.1** Ramverket ska skapa tre tabeller i databasen med konfigurerbart prefix:
-  `{prefix}_common_data`, `{prefix}_cloud_event_data` och `{prefix}_process_topic_info`.
-- **FRMM-PR-01.2** Tabellprefixet ska vara konfigurerbart och unikt per regelimplementation
-  för att möjliggöra deployment av flera regler i samma databas.
-- **FRMM-PR-01.3** Ramverket ska rejecta uppstart om tabellprefixet inte är konfigurerat.
-- **FRMM-PR-01.4** Databasmigrationer ska hanteras via Flyway och köras automatiskt vid uppstart.
-
 ---
 
 ## Icke-funktionella krav
@@ -168,10 +104,6 @@
 
 - **FRMM-NFR-01.1** Ramverket ska garantera att ett regelsvar alltid skickas för varje mottagen
   regelförfrågan — antingen med utfall eller med felinformation.
-- **FRMM-NFR-01.2** Om komplettering initieras ska regelsvaret skickas när kompletteringen är
-  avslutad — inte direkt vid mottagandet av regelförfrågan.
-- **FRMM-NFR-01.3** Optimistisk låsning ska förhindra att samtida anrop mot samma
-  handläggningsärende skriver över varandra.
 
 ### FRMM-NFR-02 — Testbarhet
 
@@ -182,12 +114,8 @@
 
 - **FRMM-NFR-03.1** Alla fel i integrationer mot OUL, handläggningstjänsten och Kafka-lagringen
   ska loggas med tillräcklig information för felsökning.
-- **FRMM-NFR-03.2** Misslyckade rensningsoperationer vid regelkörningens avslut ska loggas
-  samlat utan att hindra regelsvaret från att skickas.
 
 ### FRMM-NFR-04 — Underhållbarhet
 
 - **FRMM-NFR-04.1** En ny regelimplementation ska kunna driftsättas utan förändringar i ramverket,
   enbart genom att ärva basklasser, implementera gränssnitt och konfigurera egenskaper.
-
-
