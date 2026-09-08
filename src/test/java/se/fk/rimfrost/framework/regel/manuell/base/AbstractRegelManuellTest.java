@@ -20,7 +20,7 @@ import se.fk.rimfrost.framework.regel.RegelTestBase;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
-import se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableCloudEventData;
+import se.fk.rimfrost.framework.regel.logic.entity.ImmutableCloudEventData;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableOulCorrelationData;
 import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;

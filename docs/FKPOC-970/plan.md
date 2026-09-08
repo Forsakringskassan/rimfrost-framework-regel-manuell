@@ -117,6 +117,21 @@ Det ska inte längre äga persistens eller Kafka-lyssnare för OUL-status.
   - `mvn test`
   - Ta bort `docs/option2-mock-oul-service.md` (nu inaktuell).
 
+- [x] **19. Uppdatera till `rimfrost-framework-regel-oul` 0.0.4**
+  *(förutsätter att FKPOC-1021 är relesat som 0.0.4)*
+  - Byt version i `pom.xml` från `0.0.3` till `0.0.4`.
+  - `CloudEventData` i `rimfrost-framework-regel-oul` är nu borttagen — ersatt av typen
+    från `rimfrost-framework-regel`.
+
+- [x] **20. Förenkla `handleRegelRequest` till en enda `CloudEventData`-variabel**
+  - Slå ihop `baseCloudEvent` och `oulCloudEventData` till en enda `cloudEvent`
+    byggd med `.from(buildBaseCloudEvent(request)).type(responseTopic).source(kafkaSource)`.
+  - Används för `cloudEventData`, `cloudEventAttributes` och felresponsen.
+
+- [x] **21. Bygg och testa**
+  - `mvn spotless:apply`
+  - `mvn test`
+
 ---
 
 ## Design

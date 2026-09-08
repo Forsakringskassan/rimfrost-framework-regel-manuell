@@ -95,32 +95,23 @@ public class RegelManuellRequestHandler
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
-      CloudEventData baseCloudEvent = null;
+      CloudEventData cloudEvent = null;
       try
       {
-         baseCloudEvent = buildBaseCloudEvent(request);
-         var handlaggning = getHandlaggning(request.handlaggningId(), baseCloudEvent);
-         var erbjudandeNamn = erbjudandeReferensdata.getErbjudandeNamn(handlaggning.yrkande().erbjudandeId());
-
-         var oulCloudEventData = se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableCloudEventData.builder()
-               .id(request.id())
-               .kogitorootprociid(request.kogitorootprociid())
-               .kogitoparentprociid(request.kogitoparentprociid())
-               .kogitoprocinstanceid(request.kogitoprocinstanceid())
-               .kogitorootprocid(request.kogitorootprocid())
-               .kogitoprocid(request.kogitoprocid())
-               .kogitoprocist(request.kogitoprocist())
-               .kogitoprocversion(request.kogitoprocversion())
+         cloudEvent = ImmutableCloudEventData.builder()
+               .from(buildBaseCloudEvent(request))
                .type(responseTopic)
                .source(kafkaSource)
                .build();
+         var handlaggning = getHandlaggning(request.handlaggningId(), cloudEvent);
+         var erbjudandeNamn = erbjudandeReferensdata.getErbjudandeNamn(handlaggning.yrkande().erbjudandeId());
 
          var spec = ImmutableOulUppgiftSpec.builder()
                .handlaggningId(request.handlaggningId())
                .handlaggning(handlaggning)
                .replyTo(request.replyTo())
-               .cloudEventData(oulCloudEventData)
-               .cloudEventAttributes(CloudEventAttributesMapper.toAttributes(baseCloudEvent))
+               .cloudEventData(cloudEvent)
+               .cloudEventAttributes(CloudEventAttributesMapper.toAttributes(cloudEvent))
                .regel(regelConfig.getSpecifikation().getNamn())
                .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
                .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
@@ -143,7 +134,7 @@ public class RegelManuellRequestHandler
          {
             regelErrorInformation = ex.getRegelErrorInformation();
          }
-         sendErrorResponse(request.handlaggningId(), baseCloudEvent, regelErrorInformation, request.replyTo());
+         sendErrorResponse(request.handlaggningId(), cloudEvent, regelErrorInformation, request.replyTo());
       }
    }
 
@@ -288,7 +279,7 @@ public class RegelManuellRequestHandler
    }
 
    private void sendRegelSuccessResponse(UUID handlaggningId,
-         se.fk.rimfrost.framework.regel.oul.logic.entity.CloudEventData cloudEventData,
+         CloudEventData cloudEventData,
          Utfall utfall, String replyTopic)
    {
       try
