@@ -212,8 +212,9 @@ public class RegelManuellRequestHandler
       }
       catch (Exception e)
       {
-         LOGGER.error("Error in handleUppgiftDone() while updating handlaggning for id: {}", handlaggningId, e);
-         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+         LOGGER.error(
+               "Error in handleUppgiftDone() while updating handlaggning for id: {} — RegelResponse already sent, ignoring failure",
+               handlaggningId, e);
       }
    }
 

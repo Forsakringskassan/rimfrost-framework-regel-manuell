@@ -67,8 +67,8 @@ public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
-   @DisplayName("FRMM-FR-05.5: RegelResponse skickas trots att sista handläggningsuppdateringen misslyckas")
-   void done_should_return_500_and_still_send_regel_response_when_final_update_handlaggning_fails(
+   @DisplayName("FRMM-FR-05.5: RegelResponse skickas och /done returnerar 204 även om sista handläggningsuppdateringen misslyckas")
+   void done_should_return_204_and_still_send_regel_response_when_final_update_handlaggning_fails(
          String handlaggningId) throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
@@ -85,7 +85,7 @@ public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
                .when()
                .post(basePath() + "/" + handlaggningId + "/done")
                .then()
-               .statusCode(500);
+               .statusCode(204);
 
          var regelResponse = regelKafkaConnector.waitForRegelResponse();
          assertEquals(handlaggningId, regelResponse.getData().getHandlaggningId());
