@@ -1,8 +1,7 @@
 # rimfrost-framework-regel-manuell
 
 Quarkus-baserat ramverk för manuella regler i Rimfrost. Tillhandahåller gemensam
-infrastruktur för Kafka-hantering, OUL-integration, hantering av statusnotifieringar,
-persistent mellanlagring och REST-gränssnitt mot handläggarportalen.
+infrastruktur för Kafka-hantering, OUL-integration och REST-gränssnitt mot handläggarportalen.
 
 Manuella regler delar ett gemensamt integrationsmönster: ta emot regelförfrågan via Kafka,
 skapa en uppgift i OUL, hantera statusuppdateringar och skicka ett regelsvar när handläggaren
@@ -41,13 +40,6 @@ En regelimplementation behöver tillhandahålla tre saker:
 
 Klassen **måste** annoteras med `@ApplicationScoped` — ramverket tillhandahåller inte
 denna annotering.
-
-Eftersom `RegelManuellServiceInterface` utökar `KompletteringKontrollInterface` löser CDI
-automatiskt upp ramverkets beroende av `KompletteringKontrollInterface` via serviceklassen.
-Det förutsätter att exakt **en** `@ApplicationScoped`-bean implementerar
-`RegelManuellServiceInterface` i applikationen. Standardimplementationen av
-`checkKomplettering()` returnerar en tom lista — ingen komplettering initieras om inte
-regelimplementationen åsidosätter metoden.
 
 ```java
 @ApplicationScoped
@@ -94,7 +86,6 @@ Ramverket hanterar även följande Kafka-kanaler:
 | Kanal | Riktning | Beskrivning |
 |---|---|---|
 | `{regel-name}-in` | Inkommande | Regelförfrågan från kundbehovsflödet |
-| `{subtopic}-status` | Inkommande | OUL-statusnotifieringar |
 | `{replyTo}` | Utgående | Regelresultat till kundbehovsflödet |
 
 Fullständiga API-specifikationer definieras i regelimplementationens OpenAPI- och AsyncAPI-repon.
@@ -108,12 +99,6 @@ public class MinRegelController extends RegelManuellController<MinRegelResponse,
 ### 3. Konfiguration
 
 ```properties
-# Unikt prefix per regel — styr tabellnamn i databasen
-regel.persistence.table-prefix=min_regel
-
-# OUL-subtopic för statusnotifieringar till denna regel
-kafka.subtopic=min-regel-reply
-
 # Bas-URL till SID-tjänsten (krävs — används för skyddad identitet-kontroll vid GET)
 sid.api.base-url=https://<sid-service-host>
 ```
@@ -133,7 +118,7 @@ regelimplementationernas tester.
 |-----------------------------------------------------|-------------------------------------------|
 | `AbstractRegelManuellTest`                          | Grundkonfiguration med Kafka och WireMock |
 | `AbstractRegelManuellHandlaggningTest`              | REST-gränssnittets grundflöden            |
-| `AbstractRegelManuellOulTest`                       | OUL-integration och statusnotifieringar   |
+| `AbstractRegelManuellOulTest`                       | OUL-integration                           |
 | `AbstractRegelManuellResponseTest`                  | Regelsvar                                 |
 | `AbstractRegelManuellUtokadUppgiftsbeskrivningTest` | Utökad uppgiftsbekrivning                 |
 
@@ -148,9 +133,12 @@ public class MinRegelHandlaggningTest extends AbstractRegelManuellHandlaggningTe
 
 ### Hjälpklasser
 
-| Klass                  | Användning                                        |
-|------------------------|---------------------------------------------------|
-| `RegelManuellTestData` | Metoder för testdata                              |
-| `OulKafkaConnector`    | In-memory Kafka för OUL-kommunikation i tester    |
-| `WireMockRegelManuell` | WireMock-setup för externa HTTP-beroenden         |
-| `StorageTestCleaner`   | Rensar ramverkets lagrade tillstånd mellan tester |
+| Klass                  | Användning                                     |
+|------------------------|------------------------------------------------|
+| `RegelManuellTestData` | Metoder för testdata                           |
+| `OulKafkaConnector`    | In-memory Kafka för OUL-kommunikation i tester |
+| `WireMockRegelManuell` | WireMock-setup för externa HTTP-beroenden      |
+
+`AbstractRegelManuellTest` mockar `OulUppgiftService` via `@InjectMock` — den publika
+API-gränsen mot `rimfrost-framework-regel-oul`. Se [`docs/test-strategy.md`](docs/test-strategy.md)
+för bakgrund och designbeslut.

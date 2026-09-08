@@ -1,59 +1,23 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.tomakehurst.wiremock.http.RequestMethod;
-import io.quarkus.test.InjectMock;
-import java.util.Map;
-import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
-import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
-import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
-import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
-import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.regel.RegelTestData;
-import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.OulUppgiftSpec;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 
 @Disabled("Base test class - not executable")
 public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTest
 {
 
-   @InjectMock
-   protected OulAdapter oulAdapter;
-
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
    String responseTopic;
-
-   @ConfigProperty(name = "kafka.subtopic")
-   String expectedSubTopic;
-
-   @BeforeEach
-   void stubOulAdapter() throws Exception
-   {
-      var processInfo = ImmutableProcessInfo.builder()
-            .replyTopic(responseTopic)
-            .cloudeventAttributes(Map.of())
-            .build();
-      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation -> {
-         CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
-         return ImmutableOperativUppgift.builder()
-               .uppgiftId(UUID.randomUUID())
-               .handlaggningId(req.getHandlaggningId())
-               .status("NY")
-               .processInfo(processInfo)
-               .build();
-      });
-   }
 
    @ParameterizedTest
    @CsvSource(
@@ -64,18 +28,18 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    void should_create_correct_oul_request(String handlaggningId) throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
-      Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
-      var oulRequest = oulRequestCaptor.getValue();
-      Assertions.assertEquals(handlaggningId, oulRequest.getHandlaggningId().toString());
-      Assertions.assertEquals("TestUppgiftBeskrivning", oulRequest.getBeskrivning());
-      Assertions.assertEquals("TestUppgiftNamn", oulRequest.getRegel());
-      Assertions.assertEquals("C", oulRequest.getVerksamhetslogik());
-      Assertions.assertEquals("ANSVARIG_HANDLAGGARE", oulRequest.getRoll());
-      Assertions.assertTrue(oulRequest.getUrl().contains(basePath()));
-      Assertions.assertNotNull(oulRequest.getErbjudande());
-      Assertions.assertNotNull(oulRequest.getErbjudande().getId());
-      Assertions.assertNotNull(oulRequest.getErbjudande().getNamn());
+      var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
+      Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
+      var spec = captor.getValue();
+      Assertions.assertEquals(handlaggningId, spec.handlaggningId().toString());
+      Assertions.assertEquals("TestUppgiftBeskrivning", spec.beskrivning());
+      Assertions.assertEquals("TestUppgiftNamn", spec.regel());
+      Assertions.assertEquals("C", spec.verksamhetslogik());
+      Assertions.assertEquals("ANSVARIG_HANDLAGGARE", spec.roll());
+      Assertions.assertTrue(spec.url().contains(basePath()));
+      Assertions.assertNotNull(spec.erbjudande());
+      Assertions.assertNotNull(spec.erbjudande().getId());
+      Assertions.assertNotNull(spec.erbjudande().getNamn());
    }
 
    @ParameterizedTest
@@ -83,13 +47,13 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
-   @DisplayName("FRMM-FR-02.5: OUL-skapandeanropet innehåller konfigurerat reply-subtopic för statusnotifieringar")
-   void should_include_reply_subtopic_in_oul_request(String handlaggningId) throws Exception
+   @DisplayName("FRMM-FR-02.5: OUL-skapandeanropet innehåller rätt replyTo-topic från regelförfrågan")
+   void should_include_reply_topic_in_oul_spec(String handlaggningId) throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
-      Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
-      assertEquals(expectedSubTopic, oulRequestCaptor.getValue().getSubTopic());
+      var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
+      Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
+      assertEquals(responseTopic, captor.getValue().replyTo());
    }
 
    @ParameterizedTest
@@ -102,9 +66,9 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    {
       var testRequest = RegelTestData.newRegelRequestMessagePayload(handlaggningId, responseTopic);
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
-      Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
-      var attributes = oulRequestCaptor.getValue().getProcessInfo().getCloudeventAttributes();
+      var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
+      Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
+      var attributes = captor.getValue().cloudEventAttributes();
       Assertions.assertNotNull(attributes);
       Assertions.assertEquals(testRequest.getId(), attributes.get("id"));
       Assertions.assertEquals(testRequest.getKogitoprocinstanceid(), attributes.get("kogitoprocinstanceid"));
@@ -116,77 +80,5 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       Assertions.assertEquals(testRequest.getKogitoprocversion(), attributes.get("kogitoprocversion"));
       Assertions.assertNotNull(attributes.get("type"));
       Assertions.assertNotNull(attributes.get("source"));
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
-   })
-   @DisplayName("FRMM-FR-03.2, FRMM-FR-03.3: Uppgiftsstatus och version uppdateras i handläggningsärendet vid OUL-statusnotifiering")
-   void oul_status_should_put_handlaggning_with_status_new(
-         String handlaggningId,
-         String uppgiftId,
-         String idtypTypId,
-         String idtypVarde) throws JsonProcessingException
-   {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 1);
-      //
-      // mock status update from OUL
-      //
-      var utforarId = ImmutableIdtyp.builder()
-            .typId(idtypTypId)
-            .varde(idtypVarde)
-            .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
-            responseTopic);
-      //
-      // verify PUT handlaggning
-      //
-      WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 2);
-      var handlaggningPutUpdate = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
-      assertEquals(handlaggningId, handlaggningPutUpdate.getHandlaggning().getId().toString());
-      assertEquals(1, handlaggningPutUpdate.getHandlaggning().getVersion());
-      assertEquals(RegelManuellTestStatus.PLANERAD.name(),
-            handlaggningPutUpdate.getHandlaggning().getUppgift().getUppgiftStatus());
-      assertEquals(2, handlaggningPutUpdate.getHandlaggning().getUppgift().getVersion());
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde"
-   })
-   @DisplayName("FRMM-FR-03.4: Uppgiftens version inkrementeras vid statusuppdateringar men handläggningsärendets version förblir oförändrad")
-   void oul_status_should_increment_uppgift_version_across_multiple_updates(
-         String handlaggningId,
-         String uppgiftId,
-         String idtypTypId,
-         String idtypVarde) throws JsonProcessingException
-   {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var utforarId = ImmutableIdtyp.builder()
-            .typId(idtypTypId)
-            .varde(idtypVarde)
-            .build();
-
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
-            responseTopic);
-      WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 2);
-
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.TILLDELAD,
-            responseTopic);
-      var puts = WireMockRegelManuell.waitForHandlaggningRequests(handlaggningId, RequestMethod.PUT, 3);
-
-      assertEquals(3, puts.size(), "Expected three PUTs: NY + PLANERAD + TILLDELAD");
-
-      var lastPut = WireMockRegelManuell.getLastPutHandlaggning(handlaggningId);
-      assertEquals(1, lastPut.getHandlaggning().getVersion(),
-            "handlaggning.version should remain unchanged across OUL status updates");
-      assertEquals(3, lastPut.getHandlaggning().getUppgift().getVersion(),
-            "uppgift.version should increment to 3 after two OUL status updates");
-      assertEquals(RegelManuellTestStatus.TILLDELAD.name(),
-            lastPut.getHandlaggning().getUppgift().getUppgiftStatus());
    }
 }
