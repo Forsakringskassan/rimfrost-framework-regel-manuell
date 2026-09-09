@@ -2,6 +2,28 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.4.0 (2026-09-09)
+
+### Features
+
+-  remove redundant direct dependency on rimfrost-framework-oul (available transitively) ([4c806](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/4c8063b2ad6f490) Ulf Slunga)  
+-  simplify handleRegelRequest by removing redundant CloudEvent builder wrapper ([7eaa6](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7eaa6bca821ff77) Ulf Slunga)  
+-  remove unnecessary quarkus.index-dependency for rimfrost-framework-oul ([d640f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d640fd6d602ff46) Ulf Slunga)  
+-  absorb final handlaggning update failure instead of returning HTTP 500 (FRMM-FR-05.5) ([51505](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/515050b920ff162) Ulf Slunga)  
+-  adopt regel-oul 0.0.4 and collapse to single CloudEventData in handleRegelRequest ([d5f25](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d5f25285e480334) Ulf Slunga)  
+-  remove local persistence and delegate OUL lifecycle to regel-oul (FKPOC-970) ([86ea2](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/86ea2aebe90753a) Ulf Slunga)  
+
+### Bug Fixes
+
+-  use tryUnassignOulUppgift wrapper instead of OulAdapter in middleware ([dcbdc](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/dcbdcdba4fcd183) Ulf Slunga)  
+-  use shared ErbjudandeReferensdataTestService from core (FKPOC-963) ([c71c0](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c71c0b161d8911f) Ulf Slunga)  
+-  remove duplicate RegelManuellHealthTest (FKPOC-962) ([01226](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/01226fc988782b7) Ulf Slunga)  
+-  use CORE CloudEventAttributesMapper (FKPOC-961) ([d5d0c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d5d0c9a138a2200) Ulf Slunga)  
+
+### Dependency updates
+
+- update dependency org.apache.maven.plugins:maven-compiler-plugin to v3.16.0 ([2dade](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2dade29288fa13a) renovate[bot])  
+- pin forsakringskassan/.github action to d1349e6 ([3f287](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3f2878831504570) renovate[bot])  
 ## 1.3.1 (2026-08-26)
 
 ### Bug Fixes
