@@ -14,8 +14,8 @@ import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
-import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.regel.logic.RegelUtils;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import se.fk.rimfrost.framework.sid.exception.SidException;
@@ -44,7 +44,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    SidAdapter sidAdapter;
 
    @Inject
-   OulAdapter oulAdapter;
+   OulUppgiftService oulUppgiftService;
 
    @Override
    public T read(UUID handlaggningId)
@@ -142,7 +142,8 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    /**
     * Unassigns the OUL uppgift for the given handläggning so it returns to an unassigned state.
-    * Best-effort: errors are logged and swallowed so they never affect the HTTP response.
+    * Delegates to {@link OulUppgiftService#tryUnassignOulUppgift}, which logs and swallows any
+    * failure so it never affects the HTTP response (FRMM-FR-08.8).
     */
    private void unassignUppgift(UUID handlaggningId)
    {
@@ -158,14 +159,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          LOGGER.warn("No oulUppgiftId found for handlaggningId: {}, skipping unassign", handlaggningId);
          return;
       }
-      try
-      {
-         oulAdapter.unassignOperativUppgift(oulUppgiftId);
-      }
-      catch (Exception e)
-      {
-         LOGGER.error("Failed to unassign uppgift {} for handlaggningId: {}", oulUppgiftId, handlaggningId, e);
-      }
+      oulUppgiftService.tryUnassignOulUppgift(oulUppgiftId);
    }
 
    /**
