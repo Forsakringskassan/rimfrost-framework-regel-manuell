@@ -89,14 +89,15 @@ underliggande ramverk upprepas inte.
   regelimplementationer utan kodändringar. Varje regelimplementation måste konfigurera `sid.api.base-url`
   med adressen till SID-tjänsten.
 - **FRMM-FR-08.6** Om en eller flera individer har skyddad identitet ska ramverket ta bort tilldelningen av OUL-uppgiften
-  (via `POST /uppgifter/{uppgiftId}/unassign`) innan HTTP 403 returneras, så att uppgiften
-  återgår till otilldelat läge och kan tilldelas handläggare med SID-rättigheter.
+  innan HTTP 403 returneras, via `tryUnassignOulUppgift` som tillhandahålls av
+  `rimfrost-framework-regel-oul`, så att uppgiften återgår till otilldelat läge och kan tilldelas
+  handläggare med SID-rättigheter.
 - **FRMM-FR-08.7** Unassign ska alltid försökas oavsett om uppgiften är tilldelad eller inte —
   OUL-tjänsten förväntas hantera anropet korrekt i båda fallen. Om inget uppgifts-ID finns lagrat
   för handläggningsärendet (t.ex. vid en oväntad timingrelaterad situation) ska unassign-försöket
   hoppas över utan fel — HTTP 403 ska ändå returneras.
 - **FRMM-FR-08.8** Fel vid unassign av OUL-uppgiften ska loggas men ska inte påverka det
-  returnerade HTTP 403-svaret.
+  returnerade HTTP 403-svaret. `tryUnassignOulUppgift` hanterar loggning och sväljer felet internt.
 
 ---
 
