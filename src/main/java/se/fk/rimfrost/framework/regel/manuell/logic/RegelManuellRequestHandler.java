@@ -98,11 +98,7 @@ public class RegelManuellRequestHandler
       CloudEventData cloudEvent = null;
       try
       {
-         cloudEvent = ImmutableCloudEventData.builder()
-               .from(buildBaseCloudEvent(request))
-               .type(responseTopic)
-               .source(kafkaSource)
-               .build();
+         cloudEvent = buildCloudEvent(request);
          var handlaggning = getHandlaggning(request.handlaggningId(), cloudEvent);
          var erbjudandeNamn = erbjudandeReferensdata.getErbjudandeNamn(handlaggning.yrkande().erbjudandeId());
 
@@ -218,7 +214,7 @@ public class RegelManuellRequestHandler
       }
    }
 
-   private CloudEventData buildBaseCloudEvent(RegelDataRequest request)
+   private CloudEventData buildCloudEvent(RegelDataRequest request)
    {
       return ImmutableCloudEventData.builder()
             .id(request.id())
