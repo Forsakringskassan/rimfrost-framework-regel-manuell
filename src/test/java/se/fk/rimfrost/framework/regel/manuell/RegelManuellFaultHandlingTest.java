@@ -1,7 +1,5 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -9,19 +7,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
-import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
-import se.fk.rimfrost.framework.oul.logic.dto.ImmutableIdtyp;
-import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
-import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
+import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
+import se.fk.rimfrost.framework.regel.logic.RegelCancelledException;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
-import se.fk.rimfrost.framework.regel.manuell.base.RegelManuellTestStatus;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import java.util.Map;
-import java.util.UUID;
 
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -31,26 +24,8 @@ import java.util.UUID;
 public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
 {
 
-   @InjectMock
-   OulAdapter oulAdapter;
-
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
    String responseTopic;
-
-   private void stubOulAdapter(UUID handlaggningId) throws Exception
-   {
-      var processInfo = ImmutableProcessInfo.builder()
-            .replyTopic(responseTopic)
-            .cloudeventAttributes(Map.of())
-            .build();
-      Mockito.when(oulAdapter.createOperativUppgift(any())).thenReturn(
-            ImmutableOperativUppgift.builder()
-                  .uppgiftId(UUID.randomUUID())
-                  .handlaggningId(handlaggningId)
-                  .status("NY")
-                  .processInfo(processInfo)
-                  .build());
-   }
 
    @ParameterizedTest
    @CsvSource(
@@ -59,9 +34,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    })
    @DisplayName("FRMM-FR-06.1: Felrespons skickas via Kafka när läsning av handläggningsärende misslyckas vid start")
    void should_send_error_response_on_initial_handlaggning_read_failure(String handlaggningId, Utfall expectedUtfall)
-         throws Exception
    {
-      stubOulAdapter(UUID.fromString(handlaggningId));
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -71,77 +44,19 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    @ParameterizedTest
    @CsvSource(
    {
-         "5367f6b8-cc4a-11f0-8de9-199901015555, ERROR"
+         "5367f6b8-cc4a-11f0-8de9-199901011234, ERROR"
    })
-   @DisplayName("FRMM-FR-06.1: Felrespons skickas via Kafka när uppdatering av handläggningsärende misslyckas vid start")
+   @DisplayName("FRMM-FR-06.1: Felrespons skickas via Kafka när uppdatering av handläggningsärende misslyckas vid OUL-skapande")
    void should_send_error_response_on_initial_handlaggning_write_failure(String handlaggningId, Utfall expectedUtfall)
          throws Exception
    {
-      stubOulAdapter(UUID.fromString(handlaggningId));
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());
-   }
+      var info = new RegelErrorInformation();
+      info.setFelkod(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE);
+      info.setFelmeddelande("Handlaggning update failed");
+      Mockito.when(oulUppgiftService.createOulUppgift(any()))
+            .thenThrow(new RegelCancelledException(info, "Handlaggning update failed", null));
 
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901014444, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
-   })
-   @DisplayName("FRMM-FR-06.2: Felrespons skickas när läsning av handläggningsärende misslyckas under OUL-statusuppdatering")
-   void should_send_error_response_on_handlaggning_read_failure_during_oul_status_with_status_new(
-         String handlaggningId,
-         String uppgiftId,
-         String idtypTypId,
-         String idtypVarde,
-         Utfall expectedUtfall) throws JsonProcessingException
-   {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      //
-      // mock status update from OUL
-      //
-      var utforarId = ImmutableIdtyp.builder()
-            .typId(idtypTypId)
-            .varde(idtypVarde)
-            .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
-            responseTopic);
-      //
-      // verify response
-      //
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901015555, 11e53b18-e9ac-4707-825b-a1cb80689c29, Idtyp_typId, Idtyp_varde, ERROR"
-   })
-   @DisplayName("FRMM-FR-06.2: Felrespons skickas när uppdatering av handläggningsärende misslyckas under OUL-statusuppdatering")
-   void should_send_error_response_on_handlaggning_write_failure_during_oul_status_with_status_new(
-         String handlaggningId,
-         String uppgiftId,
-         String idtypTypId,
-         String idtypVarde,
-         Utfall expectedUtfall) throws Exception
-   {
-      stubOulAdapter(UUID.fromString(handlaggningId));
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      //
-      // mock status update from OUL
-      //
-      var utforarId = ImmutableIdtyp.builder()
-            .typId(idtypTypId)
-            .varde(idtypVarde)
-            .build();
-      oulKafkaConnector.simulateOulStatus(handlaggningId, uppgiftId, utforarId, null, RegelManuellTestStatus.PLANERAD,
-            responseTopic);
-      //
-      // verify response
-      //
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());

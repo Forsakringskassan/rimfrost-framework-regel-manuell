@@ -9,10 +9,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.regel.ErbjudandeReferensdataTestService;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellOulTest;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.OulUppgiftSpec;
 
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -21,6 +21,7 @@ import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 })
 public class RegelManuellOulTest extends AbstractRegelManuellOulTest
 {
+
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
    String responseTopic;
 
@@ -33,11 +34,11 @@ public class RegelManuellOulTest extends AbstractRegelManuellOulTest
    public void should_send_correct_erbjudande_values_with_oul_create_request(String handlaggningId) throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var oulRequestCaptor = ArgumentCaptor.forClass(CreateOperativUppgiftRequest.class);
-      Mockito.verify(oulAdapter, Mockito.timeout(5000)).createOperativUppgift(oulRequestCaptor.capture());
-      var oulRequest = oulRequestCaptor.getValue();
-      Assertions.assertEquals("f35c574d-e2a3-42ac-9ccb-835a24e692fe", oulRequest.getErbjudande().getId());
+      var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
+      Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
+      var spec = captor.getValue();
+      Assertions.assertEquals("f35c574d-e2a3-42ac-9ccb-835a24e692fe", spec.erbjudande().getId());
       Assertions.assertEquals(ErbjudandeReferensdataTestService.DEFAULT_ERBJUDANDE_NAMN,
-            oulRequest.getErbjudande().getNamn());
+            spec.erbjudande().getNamn());
    }
 }

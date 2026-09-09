@@ -6,7 +6,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
@@ -116,18 +115,6 @@ public class RegelManuellMiddlewareServiceExceptionTest
       var ex = assertThrows(RegelManuellException.class, () -> service.update(handlaggning.id(), "request"));
 
       assertEquals(expectedStatus(errorType), ex.getStatus());
-   }
-
-   @Test
-   @DisplayName("FRMM-FR-06.5: HTTP 500 returneras när läsning av lagrad uppgiftsdata misslyckas under done")
-   void done_should_return_internal_server_error_when_readManuellRegelCommonData_fails()
-   {
-      doThrow(new IllegalStateException("storage failure"))
-            .when(dataStorage).getRegelCommonData(any());
-
-      var ex = assertThrows(RegelManuellException.class, () -> service.done(UUID.randomUUID()));
-
-      assertEquals(Response.Status.INTERNAL_SERVER_ERROR, ex.getStatus());
    }
 
    private void givenSuccessfulGetHandlaggning() throws HandlaggningException

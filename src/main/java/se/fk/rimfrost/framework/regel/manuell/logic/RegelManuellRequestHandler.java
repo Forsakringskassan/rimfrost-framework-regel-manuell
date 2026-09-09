@@ -1,189 +1,162 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
+import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
-import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.exception.OulException;
-import se.fk.rimfrost.framework.oul.logic.dto.OulStatus;
-import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
 import se.fk.rimfrost.framework.oul.model.Erbjudande;
-import se.fk.rimfrost.framework.oul.model.ImmutableCreateOperativUppgiftRequest;
-import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
-import se.fk.rimfrost.framework.oul.model.OperativUppgift;
-import se.fk.rimfrost.framework.oul.logic.OulHandlerInterface;
+import se.fk.rimfrost.framework.oul.model.ImmutableErbjudande;
 import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
+import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProviderYaml;
+import se.fk.rimfrost.framework.regel.integration.kafka.RegelKafkaProducer;
+import se.fk.rimfrost.framework.regel.integration.kafka.dto.ImmutableRegelResponse;
 import se.fk.rimfrost.framework.regel.logic.CloudEventAttributesMapper;
-import se.fk.rimfrost.framework.regel.logic.KompletteringKontrollInterface;
-import se.fk.rimfrost.framework.regel.logic.KompletteringOulHandler;
 import se.fk.rimfrost.framework.regel.logic.RegelCancelledException;
-import se.fk.rimfrost.framework.regel.logic.RegelRequestHandlerBase;
+import se.fk.rimfrost.framework.regel.logic.RegelMapper;
+import se.fk.rimfrost.framework.regel.logic.config.RegelConfig;
 import se.fk.rimfrost.framework.regel.logic.dto.RegelDataRequest;
 import se.fk.rimfrost.framework.regel.logic.entity.CloudEventData;
+import se.fk.rimfrost.framework.regel.logic.entity.ImmutableCloudEventData;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableOulUppgiftSpec;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
-import se.fk.rimfrost.framework.regel.storage.entity.ImmutableProcessTopicInfo;
-import se.fk.rimfrost.framework.regel.storage.entity.ImmutableRegelCommonData;
-import se.fk.rimfrost.framework.regel.storage.entity.ProcessTopicInfo;
-import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
 
+/**
+ * Handles incoming regel requests and done-callbacks for the manuell regel flow.
+ *
+ * <p>Delegates OUL uppgift creation (including correlation persistence and
+ * handläggning updates) to {@link OulUppgiftService}. When the handläggare
+ * marks the task as done, this handler reads correlation state, ends the OUL
+ * uppgift, sends the final Kafka response, and performs cleanup.
+ */
 @SuppressWarnings("unused")
 @ApplicationScoped
-public class RegelManuellRequestHandler extends RegelRequestHandlerBase
-      implements OulHandlerInterface, RegelRequestHandlerInterface, RegelManuellUppgiftDoneHandler
+public class RegelManuellRequestHandler
+      implements RegelRequestHandlerInterface, RegelManuellUppgiftDoneHandler
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(RegelManuellRequestHandler.class);
+
+   private static final String AVSLUTAD = "AVSLUTAD";
+
+   @ConfigProperty(name = "kafka.source")
+   String kafkaSource;
+
+   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
+   String responseTopic;
+
+   @Inject
+   HandlaggningAdapter handlaggningAdapter;
+
+   @Inject
+   RegelKafkaProducer regelKafkaProducer;
+
+   @Inject
+   RegelMapper regelMapper;
+
+   @Inject
+   RegelConfigProviderYaml regelConfigProvider;
 
    @Inject
    ErbjudandeReferensdataInterface erbjudandeReferensdata;
 
    @Inject
-   KompletteringKontrollInterface kompletteringKontroll;
+   OulUppgiftService oulUppgiftService;
 
-   @Inject
-   KompletteringOulHandler kompletteringOulHandler;
+   private RegelConfig regelConfig;
 
+   @PostConstruct
+   void initRegelManuellRequestHandler()
+   {
+      this.regelConfig = regelConfigProvider.getConfig();
+   }
+
+   /**
+    * Handles an incoming {@link RegelDataRequest} by reading the handläggning,
+    * building an OUL uppgift specification, and delegating creation to
+    * {@link OulUppgiftService}. On any failure an error response is sent on the
+    * request's {@code replyTo} topic.
+    */
    @Override
    public void handleRegelRequest(RegelDataRequest request)
    {
-      CloudEventData cloudevent = null;
-      ProcessTopicInfo processTopicInfo = null;
-      OperativUppgift operativUppgift = null;
+      CloudEventData cloudEvent = null;
       try
       {
-         cloudevent = createCloudEvent(request);
-         var handlaggning = getHandlaggning(request.handlaggningId(), cloudevent);
-
+         cloudEvent = buildCloudEvent(request);
+         var handlaggning = getHandlaggning(request.handlaggningId(), cloudEvent);
          var erbjudandeNamn = erbjudandeReferensdata.getErbjudandeNamn(handlaggning.yrkande().erbjudandeId());
 
-         var kompletteringar = kompletteringKontroll.checkKomplettering(handlaggning);
-         if (!kompletteringar.isEmpty())
-         {
-            var erbjudande = createErbjudande(handlaggning.yrkande().erbjudandeId(), erbjudandeNamn);
-            try
-            {
-               kompletteringOulHandler.initiate(
-                     request,
-                     CloudEventAttributesMapper.toAttributes(cloudevent),
-                     regelConfig,
-                     erbjudande);
-            }
-            catch (OulException e)
-            {
-               var message = String.format(
-                     "Failed to initiate komplettering. handlaggningId: %s", request.handlaggningId());
-               var regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER, message);
-               throw new RegelCancelledException(regelErrorInformation, message, e);
-            }
-            return;
-         }
-
-         var oulCreateRequest = ImmutableCreateOperativUppgiftRequest.builder()
+         var spec = ImmutableOulUppgiftSpec.builder()
                .handlaggningId(request.handlaggningId())
-               .version("1")
+               .handlaggning(handlaggning)
+               .replyTo(request.replyTo())
+               .cloudEventData(cloudEvent)
+               .cloudEventAttributes(CloudEventAttributesMapper.toAttributes(cloudEvent))
                .regel(regelConfig.getSpecifikation().getNamn())
                .beskrivning(regelConfig.getSpecifikation().getUppgiftbeskrivning())
                .verksamhetslogik(regelConfig.getSpecifikation().getVerksamhetslogik())
                .roll(regelConfig.getSpecifikation().getRoll())
                .url(regelConfig.getUppgift().getPath())
-               .subTopic(oulReplyToSubTopic)
-               .erbjudande(createErbjudande(handlaggning.yrkande().erbjudandeId(), erbjudandeNamn))
-               .processInfo(ImmutableProcessInfo.builder()
-                     .replyTopic(request.replyTo())
-                     .cloudeventAttributes(CloudEventAttributesMapper.toAttributes(cloudevent))
-                     .build())
+               .erbjudande(buildErbjudande(handlaggning.yrkande().erbjudandeId(), erbjudandeNamn))
+               .aktivitetId(request.aktivitetId())
+               .uppgiftSpecifikationId(regelConfig.getSpecifikation().getId())
+               .uppgiftSpecifikationVersion(regelConfig.getSpecifikation().getVersion())
                .build();
 
-         operativUppgift = createOperativUppgift(oulCreateRequest, cloudevent);
-         var uppgift = createUppgift(request.aktivitetId(), operativUppgift.getStatus());
-
-         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, uppgift, request.kogitoprocinstanceid(),
-               handlaggning.version() + 1);
-         updateHandlaggning(handlaggningUpdate, cloudevent, operativUppgift.getUppgiftId());
-         writeCloudEventData(request.handlaggningId(), cloudevent);
-
-         processTopicInfo = ImmutableProcessTopicInfo.builder().replyTopic(request.replyTo()).build();
-
-         writeProcessTopicInfo(request.handlaggningId(), processTopicInfo);
-
-         var commonRegelData = ImmutableRegelCommonData.builder()
-               .uppgift(uppgift)
-               .oulUppgiftId(operativUppgift.getUppgiftId())
-               .build();
-
-         writeRegelCommonData(request.handlaggningId(), operativUppgift.getUppgiftId(), commonRegelData);
+         oulUppgiftService.createOulUppgift(spec);
       }
       catch (Exception e)
       {
          LOGGER.error("Regel run cancelled due to error", e);
-
-         RegelErrorInformation regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER,
+         var regelErrorInformation = buildRegelErrorInformation(RegelFelkod.RIMFROST_OTHER,
                "Regel failed due to unexpected internal error. Handlaggning id: " + request.handlaggningId());
          if (e instanceof RegelCancelledException ex)
          {
             regelErrorInformation = ex.getRegelErrorInformation();
          }
-
-         if (operativUppgift != null)
-         {
-            tryEndOperativUppgift(operativUppgift.getUppgiftId(), "Internal error");
-         }
-
-         if (cloudevent != null)
-         {
-            tryDeleteCloudEventData(request.handlaggningId());
-         }
-
-         if (processTopicInfo != null)
-         {
-            tryDeleteProcessTopicInfo(request.handlaggningId());
-         }
-
-         sendErrorResponse(request.handlaggningId(), cloudevent, regelErrorInformation, request.replyTo());
-         return;
+         sendErrorResponse(request.handlaggningId(), cloudEvent, regelErrorInformation, request.replyTo());
       }
    }
 
+   /**
+    * Handles a done-callback from the REST layer by reading correlation state,
+    * ending the OUL uppgift, sending the final {@code RegelResponse}, cleaning up
+    * correlation data, and performing the final handläggning update.
+    *
+    * <p>If any pre-condition read (correlation storage, handläggning) or
+    * {@link se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService#endOulUppgift}
+    * fails, the method throws {@link RegelManuellException} (HTTP 5xx) and no Kafka
+    * response is sent. The handläggare can retry the {@code POST /done} call.
+    *
+    * <p>Once {@code endOulUppgift} succeeds, the Kafka response is sent before
+    * cleanup and the final handläggning update, so a failure in those subsequent
+    * steps does not prevent response delivery.
+    */
    @Override
    public void handleUppgiftDone(UUID handlaggningId, Utfall utfall)
    {
-      var cloudEventData = readCloudEventData(handlaggningId);
+      OulCorrelationData correlation = oulUppgiftService.getCorrelationData(handlaggningId);
 
-      if (cloudEventData == null)
+      if (correlation == null)
       {
-         LOGGER.error("Failed to read cloudEventData in handleUppgiftDone for handlaggningId: {}", handlaggningId);
-         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read cloudEventData");
-      }
-
-      var processTopicInfo = readProcessTopicInfo(handlaggningId);
-
-      if (processTopicInfo == null)
-      {
-         LOGGER.error("Failed to read processTopicInfo in handleUppgiftDone for handlaggningId: {}", handlaggningId);
-         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read processTopicInfo");
-      }
-
-      RegelCommonData commonRegelData;
-      try
-      {
-         commonRegelData = readRegelCommonData(handlaggningId);
-      }
-      catch (RegelCancelledException e)
-      {
-         LOGGER.error("Failed to read commonRegelData in handleUppgiftDone for handlaggningId: {}", handlaggningId, e);
-         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+         LOGGER.error("Failed to read correlation data in handleUppgiftDone for handlaggningId: {}", handlaggningId);
+         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read correlation data");
       }
 
       Handlaggning handlaggning;
@@ -193,133 +166,170 @@ public class RegelManuellRequestHandler extends RegelRequestHandlerBase
       }
       catch (HandlaggningException e)
       {
-         LOGGER.error("Error in handleUppgiftDone() while trying to update handlaggning with id: {}", handlaggningId, e);
+         LOGGER.error("Error in handleUppgiftDone() while trying to read handlaggning with id: {}", handlaggningId, e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
 
-      OperativUppgift operativUppgift;
       try
       {
-         operativUppgift = oulAdapter.endOperativUppgift(commonRegelData.oulUppgiftId(), "Uppgift klar");
+         oulUppgiftService.endOulUppgift(correlation.oulUppgiftId(), "Uppgift klar");
       }
       catch (OulException e)
       {
-         LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}", handlaggningId,
-               e);
+         LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}",
+               handlaggningId, e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
 
-      sendResponse(handlaggningId, cloudEventData, utfall, processTopicInfo.replyTopic());
+      sendRegelSuccessResponse(handlaggningId, correlation.cloudEventData(), utfall, correlation.replyTopic());
 
-      DelayedException delayedException = new DelayedException();
+      oulUppgiftService.cleanupCorrelation(handlaggningId);
+
+      var uppgift = correlation.uppgift();
+      var updatedUppgift = ImmutableUppgift.builder()
+            .from(uppgift)
+            .version(uppgift.version() + 1)
+            .uppgiftStatus(AVSLUTAD)
+            .utfordTs(OffsetDateTime.now())
+            .build();
+      var handlaggningUpdate = ImmutableHandlaggningUpdate.builder()
+            .id(handlaggning.id())
+            .version(handlaggning.version())
+            .yrkande(handlaggning.yrkande())
+            .processInstansId(handlaggning.processInstansId())
+            .skapadTS(handlaggning.skapadTS())
+            .avslutadTS(handlaggning.avslutadTS())
+            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
+            .uppgift(updatedUppgift)
+            .build();
       try
       {
-         dataStorage.deleteRegelCommonData(handlaggningId);
-      }
-      catch (Exception e)
-      {
-         delayedException.addSuppressed(e);
-      }
-
-      try
-      {
-         processTopicInfoStorage.deleteProcessTopicInfo(handlaggningId);
-      }
-      catch (Exception e)
-      {
-         delayedException.addSuppressed(e);
-      }
-
-      try
-      {
-         this.cloudEventDataStorage.deleteCloudEventData(handlaggningId);
-      }
-      catch (Exception e)
-      {
-         delayedException.addSuppressed(e);
-      }
-
-      try
-      {
-         var uppgift = commonRegelData.uppgift();
-         var updatedUppgift = ImmutableUppgift.builder()
-               .from(uppgift)
-               .version(uppgift.version() + 1)
-               .uppgiftStatus(operativUppgift.getStatus())
-               .utfordTs(OffsetDateTime.now())
-               .build();
-         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
-               handlaggning.version());
          handlaggningAdapter.updateHandlaggning(handlaggningUpdate);
       }
       catch (Exception e)
       {
-         delayedException.addSuppressed(e);
-      }
-      if (delayedException.getSuppressed().length > 0)
-      {
-         throw delayedException;
+         LOGGER.error(
+               "Error in handleUppgiftDone() while updating handlaggning for id: {} — RegelResponse already sent, ignoring failure",
+               handlaggningId, e);
       }
    }
 
-   @Override
-   public void handleOulStatus(OulStatus oulStatus)
+   private CloudEventData buildCloudEvent(RegelDataRequest request)
    {
-      CloudEventData cloudEventData = null;
+      return ImmutableCloudEventData.builder()
+            .id(request.id())
+            .kogitoparentprociid(request.kogitoparentprociid())
+            .kogitoprocid(request.kogitoprocid())
+            .kogitoprocinstanceid(request.kogitoprocinstanceid())
+            .kogitoprocist(request.kogitoprocist())
+            .kogitoprocversion(request.kogitoprocversion())
+            .kogitorootprocid(request.kogitorootprocid())
+            .kogitorootprociid(request.kogitorootprociid())
+            .type(responseTopic)
+            .source(kafkaSource)
+            .build();
+   }
+
+   private Handlaggning getHandlaggning(UUID handlaggningId, CloudEventData cloudEventData)
+   {
       try
       {
-         cloudEventData = CloudEventAttributesMapper.toCloudEventData(oulStatus.processInfo().cloudeventAttributes());
-
-         RegelCommonData commonRegelData = readRegelCommonData(oulStatus.handlaggningId());
-         if (commonRegelData == null)
-         {
-            // No RegelCommonData for this handlaggningId — komplettering tasks are managed by
-            // KompletteringOulHandler and have no RegelCommonData row; skip OUL status update.
-            return;
-         }
-         var uppgift = commonRegelData.uppgift();
-         Handlaggning handlaggning = getHandlaggning(oulStatus.handlaggningId(), cloudEventData);
-
-         var updatedUppgift = ImmutableUppgift.builder()
-               .from(uppgift)
-               .version(uppgift.version() + 1)
-               .utforarId(toHandlaggningModelIdtyp(Objects.requireNonNull(oulStatus.utforarId())))
-               .planeradTs(oulStatus.planeradTill())
-               .uppgiftStatus(oulStatus.uppgiftStatus())
-               .build();
-
-         var handlaggningUpdate = createHandlaggningUpdate(handlaggning, updatedUppgift, handlaggning.processInstansId(),
-               handlaggning.version());
-
-         var updatedCommonRegelData = ImmutableRegelCommonData.builder()
-               .from(commonRegelData)
-               .uppgift(updatedUppgift)
-               .build();
-
-         writeRegelCommonData(oulStatus.handlaggningId(), commonRegelData.oulUppgiftId(), updatedCommonRegelData);
-
-         updateHandlaggning(handlaggningUpdate, cloudEventData, commonRegelData.oulUppgiftId());
+         return handlaggningAdapter.readHandlaggning(handlaggningId);
       }
-      catch (Exception e)
+      catch (HandlaggningException e)
       {
-         LOGGER.error("Regel run in handleOulStatus cancelled due to error", e);
-
-         RegelErrorInformation regelErrorInformation = createRegelErrorInformation(RegelFelkod.RIMFROST_OTHER,
-               "Regel failed due to unexpected internal error. Handlaggning id: " + oulStatus.handlaggningId());
-         if (e instanceof RegelCancelledException ex)
-         {
-            regelErrorInformation = ex.getRegelErrorInformation();
-         }
-
-         tryEndOperativUppgift(oulStatus.uppgiftId(), "Internal error");
-         tryDeleteCloudEventData(oulStatus.handlaggningId());
-         tryDeleteProcessTopicInfo(oulStatus.handlaggningId());
-         tryDeleteRegelCommonData(oulStatus.handlaggningId());
-         sendErrorResponse(oulStatus.handlaggningId(), cloudEventData, regelErrorInformation,
-               oulStatus.processInfo().replyTopic());
-         return;
+         var message = String.format("Failed to read handlaggning. handlaggningId: %s, kogitoprocId: %s",
+               handlaggningId, cloudEventData.kogitoprocinstanceid());
+         var regelErrorInformation = buildRegelErrorInformation(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, message);
+         throw new RegelCancelledException(regelErrorInformation, message, e);
       }
-
    }
 
+   private Erbjudande buildErbjudande(String id, String namn)
+   {
+      return ImmutableErbjudande.builder()
+            .id(id)
+            .namn(namn)
+            .build();
+   }
+
+   private void sendErrorResponse(UUID handlaggningId, CloudEventData cloudEventData,
+         RegelErrorInformation regelErrorInformation, String replyTo)
+   {
+      if (handlaggningId == null || cloudEventData == null || regelErrorInformation == null)
+      {
+         LOGGER.warn(
+               "Could not send error response. Missing one or more required parameters. handlaggningId: {}, cloudEventData: {}, regelErrorInformation: {}",
+               handlaggningId, cloudEventData, regelErrorInformation);
+         return;
+      }
+      try
+      {
+         var regelResponse = regelMapper.toRegelResponse(handlaggningId, cloudEventData, regelErrorInformation);
+         regelKafkaProducer.sendRegelResponse(regelResponse, Objects.requireNonNull(replyTo));
+      }
+      catch (IllegalStateException e)
+      {
+         LOGGER.error("Failed to send error response for handlaggning. handlaggningId: {}, regelErrorInformation: {}",
+               handlaggningId, regelErrorInformation, e);
+      }
+   }
+
+   private void sendRegelSuccessResponse(UUID handlaggningId,
+         CloudEventData cloudEventData,
+         Utfall utfall, String replyTopic)
+   {
+      try
+      {
+         var regelResponse = ImmutableRegelResponse.builder()
+               .id(cloudEventData.id())
+               .handlaggningId(handlaggningId)
+               .kogitoparentprociid(cloudEventData.kogitoparentprociid())
+               .kogitorootprociid(cloudEventData.kogitorootprociid())
+               .kogitoprocid(cloudEventData.kogitoprocid())
+               .kogitorootprocid(cloudEventData.kogitorootprocid())
+               .kogitoprocinstanceid(cloudEventData.kogitoprocinstanceid())
+               .kogitoprocist(cloudEventData.kogitoprocist())
+               .kogitoprocversion(cloudEventData.kogitoprocversion())
+               .utfall(utfall)
+               .type(cloudEventData.type())
+               .source(cloudEventData.source())
+               .build();
+         regelKafkaProducer.sendRegelResponse(regelResponse, Objects.requireNonNull(replyTopic));
+      }
+      catch (IllegalStateException e)
+      {
+         LOGGER.error("Failed to send regel response for handlaggning. handlaggningId: {}, utfall: {}",
+               handlaggningId, utfall, e);
+      }
+   }
+
+   private RegelErrorInformation buildRegelErrorInformation(String felkod, String meddelande)
+   {
+      var info = new RegelErrorInformation();
+      info.setFelkod(felkod);
+      info.setFelmeddelande(meddelande);
+      return info;
+   }
+
+   private static Response.Status toHttpStatus(HandlaggningException e)
+   {
+      return switch (e.getErrorType())
+      {
+         case NOT_FOUND -> Response.Status.NOT_FOUND;
+         case BAD_REQUEST -> Response.Status.BAD_REQUEST;
+         case SERVICE_UNAVAILABLE -> Response.Status.SERVICE_UNAVAILABLE;
+         default -> Response.Status.INTERNAL_SERVER_ERROR;
+      };
+   }
+
+   private static Response.Status toHttpStatus(OulException e)
+   {
+      return switch (e.getErrorType())
+      {
+         case NOT_FOUND -> Response.Status.NOT_FOUND;
+         case SERVICE_UNAVAILABLE -> Response.Status.SERVICE_UNAVAILABLE;
+         default -> Response.Status.INTERNAL_SERVER_ERROR;
+      };
+   }
 }
