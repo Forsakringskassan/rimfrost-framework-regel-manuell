@@ -18,8 +18,8 @@ import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
-import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
-import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,7 +47,7 @@ public class RegelManuellReadDelegationTest
    SidAdapter sidAdapter;
 
    @InjectMock
-   RegelCommonDataStorage dataStorage;
+   OulUppgiftService oulUppgiftService;
 
    @InjectMock
    RegelManuellTestService regelService;
@@ -60,7 +60,7 @@ public class RegelManuellReadDelegationTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
       when(regelService.readData(handlaggning)).thenReturn("expectedResult");
-      givenSuccessfulDataStorage();
+      givenSuccessfulCorrelationData();
 
       var result = service.read(handlaggning.id());
 
@@ -76,7 +76,7 @@ public class RegelManuellReadDelegationTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
       when(regelService.readData(handlaggning)).thenReturn("expectedResult");
-      givenSuccessfulDataStorage();
+      givenSuccessfulCorrelationData();
 
       service.read(handlaggning.id());
 
@@ -102,10 +102,10 @@ public class RegelManuellReadDelegationTest
       return handlaggning;
    }
 
-   private void givenSuccessfulDataStorage()
+   private void givenSuccessfulCorrelationData()
    {
-      var data = mock(RegelCommonData.class);
-      when(data.uppgift()).thenReturn(mock(Uppgift.class));
-      when(dataStorage.getRegelCommonData(any())).thenReturn(data);
+      var correlationData = mock(OulCorrelationData.class);
+      when(correlationData.uppgift()).thenReturn(mock(Uppgift.class));
+      when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
    }
 }

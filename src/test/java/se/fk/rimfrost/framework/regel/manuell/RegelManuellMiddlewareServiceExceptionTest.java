@@ -17,8 +17,8 @@ import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
-import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
-import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -41,7 +41,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
    HandlaggningAdapter handlaggningAdapter;
 
    @InjectMock
-   RegelCommonDataStorage dataStorage;
+   OulUppgiftService oulUppgiftService;
 
    @InjectMock
    SidAdapter sidAdapter;
@@ -81,7 +81,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
          throws Exception
    {
       givenSuccessfulGetHandlaggning();
-      givenSuccessfulDataStorage();
+      givenSuccessfulCorrelationData();
       doThrow(new HandlaggningException(errorType, "error"))
             .when(handlaggningAdapter).updateHandlaggning(any());
 
@@ -108,7 +108,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
             .build();
 
       when(handlaggningAdapter.readHandlaggning(handlaggning.id())).thenReturn(handlaggning);
-      givenSuccessfulDataStorage();
+      givenSuccessfulCorrelationData();
       doThrow(new HandlaggningException(errorType, "error"))
             .when(handlaggningAdapter).updateHandlaggning(any());
 
@@ -129,11 +129,11 @@ public class RegelManuellMiddlewareServiceExceptionTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
    }
 
-   private void givenSuccessfulDataStorage()
+   private void givenSuccessfulCorrelationData()
    {
-      var data = mock(RegelCommonData.class);
-      when(data.uppgift()).thenReturn(mock(Uppgift.class));
-      when(dataStorage.getRegelCommonData(any())).thenReturn(data);
+      var correlationData = mock(OulCorrelationData.class);
+      when(correlationData.uppgift()).thenReturn(mock(Uppgift.class));
+      when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
    }
 
    private static Response.Status expectedStatus(HandlaggningException.ErrorType errorType)
