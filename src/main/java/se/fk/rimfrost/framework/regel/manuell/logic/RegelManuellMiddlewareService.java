@@ -16,7 +16,6 @@ import se.fk.rimfrost.framework.handlaggning.model.Underlag;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.regel.logic.RegelUtils;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
-import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import se.fk.rimfrost.framework.sid.exception.SidException;
 import se.fk.rimfrost.framework.sid.model.ImmutableIdtyp;
@@ -36,9 +35,6 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    @Inject
    ObjectMapper objectMapper;
-
-   @Inject
-   RegelCommonDataStorage dataStorage;
 
    @Inject
    SidAdapter sidAdapter;
@@ -93,7 +89,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    private Uppgift getUppgift(UUID handlaggningId)
    {
-      return dataStorage.getRegelCommonData(handlaggningId).uppgift();
+      return oulUppgiftService.getCorrelationData(handlaggningId).uppgift();
    }
 
    private Handlaggning getHandlaggning(UUID handlaggningId)
@@ -147,7 +143,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
     */
    private void unassignUppgift(UUID handlaggningId)
    {
-      var commonData = dataStorage.getRegelCommonData(handlaggningId);
+      var commonData = oulUppgiftService.getCorrelationData(handlaggningId);
       if (commonData == null)
       {
          LOGGER.warn("No common data found for handlaggningId: {}, skipping unassign", handlaggningId);

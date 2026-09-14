@@ -7,7 +7,7 @@ import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.regel.Utfall;
-import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 
 import java.util.UUID;
 
@@ -18,7 +18,7 @@ public class RegelManuellTestService extends RegelManuellServiceBase
       implements RegelManuellServiceInterface<String, String>
 {
    @Inject
-   RegelCommonDataStorage dataStorage;
+   OulUppgiftService oulUppgiftService;
 
    @Override
    public String readData(Handlaggning handlaggning)
@@ -43,7 +43,7 @@ public class RegelManuellTestService extends RegelManuellServiceBase
             .skapadTS(handlaggning.skapadTS())
             .avslutadTS(handlaggning.avslutadTS())
             .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
-            .uppgift(dataStorage.getRegelCommonData(handlaggning.id()).uppgift())
+            .uppgift(oulUppgiftService.getCorrelationData(handlaggning.id()).uppgift())
             .build();
    }
 

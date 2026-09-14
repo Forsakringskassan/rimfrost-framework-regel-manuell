@@ -9,19 +9,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.Mockito;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.IndividYrkandeRoll;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
-import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
 import se.fk.rimfrost.framework.oul.exception.OulException;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
-import se.fk.rimfrost.framework.regel.storage.RegelCommonDataStorage;
-import se.fk.rimfrost.framework.regel.storage.entity.RegelCommonData;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import se.fk.rimfrost.framework.sid.exception.SidException;
 import java.time.OffsetDateTime;
@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -56,10 +57,7 @@ public class RegelManuellSidCheckTest
    SidAdapter sidAdapter;
 
    @InjectMock
-   RegelCommonDataStorage dataStorage;
-
-   @InjectMock
-   OulAdapter oulAdapter;
+   OulUppgiftService oulUppgiftService;
 
    @Test
    @DisplayName("FRMM-FR-08.3: HTTP 403 returneras och readData() anropas inte när SID-träff detekteras")
@@ -88,7 +86,8 @@ public class RegelManuellSidCheckTest
 
       assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
-      verify(oulAdapter).unassignOperativUppgift(eq(oulUppgiftId));
+      verify(oulUppgiftService).getCorrelationData(any());
+      verify(oulUppgiftService).tryUnassignOulUppgift(eq(oulUppgiftId));
    }
 
    @Test
@@ -98,11 +97,11 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
-      givenSuccessfulDataStorage();
+      givenSuccessfulCorrelationData();
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
 
-      verify(oulAdapter, never()).unassignOperativUppgift(any());
+      verify(oulUppgiftService, never()).tryUnassignOulUppgift(any());
    }
 
    @Test
@@ -114,8 +113,7 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
       givenStoredOulUppgiftId(oulUppgiftId);
-      doThrow(new OulException(OulException.ErrorType.SERVICE_UNAVAILABLE, "oul down"))
-            .when(oulAdapter).unassignOperativUppgift(any());
+      doNothing().when(oulUppgiftService).tryUnassignOulUppgift(any());
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -134,7 +132,7 @@ public class RegelManuellSidCheckTest
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
       assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
-      verify(oulAdapter, never()).unassignOperativUppgift(any());
+      verify(oulUppgiftService, never()).tryUnassignOulUppgift(any());
    }
 
    @Test
@@ -144,7 +142,7 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
-      givenSuccessfulDataStorage();
+      givenSuccessfulCorrelationData();
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
    }
@@ -171,7 +169,7 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithoutIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
-      givenSuccessfulDataStorage();
+      givenSuccessfulCorrelationData();
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
    }
@@ -205,18 +203,18 @@ public class RegelManuellSidCheckTest
       return handlaggning;
    }
 
-   private void givenSuccessfulDataStorage()
+   private void givenSuccessfulCorrelationData()
    {
-      var data = mock(RegelCommonData.class);
-      when(data.uppgift()).thenReturn(mock(Uppgift.class));
-      when(dataStorage.getRegelCommonData(any())).thenReturn(data);
+      var correlationData = mock(OulCorrelationData.class);
+      when(correlationData.uppgift()).thenReturn(mock(Uppgift.class));
+      when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
    }
 
    private void givenStoredOulUppgiftId(UUID oulUppgiftId)
    {
-      var data = mock(RegelCommonData.class);
-      when(data.oulUppgiftId()).thenReturn(oulUppgiftId);
-      when(dataStorage.getRegelCommonData(any())).thenReturn(data);
+      var correlationData = mock(OulCorrelationData.class);
+      when(correlationData.oulUppgiftId()).thenReturn(oulUppgiftId);
+      when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
    }
 
    private static Response.Status expectedStatus(SidException.ErrorType errorType)
