@@ -15,9 +15,6 @@ import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
-import se.fk.rimfrost.framework.oul.exception.OulException;
-import se.fk.rimfrost.framework.oul.model.Erbjudande;
-import se.fk.rimfrost.framework.oul.model.ImmutableErbjudande;
 import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
 import se.fk.rimfrost.framework.regel.Utfall;
@@ -25,7 +22,9 @@ import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProviderYaml;
 import se.fk.rimfrost.framework.regel.integration.kafka.RegelKafkaProducer;
 import se.fk.rimfrost.framework.regel.integration.kafka.dto.ImmutableRegelResponse;
-import se.fk.rimfrost.framework.regel.logic.CloudEventAttributesMapper;
+import se.fk.rimfrost.framework.regel.oul.logic.CloudEventAttributesMapper;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.Erbjudande;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableErbjudande;
 import se.fk.rimfrost.framework.regel.logic.RegelCancelledException;
 import se.fk.rimfrost.framework.regel.logic.RegelMapper;
 import se.fk.rimfrost.framework.regel.logic.config.RegelConfig;
@@ -35,6 +34,7 @@ import se.fk.rimfrost.framework.regel.logic.entity.ImmutableCloudEventData;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableOulUppgiftSpec;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
+import se.fk.rimfrost.framework.regel.oul.logic.exception.OulServiceException;
 import se.fk.rimfrost.framework.regel.presentation.kafka.RegelRequestHandlerInterface;
 
 /**
@@ -174,7 +174,7 @@ public class RegelManuellRequestHandler
       {
          oulUppgiftService.endOulUppgift(correlation.oulUppgiftId(), "Uppgift klar");
       }
-      catch (OulException e)
+      catch (OulServiceException e)
       {
          LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}",
                handlaggningId, e);
@@ -323,7 +323,7 @@ public class RegelManuellRequestHandler
       };
    }
 
-   private static Response.Status toHttpStatus(OulException e)
+   private static Response.Status toHttpStatus(OulServiceException e)
    {
       return switch (e.getErrorType())
       {
