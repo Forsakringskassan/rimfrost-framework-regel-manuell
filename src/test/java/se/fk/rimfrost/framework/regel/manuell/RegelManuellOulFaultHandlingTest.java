@@ -7,11 +7,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
-import se.fk.rimfrost.framework.oul.exception.OulException;
 import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.manuell.base.AbstractRegelManuellTest;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+import se.fk.rimfrost.framework.regel.oul.logic.exception.OulServiceException;
+
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,8 +37,8 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
    void should_send_error_response_on_oul_create_uppgift_failure(String handlaggningId, Utfall expectedUtfall)
          throws Exception
    {
-      Mockito.when(oulUppgiftService.createOulUppgift(any()))
-            .thenThrow(new OulException(OulException.ErrorType.SERVICE_UNAVAILABLE, "OUL is down"));
+      Mockito.doThrow(new OulServiceException(OulServiceException.ErrorType.SERVICE_UNAVAILABLE, "OUL is down"))
+            .when(oulUppgiftService).createOulUppgift(any());
 
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
 
@@ -54,7 +55,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
    @DisplayName("FRMM-FR-06.4: HTTP 500 returneras vid oväntat fel i OUL-tjänsten under avslutning av uppgift")
    void should_return_500_on_oul_end_uppgift_failure_during_done(String handlaggningId) throws Exception
    {
-      Mockito.doThrow(new OulException(OulException.ErrorType.UNEXPECTED_ERROR, "OUL is broken"))
+      Mockito.doThrow(new OulServiceException(OulServiceException.ErrorType.UNEXPECTED_ERROR, "OUL is broken"))
             .when(oulUppgiftService).endOulUppgift(any(), any());
 
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);

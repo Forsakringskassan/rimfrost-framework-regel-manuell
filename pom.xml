@@ -66,12 +66,12 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel</artifactId>
-      <version>1.4.1</version>
+      <version>1.4.2</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel</artifactId>
-      <version>1.4.1</version>
+      <version>1.4.2</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -87,14 +87,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>se.fk.rimfrost.framework.oul</groupId>
-      <artifactId>rimfrost-framework-oul-adapter</artifactId>
-      <version>1.1.4</version>
-    </dependency>
-    <dependency>
       <groupId>se.fk.rimfrost.framework.regel.oul</groupId>
       <artifactId>rimfrost-framework-regel-oul</artifactId>
-      <version>0.0.5</version>
+      <version>0.1.0</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.referensdata</groupId>

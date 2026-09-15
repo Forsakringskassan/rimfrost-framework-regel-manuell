@@ -53,7 +53,7 @@ import static org.mockito.ArgumentMatchers.any;
  * </ul>
  *
  * <p>Tests that need to simulate OUL failures override these defaults with
- * {@code thenThrow(OulException)} for the relevant method.
+ * {@code thenThrow(OulServiceException)} for the relevant method.
  *
  * <p><b>Synchronisation:</b>
  * After {@code sendRegelRequest}, the Kafka consumer thread processes the message asynchronously.
@@ -138,29 +138,12 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
     *
     * <p>Quarkus resets all {@link InjectMock} mocks before each test, so stubbing must be
     * re-established here. Subclasses that need to simulate OUL failures override individual
-    * stubs with {@code thenThrow(OulException)} after calling {@code super.regelManuellResetState()}.
+    * stubs with {@code thenThrow(OulServiceException)} after calling {@code super.regelManuellResetState()}.
     */
    private void configureOulUppgiftServiceMocks() throws Exception
    {
-      Mockito.when(oulUppgiftService.createOulUppgift(any()))
-            .thenReturn(defaultOperativUppgift());
-
       Mockito.when(oulUppgiftService.getCorrelationData(any()))
             .thenReturn(defaultOulCorrelationData());
-   }
-
-   private se.fk.rimfrost.framework.oul.model.OperativUppgift defaultOperativUppgift()
-   {
-      var processInfo = ImmutableProcessInfo.builder()
-            .replyTopic(responseTopic)
-            .cloudeventAttributes(Map.of())
-            .build();
-      return ImmutableOperativUppgift.builder()
-            .uppgiftId(UUID.fromString(WireMockRegelManuell.DEFAULT_UPPGIFT_ID))
-            .handlaggningId(UUID.randomUUID())
-            .status(RegelManuellTestStatus.PLANERAD.name())
-            .processInfo(processInfo)
-            .build();
    }
 
    private se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData defaultOulCorrelationData()

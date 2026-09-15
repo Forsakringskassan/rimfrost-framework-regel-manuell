@@ -53,8 +53,8 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
       var info = new RegelErrorInformation();
       info.setFelkod(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE);
       info.setFelmeddelande("Handlaggning update failed");
-      Mockito.when(oulUppgiftService.createOulUppgift(any()))
-            .thenThrow(new RegelCancelledException(info, "Handlaggning update failed", null));
+      Mockito.doThrow(new RegelCancelledException(info, "Handlaggning update failed", null)).when(oulUppgiftService)
+            .createOulUppgift(any());
 
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();

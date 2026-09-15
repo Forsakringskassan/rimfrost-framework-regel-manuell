@@ -1,57 +1,19 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import com.github.tomakehurst.wiremock.http.RequestMethod;
-import io.quarkus.test.InjectMock;
-import java.util.Map;
-import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.Mockito;
-import se.fk.rimfrost.framework.oul.adapter.OulAdapter;
-import se.fk.rimfrost.framework.oul.model.CreateOperativUppgiftRequest;
-import se.fk.rimfrost.framework.oul.model.ImmutableOperativUppgift;
-import se.fk.rimfrost.framework.oul.model.ImmutableProcessInfo;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-import static org.mockito.ArgumentMatchers.any;
 
 @Disabled("Base test class - not executable")
 public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegelManuellTest
 {
-
-   @InjectMock
-   OulAdapter oulAdapter;
-
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
    String responseTopic;
-
-   @BeforeEach
-   void stubOulAdapter() throws Exception
-   {
-      var processInfo = ImmutableProcessInfo.builder()
-            .replyTopic(responseTopic)
-            .cloudeventAttributes(Map.of())
-            .build();
-      Mockito.when(oulAdapter.createOperativUppgift(any())).thenAnswer(invocation -> {
-         CreateOperativUppgiftRequest req = invocation.getArgument(0, CreateOperativUppgiftRequest.class);
-         return ImmutableOperativUppgift.builder()
-               .uppgiftId(UUID.randomUUID())
-               .handlaggningId(req.getHandlaggningId())
-               .status(RegelManuellTestStatus.PLANERAD.name())
-               .processInfo(processInfo)
-               .build();
-      });
-      Mockito.when(oulAdapter.endOperativUppgift(any(), any())).thenAnswer(invocation -> ImmutableOperativUppgift.builder()
-            .uppgiftId(UUID.randomUUID())
-            .handlaggningId(UUID.randomUUID())
-            .status(RegelManuellTestStatus.AVSLUTAD.name())
-            .processInfo(processInfo)
-            .build());
-   }
 
    @ParameterizedTest
    @CsvSource(
