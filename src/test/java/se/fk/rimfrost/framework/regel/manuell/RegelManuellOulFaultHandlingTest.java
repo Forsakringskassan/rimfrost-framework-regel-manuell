@@ -67,4 +67,28 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
             .then()
             .statusCode(500);
    }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   @DisplayName("FRMM-FR-06.7: HTTP 404 fel från OUL-tjänsten hanteras som lyckat anrop under avslutning av uppgift")
+   void should_return_204_on_oul_end_uppgift_not_found_failure_during_done(String handlaggningId) throws Exception
+   {
+      Mockito.doThrow(new OulServiceException(OulServiceException.ErrorType.NOT_FOUND, "OUL id not found"))
+            .when(oulUppgiftService).endOulUppgift(any(), any());
+
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      waitForRegelRequestProcessed(handlaggningId);
+
+      given()
+            .when()
+            .post(basePath() + "/" + handlaggningId + "/done")
+            .then()
+            .statusCode(204);
+
+      var response = regelKafkaConnector.waitForRegelResponse();
+      assertEquals(Utfall.JA, response.getData().getUtfall());
+   }
 }

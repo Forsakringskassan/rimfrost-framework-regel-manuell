@@ -139,10 +139,10 @@ public class RegelManuellRequestHandler
     * ending the OUL uppgift, sending the final {@code RegelResponse}, cleaning up
     * correlation data, and performing the final handläggning update.
     *
-    * <p>If any pre-condition read (correlation storage, handläggning) or
+    * <p>If any pre-condition read (correlation storage, handläggning) fails or
     * {@link se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService#endOulUppgift}
-    * fails, the method throws {@link RegelManuellException} (HTTP 5xx) and no Kafka
-    * response is sent. The handläggare can retry the {@code POST /done} call.
+    * fails with a status code other than 404, the method throws {@link RegelManuellException}
+    * (HTTP 5xx) and no Kafka response is sent. The handläggare can retry the {@code POST /done} call.
     *
     * <p>Once {@code endOulUppgift} succeeds, the Kafka response is sent before
     * cleanup and the final handläggning update, so a failure in those subsequent
@@ -176,9 +176,12 @@ public class RegelManuellRequestHandler
       }
       catch (OulServiceException e)
       {
-         LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}",
-               handlaggningId, e);
-         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+         if (e.getErrorType() != OulServiceException.ErrorType.NOT_FOUND)
+         {
+            LOGGER.error("Error in handleUppgiftDone() while trying to end operativ uppgift for handlaggningId: {}",
+                  handlaggningId, e);
+            throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+         }
       }
 
       sendRegelSuccessResponse(handlaggningId, correlation.cloudEventData(), utfall, correlation.replyTopic());

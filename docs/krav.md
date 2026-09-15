@@ -66,6 +66,7 @@ underliggande ramverk upprepas inte.
 - **FRMM-FR-06.5** Okategoriserade exceptions från REST-gränssnittet ska resultera i HTTP 500 med
   ett konfigurerbart generellt felmeddelande. Standardvärdet ska vara `Internal Server Error`.
 - **FRMM-FR-06.6** Valideringsfel från REST-gränssnittet ska resultera i HTTP 400.
+- **FRMM-FR-06.7** 404 fel vid REST-anrop för att avsluta OUL uppgift behandlas som lyckat anrop.  
 
 ### FRMM-FR-07 — Kontraktsdefinierade gränssnitt för regelimplementationer
 
