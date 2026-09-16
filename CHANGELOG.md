@@ -2,6 +2,24 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.4.1 (2026-09-16)
+
+### Bug Fixes
+
+-  Use dedicated conflict faults ([6af8a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/6af8a39a0f5f906) Lars Persson)  
+-  Treat 404 as 200 during OUL end REST operation. ([76189](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7618912a1de16ab) Lars Persson)  
+-  Remove OUL adapter dependency ([c0c26](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c0c26443c4f33b7) Lars Persson)  
+-  Use correlation data interface instead of common data in middleware ([7fa76](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7fa769145570508) Lars Persson)  
+
+### Other changes
+
+**Apply suggestion from @UlfSlunga-Sinetiq**
+
+* Co-authored-by: Ulf Slunga &lt;98820233+UlfSlunga-Sinetiq@users.noreply.github.com&gt; 
+
+[49a78](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/49a789997d63c44) larpersso *2026-09-16 08:35:27*
+
+
 ## 1.4.0 (2026-09-09)
 
 ### Features
