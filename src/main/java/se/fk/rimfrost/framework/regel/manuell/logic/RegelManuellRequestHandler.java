@@ -211,9 +211,18 @@ public class RegelManuellRequestHandler
       }
       catch (Exception e)
       {
-         LOGGER.error(
-               "Error in handleUppgiftDone() while updating handlaggning for id: {} — RegelResponse already sent, ignoring failure",
-               handlaggningId, e);
+         if (e instanceof HandlaggningException ex && ex.getErrorType() == HandlaggningException.ErrorType.CONFLICT)
+         {
+            LOGGER.error(
+                  "Version conflict error in handleUppgiftDone() while updating handlaggning for id: {}. Programming fault? — RegelResponse already sent, ignoring failure",
+                  handlaggningId, e);
+         }
+         else
+         {
+            LOGGER.error(
+                  "Error in handleUppgiftDone() while updating handlaggning for id: {} — RegelResponse already sent, ignoring failure",
+                  handlaggningId, e);
+         }
       }
    }
 
