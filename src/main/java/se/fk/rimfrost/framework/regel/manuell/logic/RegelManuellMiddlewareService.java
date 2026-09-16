@@ -117,7 +117,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          {
             LOGGER.error(
                   "Version conflict while attempting to update handlaggning with id: {}. Programming fault in regel service?",
-                  handlaggningUpdate, e);
+                  handlaggningUpdate.id(), e);
             throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR,
                   "Version conflict while attempting to update handlaggning with id: " + handlaggningUpdate.id()
                         + ". Programming fault in regel service?",
