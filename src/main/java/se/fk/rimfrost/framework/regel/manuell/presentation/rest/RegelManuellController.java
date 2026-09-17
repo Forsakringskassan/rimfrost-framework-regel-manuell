@@ -11,12 +11,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
 import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
-import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.RegelManuellControllerApi;
-import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
+import se.fk.rimfrost.framework.regel.oul.jaxrsspec.controllers.generatedsource.RegelOulControllerApi;
+import se.fk.rimfrost.framework.regel.oul.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceInterface;
 
 @SuppressWarnings("unused")
-public abstract class RegelManuellController<T, Y> implements RegelManuellControllerApi
+public abstract class RegelManuellController<T, Y> implements RegelOulControllerApi
 {
    @Inject
    RegelManuellMiddlewareServiceInterface<T, Y> regelManuellMiddlewareService;

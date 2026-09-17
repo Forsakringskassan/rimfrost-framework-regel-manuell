@@ -4,8 +4,8 @@ import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import se.fk.rimfrost.framework.regel.manuell.jaxrsspec.controllers.generatedsource.model.ErrorResponse;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
+import se.fk.rimfrost.framework.regel.oul.jaxrsspec.controllers.generatedsource.model.ErrorResponse;
 
 public class RegelManuellExceptionMapper
 {
