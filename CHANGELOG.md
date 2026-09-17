@@ -2,6 +2,13 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.4.2 (2026-09-17)
+
+### Bug Fixes
+
+-  Use rimfrost-framework-regel-oul-openapi ([3f96a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/3f96a7b475f393f) Lars Persson)  
+-  Remove handlaggning update from middleware read ([5e229](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5e229a35e9ad708) Lars Persson)  
+
 ## 1.4.1 (2026-09-16)
 
 ### Bug Fixes
