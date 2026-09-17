@@ -68,26 +68,6 @@ public class RegelManuellReadDelegationTest
       verify(regelService).readData(handlaggning);
    }
 
-   @Test
-   @DisplayName("FRMM-FR-04.3: read() skapar ett GetResponse-underlag och uppdaterar handläggningsärendet")
-   void read_should_create_get_response_underlag_and_update_handlaggning() throws Exception
-   {
-      var handlaggning = buildHandlaggning();
-      when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
-      when(sidAdapter.containsSid(any())).thenReturn(false);
-      when(regelService.readData(handlaggning)).thenReturn("expectedResult");
-      givenSuccessfulCorrelationData();
-
-      service.read(handlaggning.id());
-
-      var captor = ArgumentCaptor.forClass(HandlaggningUpdate.class);
-      verify(handlaggningAdapter).updateHandlaggning(captor.capture());
-      var update = captor.getValue();
-      assertEquals(2, update.version());
-      assertEquals(1, update.underlag().size());
-      assertEquals("GetResponse", update.underlag().getFirst().typ());
-   }
-
    private Handlaggning buildHandlaggning()
    {
       var yrkande = mock(Yrkande.class);

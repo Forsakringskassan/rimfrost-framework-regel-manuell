@@ -28,8 +28,6 @@ underliggande ramverk upprepas inte.
   - `POST /{handlaggningId}/done` — markera uppgiften som utförd
 - **FRMM-FR-04.2** `GET /{handlaggningId}` ska delegera datahämtning till regelimplementationens
   `readData()`-metod och returnera regelspecifik svarstyp `T`.
-- **FRMM-FR-04.3** Vid `GET /{handlaggningId}` ska ramverket skapa ett handläggningsunderlag av
-  typen "GetResponse" och uppdatera handläggningsärendet.
 - **FRMM-FR-04.4** `PATCH /{handlaggningId}` ska delegera uppdateringen till
   regelimplementationens `updateData()`-metod med regelspecifik förfråganstyp `Y`.
 - **FRMM-FR-04.5** `PATCH`-förfrågan ska valideras med `@Valid @NotNull` innan delegering.

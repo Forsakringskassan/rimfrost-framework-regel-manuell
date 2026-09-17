@@ -78,22 +78,6 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    @ParameterizedTest
    @EnumSource(HandlaggningException.ErrorType.class)
-   @DisplayName("FRMM-FR-06.4: HandlaggningException vid uppdatering av handläggningsärende under GET mappas till väldefinierad HTTP-statuskod")
-   void read_should_throw_with_mapped_status_when_updateHandlaggning_throws(HandlaggningException.ErrorType errorType)
-         throws Exception
-   {
-      givenSuccessfulGetHandlaggning();
-      givenSuccessfulCorrelationData();
-      doThrow(new HandlaggningException(errorType, "error"))
-            .when(handlaggningAdapter).updateHandlaggning(any());
-
-      var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
-
-      assertEquals(expectedStatus(errorType), ex.getStatus());
-   }
-
-   @ParameterizedTest
-   @EnumSource(HandlaggningException.ErrorType.class)
    @DisplayName("FRMM-FR-06.4: HandlaggningException vid uppdatering av handläggningsärende under PATCH mappas till väldefinierad HTTP-statuskod")
    void update_should_throw_with_mapped_status_when_updateHandlaggning_throws(HandlaggningException.ErrorType errorType)
          throws HandlaggningException

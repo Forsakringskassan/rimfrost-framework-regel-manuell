@@ -51,11 +51,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          unassignUppgift(handlaggningId);
          throw new RegelManuellException(Response.Status.FORBIDDEN, "Skyddad identitet");
       }
-      var result = regelService.readData(handlaggning);
-      var underlag = RegelUtils.createUnderlag("GetResponse", 1, result, objectMapper);
-      var handlaggningUpdate = createHandlaggningUpdate(handlaggning, underlag);
-      updateHandlaggning(handlaggningUpdate);
-      return result;
+      return regelService.readData(handlaggning);
    }
 
    @Override
