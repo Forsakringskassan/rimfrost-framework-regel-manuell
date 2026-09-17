@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.4.3 (2026-09-17)
+
+### Bug Fixes
+
+-  Fix dependency index discovery ([99d5f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/99d5f9c5467d65c) Lars Persson)  
+
 ## 1.4.2 (2026-09-17)
 
 ### Bug Fixes
