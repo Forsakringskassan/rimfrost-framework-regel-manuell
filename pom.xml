@@ -61,17 +61,17 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel.oul</groupId>
       <artifactId>rimfrost-framework-regel-oul-openapi-jaxrs-spec</artifactId>
-      <version>0.0.2</version>
+      <version>0.0.3</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel</artifactId>
-      <version>1.4.3</version>
+      <version>1.4.4</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel</artifactId>
-      <version>1.4.3</version>
+      <version>1.4.4</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -89,7 +89,7 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel.oul</groupId>
       <artifactId>rimfrost-framework-regel-oul</artifactId>
-      <version>0.1.1</version>
+      <version>0.1.2</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.referensdata</groupId>
