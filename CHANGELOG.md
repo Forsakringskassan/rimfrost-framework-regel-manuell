@@ -2,6 +2,17 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.4.5 (2026-09-23)
+
+### Bug Fixes
+
+-  bump rimfrost dependencies to latest versions ([a3bc9](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a3bc992059443cc) Ulf Slunga)  
+
+### Dependency updates
+
+- update dependency org.apache.maven.plugins:maven-compiler-plugin to v3.16.0 ([b9b04](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b9b04e3bb252f2d) renovate[bot])  
+## rimfrost-1_2 (2026-09-18)
+
 ## 1.4.4 (2026-09-18)
 
 ### Bug Fixes
