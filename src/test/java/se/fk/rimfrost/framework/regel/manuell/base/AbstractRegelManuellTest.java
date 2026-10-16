@@ -14,7 +14,9 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.regel.RegelTestBase;
+import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
 import se.fk.rimfrost.framework.regel.oul.jaxrsspec.controllers.generatedsource.model.GetUtokadUppgiftsbeskrivningResponse;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.logic.entity.ImmutableCloudEventData;
@@ -94,6 +96,9 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    @Inject
    HandlaggningAdapter handlaggningAdapter;
 
+   @Inject
+   protected RegelManuellTestService regelManuellTestService;
+
    /** Mocked OUL uppgift service — the public API boundary with rimfrost-framework-regel-oul. */
    @InjectMock
    protected OulUppgiftService oulUppgiftService;
@@ -127,6 +132,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
          throw new IllegalStateException("WireMock not initialized");
       }
       server.resetRequests();
+      regelManuellTestService.setNextUtfall(Utfall.JA);
       configureOulUppgiftServiceMocks();
    }
 
@@ -164,7 +170,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       var uppgift = ImmutableUppgift.builder()
             .id(UUID.fromString(WireMockRegelManuell.DEFAULT_UPPGIFT_ID))
             .version(1)
-            .skapadTs(OffsetDateTime.now())
+            .skapadTS(OffsetDateTime.now())
             .aktivitetId(UUID.randomUUID())
             .fSSAinformation("")
             .uppgiftSpecifikation(uppgiftSpecifikation)

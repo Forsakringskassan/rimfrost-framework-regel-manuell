@@ -49,6 +49,9 @@ underliggande ramverk upprepas inte.
   handläggningsärendet misslyckas, så att regelsvaret alltid når kundbehovsflödet.
 - **FRMM-FR-05.6** Ramverket ska uppdatera handläggningsärendet med uppgiftens slutstatus och
   utföringstidsstämpel efter avslutning.
+- **FRMM-FR-05.7** `utfall`-värdet som skickas med `POST /{handlaggningId}/done` ska sparas i
+  handläggningsärendet, så att utfallet är tillgängligt för konsumenter som inspekterar
+  handläggningsdata och inte enbart konsumerar Kafka-svaret.
 
 ### FRMM-FR-06 — Felhantering och återhämtning
 

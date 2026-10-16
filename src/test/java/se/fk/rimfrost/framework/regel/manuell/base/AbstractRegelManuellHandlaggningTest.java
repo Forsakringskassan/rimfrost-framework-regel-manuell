@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 
 @Disabled("Base test class - not executable")
@@ -55,6 +57,23 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
       waitForRegelRequestProcessed(handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = se.fk.rimfrost.framework.regel.WireMockHandlaggning.getUppgiftFromLastPutHandlaggning(handlaggningId);
-      Assertions.assertNotNull(uppgift.getUtfordTs());
+      Assertions.assertNotNull(uppgift.getUtfordTS());
+   }
+
+   @ParameterizedTest
+   @EnumSource(value = Utfall.class, names =
+   {
+         "JA", "NEJ"
+   })
+   @DisplayName("FRMM-FR-05.7: regelutfall sparas i handläggningsärendet vid POST /done")
+   void should_put_handlaggning_with_regelutfall(Utfall utfall) throws Exception
+   {
+      var handlaggningId = "5367f6b8-cc4a-11f0-8de9-199901011234";
+      regelManuellTestService.setNextUtfall(utfall);
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      waitForRegelRequestProcessed(handlaggningId);
+      sendPostRegelManuellHandlaggningDone(handlaggningId);
+      var uppgift = se.fk.rimfrost.framework.regel.WireMockHandlaggning.getUppgiftFromLastPutHandlaggning(handlaggningId);
+      Assertions.assertEquals(utfall.getValue(), uppgift.getRegelutfall().getVarde());
    }
 }
