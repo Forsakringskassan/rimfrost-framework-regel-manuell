@@ -27,7 +27,8 @@ underliggande ramverk upprepas inte.
   - `PATCH /{handlaggningId}` — uppdatera handläggningsunderlag
   - `POST /{handlaggningId}/done` — markera uppgiften som utförd
 - **FRMM-FR-04.2** `GET /{handlaggningId}` ska delegera datahämtning till regelimplementationens
-  `readData()`-metod och returnera regelspecifik svarstyp `T`.
+  `readData()`-metod och returnera regelspecifik svarstyp `T`, inpackad tillsammans med
+  informationsaccessdata enligt FRMM-FR-09.
 - **FRMM-FR-04.4** `PATCH /{handlaggningId}` ska delegera uppdateringen till
   regelimplementationens `updateData()`-metod med regelspecifik förfråganstyp `Y`.
 - **FRMM-FR-04.5** `PATCH`-förfrågan ska valideras med `@Valid @NotNull` innan delegering.
@@ -97,6 +98,26 @@ underliggande ramverk upprepas inte.
   hoppas över utan fel — HTTP 403 ska ändå returneras.
 - **FRMM-FR-08.8** Fel vid unassign av OUL-uppgiften ska loggas men ska inte påverka det
   returnerade HTTP 403-svaret. `tryUnassignOulUppgift` hanterar loggning och sväljer felet internt.
+
+### FRMM-FR-09 — Informationsaccessdata i GET-svaret
+
+En BFF som visar regelns data ska kunna publicera ett informationsaccess-event enligt
+`rimfrost-service-informationsaccess-asyncapi`. FK har angett att eventet ska ange
+handläggare, processinstans, uppgiftsinstans, uppgiftsspecifikation, tidpunkt och den data
+som visas i GUI:t. Individerna listas inte separat, eftersom personuppgifterna finns i den
+data som visas. Svaret bär därför den data som BFF:en inte själv har (FKPOC-1103).
+
+- **FRMM-FR-09.1** `GET /{handlaggningId}` ska returnera regelns svar inpackat i ett kuvert,
+  med regelns eget svar oförändrat i fältet `data` och informationsaccessdata i fältet
+  `informationsaccess`. Fältet `data` är det som BFF:en lägger i eventets
+  `visadInformation`.
+- **FRMM-FR-09.2** `informationsaccess.uppgiftId` ska vara OUL-uppgiftens id från lagrad
+  korrelationsdata. Det anger uppgiftsinstansen. Om korrelationsdata saknas ska fältet vara
+  `null`.
+- **FRMM-FR-09.3** `informationsaccess.regelId` och `informationsaccess.regelVersion` ska hämtas
+  från regelns `config.yaml`. De anger uppgiftsspecifikationen, alltså vilken regel som
+  utförs.
+- **FRMM-FR-09.4** Kuvertet ska bara returneras när SID-kontrollen har passerat.
 
 ---
 
