@@ -11,13 +11,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
-import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
+import se.fk.rimfrost.framework.regel.manuell.logic.entity.Idtyp;
+import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
@@ -36,6 +37,9 @@ import static org.mockito.Mockito.*;
 })
 public class RegelManuellMiddlewareServiceExceptionTest
 {
+   private static final String ID_TYP = "ID_TYP";
+   private static final String ID_VARDE = "ID_VARDE";
+
    @Inject
    RegelManuellMiddlewareServiceTest service;
 
@@ -47,6 +51,9 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    @InjectMock
    SidAdapter sidAdapter;
+
+   @InjectMock
+   UserIdentityHolder userIdentityHolder;
 
    @ParameterizedTest
    @EnumSource(HandlaggningException.ErrorType.class)
@@ -82,6 +89,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
    void update_should_throw_with_mapped_status_when_updateHandlaggning_throws(HandlaggningException.ErrorType errorType)
          throws HandlaggningException
    {
+      givenUserIdentity();
 
       var handlaggning = ImmutableHandlaggning.builder()
             .id(UUID.randomUUID())
@@ -120,6 +128,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
             .build();
 
       when(handlaggningAdapter.readHandlaggning(handlaggning.id())).thenReturn(handlaggning);
+      givenUserIdentity();
       givenSuccessfulCorrelationData();
       doThrow(new HandlaggningException(errorType, "error"))
             .when(handlaggningAdapter).updateHandlaggning(any());
@@ -131,23 +140,24 @@ public class RegelManuellMiddlewareServiceExceptionTest
       assertTrue(ex.getMessage().matches("(?i).*programming fault.*"));
    }
 
-   private void givenSuccessfulGetHandlaggning() throws HandlaggningException
-   {
-      var handlaggning = mock(Handlaggning.class);
-      when(handlaggning.id()).thenReturn(UUID.randomUUID());
-      when(handlaggning.version()).thenReturn(1);
-      when(handlaggning.processInstansId()).thenReturn(UUID.randomUUID());
-      when(handlaggning.skapadTS()).thenReturn(OffsetDateTime.now());
-      when(handlaggning.handlaggningspecifikationId()).thenReturn(UUID.randomUUID());
-      when(handlaggning.yrkande()).thenReturn(mock(Yrkande.class));
-      when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
-   }
-
    private void givenSuccessfulCorrelationData()
    {
+      var utforarId = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
+      when(utforarId.typId()).thenReturn(ID_TYP);
+      when(utforarId.varde()).thenReturn(ID_VARDE);
+      var uppgift = mock(Uppgift.class);
+      when(uppgift.utforarId()).thenReturn(utforarId);
       var correlationData = mock(OulCorrelationData.class);
-      when(correlationData.uppgift()).thenReturn(mock(Uppgift.class));
+      when(correlationData.uppgift()).thenReturn(uppgift);
       when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
+   }
+
+   private void givenUserIdentity()
+   {
+      var identity = mock(Idtyp.class);
+      when(identity.typId()).thenReturn(ID_TYP);
+      when(identity.varde()).thenReturn(ID_VARDE);
+      when(userIdentityHolder.getIdentity()).thenReturn(identity);
    }
 
    private static Response.Status expectedStatus(HandlaggningException.ErrorType errorType)

@@ -9,18 +9,13 @@ import java.util.Collections;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
-import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
-import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
+import se.fk.rimfrost.framework.regel.manuell.logic.RegelAccessGuard;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
-import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
-import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
-import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -44,13 +39,10 @@ public class RegelManuellReadDelegationTest
    HandlaggningAdapter handlaggningAdapter;
 
    @InjectMock
-   SidAdapter sidAdapter;
-
-   @InjectMock
-   OulUppgiftService oulUppgiftService;
-
-   @InjectMock
    RegelManuellTestService regelService;
+
+   @InjectMock
+   RegelAccessGuard regelAccessGuard;
 
    @Test
    @DisplayName("FRMM-FR-04.2: read() delegerar till readData() och returnerar regelimplementationens svar")
@@ -58,13 +50,12 @@ public class RegelManuellReadDelegationTest
    {
       var handlaggning = buildHandlaggning();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
-      when(sidAdapter.containsSid(any())).thenReturn(false);
       when(regelService.readData(handlaggning)).thenReturn("expectedResult");
-      givenSuccessfulCorrelationData();
 
       var result = service.read(handlaggning.id());
 
       assertEquals("expectedResult", result);
+      verify(regelAccessGuard).verifyAccess(handlaggning);
       verify(regelService).readData(handlaggning);
    }
 
@@ -80,12 +71,5 @@ public class RegelManuellReadDelegationTest
       when(handlaggning.handlaggningspecifikationId()).thenReturn(UUID.randomUUID());
       when(handlaggning.yrkande()).thenReturn(yrkande);
       return handlaggning;
-   }
-
-   private void givenSuccessfulCorrelationData()
-   {
-      var correlationData = mock(OulCorrelationData.class);
-      when(correlationData.uppgift()).thenReturn(mock(Uppgift.class));
-      when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
    }
 }

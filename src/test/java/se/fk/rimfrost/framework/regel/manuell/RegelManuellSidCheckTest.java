@@ -3,10 +3,8 @@ package se.fk.rimfrost.framework.regel.manuell;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.vertx.ext.web.RoutingContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,17 +16,17 @@ import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.IndividYrkandeRoll;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
+import se.fk.rimfrost.framework.handlaggning.model.UppgiftSpecifikation;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
-import se.fk.rimfrost.adapter.identity.adapter.IdentityAdapter;
-import se.fk.rimfrost.adapter.identity.exception.IdentityException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
+import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellServiceInterface;
+import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import se.fk.rimfrost.framework.sid.exception.SidException;
-import se.fk.rimfrost.adapter.identity.model.ImmutableIdtyp;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +34,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -52,6 +51,9 @@ import static org.mockito.Mockito.when;
 })
 public class RegelManuellSidCheckTest
 {
+   private static final String ID_TYP = "PERSONNR";
+   private static final String ID_VARDE = "19901010-1234";
+
    @Inject
    RegelManuellMiddlewareServiceTest service;
 
@@ -65,23 +67,13 @@ public class RegelManuellSidCheckTest
    PermissionsAdapter permissionsAdapter;
 
    @InjectMock
-   IdentityAdapter identityAdapter;
-
-   @InjectMock
    OulUppgiftService oulUppgiftService;
 
-   @InjectMock
-   RoutingContext routingContext;
+   @Inject
+   UserIdentityHolder userIdentityHolder;
 
-   @BeforeEach
-   void setupRoutingContext()
-   {
-      var request = mock(io.vertx.core.http.HttpServerRequest.class);
-      var headers = mock(io.vertx.core.MultiMap.class);
-      when(routingContext.request()).thenReturn(request);
-      when(request.headers()).thenReturn(headers);
-      when(headers.get(io.vertx.core.http.HttpHeaders.AUTHORIZATION)).thenReturn("Bearer DUMMY:dummy");
-   }
+   @InjectMock
+   RegelManuellServiceInterface<String, String> regelManuellService;
 
    @Test
    @DisplayName("FRMM-FR-08.3: HTTP 403 returneras och readData() anropas inte när SID detekteras och handläggaren saknar SID-rättigheter")
@@ -89,14 +81,17 @@ public class RegelManuellSidCheckTest
    {
       var oulUppgiftId = UUID.randomUUID();
       var handlaggning = handlaggningWithIndivider();
+
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
-      givenHandlaggareIdentity("PERSONNR", "19901010-1234");
-      givenStoredOulUppgiftId(oulUppgiftId);
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
       assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
+      assertTrue(ex.getMessage().matches("(?i).*does not have permission to access this uppgift.*"));
+      verify(regelManuellService, never()).readData(any());
    }
 
    @Test
@@ -107,12 +102,13 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
-      givenHandlaggareIdentity("PERSONNR", "19901010-1234");
-      givenStoredOulUppgiftId(oulUppgiftId);
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
 
       assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
       verify(oulUppgiftService).tryUnassignOulUppgift(eq(oulUppgiftId));
+      verify(regelManuellService, never()).readData(any());
    }
 
    @Test
@@ -122,7 +118,9 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
-      givenSuccessfulCorrelationData();
+      when(regelManuellService.readData(handlaggning)).thenReturn("value");
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
 
@@ -137,13 +135,15 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
-      givenHandlaggareIdentity("PERSONNR", "19901010-1234");
-      givenStoredOulUppgiftId(oulUppgiftId);
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
       doNothing().when(oulUppgiftService).tryUnassignOulUppgift(any());
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
       assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
+      assertTrue(ex.getMessage().matches("(?i).*does not have permission to access this uppgift.*"));
+      verify(regelManuellService, never()).readData(any());
    }
 
    @Test
@@ -153,13 +153,14 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
-      givenHandlaggareIdentity("PERSONNR", "19901010-1234");
-      givenStoredOulUppgiftId(null);
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(null, ID_TYP, ID_VARDE);
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
       assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
       verify(oulUppgiftService, never()).tryUnassignOulUppgift(any());
+      verify(regelManuellService, never()).readData(any());
    }
 
    @Test
@@ -169,9 +170,12 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
-      givenSuccessfulCorrelationData();
+      when(regelManuellService.readData(handlaggning)).thenReturn("value");
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
+      verify(regelManuellService).readData(handlaggning);
    }
 
    @Test
@@ -183,24 +187,27 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
       when(permissionsAdapter.hasSidPermission(any(), any())).thenReturn(true);
-      givenHandlaggareIdentity("PERSONNR", "19901010-1234");
-      givenStoredOulUppgiftId(oulUppgiftId);
+      when(regelManuellService.readData(handlaggning)).thenReturn("value");
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
 
       verify(oulUppgiftService, never()).tryUnassignOulUppgift(any());
+      verify(regelManuellService).readData(handlaggning);
    }
 
    @Test
-   @DisplayName("FRMM-FR-08.9: hasSidPermission anropas med handläggarens identitet från IdentityAdapter när SID detekteras")
+   @DisplayName("FRMM-FR-08.9: hasSidPermission anropas med handläggarens identitet när SID detekteras")
    void read_should_check_permission_with_handlaggare_id_when_sid_detected() throws Exception
    {
       var oulUppgiftId = UUID.randomUUID();
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
-      givenHandlaggareIdentity("PERSONNR", "19901010-1234");
-      givenStoredOulUppgiftId(oulUppgiftId);
+      when(regelManuellService.readData(handlaggning)).thenReturn("value");
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
 
       assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -209,7 +216,7 @@ public class RegelManuellSidCheckTest
 
    @ParameterizedTest
    @EnumSource(PermissionsException.ErrorType.class)
-   @DisplayName("FRMM-FR-08.9: Fel från behörighetstjänsten mappas till väldefinierade HTTP-statuskoder")
+   @DisplayName("FRMM-FR-06.4: Fel från behörighetstjänsten mappas till väldefinierade HTTP-statuskoder")
    void read_should_throw_with_mapped_status_when_permissions_throws(PermissionsException.ErrorType errorType)
          throws Exception
    {
@@ -217,8 +224,8 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
-      givenHandlaggareIdentity("PERSONNR", "19901010-1234");
-      givenStoredOulUppgiftId(oulUppgiftId);
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
       doThrow(new PermissionsException(errorType, "permissions error")).when(permissionsAdapter)
             .hasSidPermission(any(), any());
 
@@ -236,6 +243,8 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       doThrow(new SidException(errorType, "sid error")).when(sidAdapter).containsSid(any());
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -249,7 +258,9 @@ public class RegelManuellSidCheckTest
       var handlaggning = handlaggningWithoutIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
-      givenSuccessfulCorrelationData();
+      when(regelManuellService.readData(handlaggning)).thenReturn("value");
+      givenHandlaggareIdentity(ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
    }
@@ -283,24 +294,50 @@ public class RegelManuellSidCheckTest
       return handlaggning;
    }
 
-   private void givenSuccessfulCorrelationData()
+   private Uppgift buildTilldeladUppgift(String typId, String varde)
    {
-      var correlationData = mock(OulCorrelationData.class);
-      when(correlationData.uppgift()).thenReturn(mock(Uppgift.class));
-      when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
+      se.fk.rimfrost.framework.handlaggning.model.Idtyp utforarId = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
+      when(utforarId.typId()).thenReturn(typId);
+      when(utforarId.varde()).thenReturn(varde);
+
+      var uppgift = buildUppgift();
+      when(uppgift.utforarId()).thenReturn(utforarId);
+
+      return uppgift;
    }
 
-   private void givenStoredOulUppgiftId(UUID oulUppgiftId)
+   private Uppgift buildUppgift()
+   {
+      var uppgiftSpecifikation = mock(UppgiftSpecifikation.class);
+
+      var uppgift = mock(Uppgift.class);
+      when(uppgift.id()).thenReturn(UUID.randomUUID());
+      when(uppgift.version()).thenReturn(1);
+      when(uppgift.skapadTs()).thenReturn(OffsetDateTime.now());
+      when(uppgift.utfordTs()).thenReturn(null);
+      when(uppgift.planeradTs()).thenReturn(null);
+      when(uppgift.utforarId()).thenReturn(null);
+      when(uppgift.uppgiftStatus()).thenReturn("Planerad");
+      when(uppgift.aktivitetId()).thenReturn(UUID.randomUUID());
+      when(uppgift.fSSAinformation()).thenReturn(UUID.randomUUID().toString());
+      when(uppgift.uppgiftSpecifikation()).thenReturn(uppgiftSpecifikation);
+
+      return uppgift;
+   }
+
+   private void givenCorrelationData(UUID oulUppgiftId, String typId, String varde)
    {
       var correlationData = mock(OulCorrelationData.class);
+      var uppgift = buildTilldeladUppgift(typId, varde);
       when(correlationData.oulUppgiftId()).thenReturn(oulUppgiftId);
+      when(correlationData.uppgift()).thenReturn(uppgift);
       when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
    }
 
-   private void givenHandlaggareIdentity(String idTyp, String idVarde) throws IdentityException
+   private void givenHandlaggareIdentity(String idTyp, String idVarde)
    {
-      when(identityAdapter.getIdentity(any())).thenReturn(
-            ImmutableIdtyp.builder().typId(idTyp).varde(idVarde).build());
+      userIdentityHolder.setIdentity(
+            se.fk.rimfrost.framework.regel.manuell.logic.entity.ImmutableIdtyp.builder().typId(idTyp).varde(idVarde).build());
    }
 
    private static Response.Status expectedStatus(SidException.ErrorType errorType)

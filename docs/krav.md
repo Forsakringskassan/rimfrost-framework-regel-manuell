@@ -77,12 +77,13 @@ underliggande ramverk upprepas inte.
 
 ### FRMM-FR-08 — Kontroll av skyddad identitet (SID)
 
-- **FRMM-FR-08.1** Innan `readData()` anropas vid `GET /{handlaggningId}` ska ramverket kontrollera
-  om någon av handläggningsärendets individer har skyddad identitet via SID-tjänsten.
+- **FRMM-FR-08.1** Innan läsning, uppdatering och avslut av uppgift kopplad
+  till handläggningsärende så ska ramverket kontrollera om någon av
+  handläggningsärendets individer har skyddad identitet via SID-tjänsten.
 - **FRMM-FR-08.2** Individerna hämtas från `handlaggning.yrkande().individYrkandeRoller()` och
   skickas i en `POST /sid/status`-förfrågan till SID-tjänsten.
 - **FRMM-FR-08.3** Om en eller flera individer har skyddad identitet och handläggaren saknar
-  SID-rättigheter ska ramverket returnera HTTP 403 och `readData()` ska inte anropas.
+  SID-rättigheter ska ramverket returnera HTTP 403 och den efterfrågade operationen ska inte utföras.
 - **FRMM-FR-08.5** SID-kontrollen ska ingå i ramverket och gälla automatiskt för alla
   regelimplementationer utan kodändringar.
 - **FRMM-FR-08.6** Om en eller flera individer har skyddad identitet och handläggaren saknar
@@ -97,10 +98,8 @@ underliggande ramverk upprepas inte.
   returnerade HTTP 403-svaret. `tryUnassignOulUppgift` hanterar loggning och sväljer felet internt.
 - **FRMM-FR-08.9** Om SID detekteras ska ramverket kontrollera om den inloggade handläggaren har
   SID-rättigheter via `PermissionsAdapter.hasSidPermission()`. Handläggarens identitet (`idTyp`
-  och `idVarde`) ska hämtas via `IdentityAdapter.getIdentity()`, som anropar identity-tjänsten
-  med det bearer token som medföljer HTTP-anropet.
-- **FRMM-FR-08.10** Om handläggaren har SID-rättigheter ska `readData()` anropas normalt och
-  ärendet hanteras utan begränsning.
+  och `idVarde`) ska hämtas via `UserIdentityHolder.getIdentity()`, som håller den identitet som sparats av `UserIdentityFilter` (FRMM-FR-11.2).
+- **FRMM-FR-08.10** Om handläggaren har SID-rättigheter ska den efterfrågade operationen utföras utan begränsning.
 - **FRMM-FR-08.11** *(ej testbar — konfigurationskrav)* Ramverket ska läsa adressen till SID-tjänsten från property `sid.api.base-url`.
 - **FRMM-FR-08.12** *(ej testbar — konfigurationskrav)* Ramverket ska läsa adressen till behörighetstjänsten från property `permissions.api.base-url`.
 - **FRMM-FR-08.13** *(ej testbar — konfigurationskrav)* Ramverket ska läsa adressen till identity-tjänsten från property `quarkus.rest-client.identity-api.url`.
@@ -124,6 +123,21 @@ med `uppgiftId`. Svaret bär därför den data som BFF:en inte själv har (FKPOC
 - **FRMM-FR-09.3** `informationsaccess.regelId` och `informationsaccess.regelVersion` ska hämtas
   från regelns `config.yaml`.
 - **FRMM-FR-09.4** Containern ska bara returneras när SID-kontrollen har passerat.
+
+### FRMM-FR-10 — Utility för kontroll av access till uppgift
+
+- **FRMM-FR-10.1** Ramverket ska definiera en utility som kan användas vid förfrågan till
+  REST-endpoints för att kontrollera att handläggare har rätt att arbeta med en uppgift.
+  Om handläggaren inte har rätt att jobba med uppgiften så ska HTTP 403 returneras som svar.
+- **FRMM-FR-10.2** Kontrollen ska verifiera att handläggaren är tilldelad som ansvarig för uppgiften.
+- **FRMM-FR-10.3** SID kontroll enligt FRMM-FR-08 ska utföras som del av kontrollen för att säkerställa att handläggaren har rätt att se uppgiften.
+- **FRMM-FR-10.4** Kontrollen ska returnera så snabbt som möjligt. Om kontroll av tilldelning misslyckas ska inte kontroll av SID göras.
+- **FRMM-FR-10.5** Om handläggarens identitet saknas i UserIdentityHolder eller om UserIdentityHolder inte är tillgänglig så ska HTTP 401 returneras.
+
+### FRMM-FR-11 — Kontroll av identitet vid REST förfrågan
+
+- **FRMM-FR-11.1** Användarens identitet ska verifieras vid REST förfrågan via `IdentityAdapter.getIdentity()`. Om identity-tjänsten svarar med 401 så ska HTTP 401 returneras. Övriga fel ska hanteras enligt FRMM-FR-06.4.
+- **FRMM-FR-11.2** Om användarens identitet kunde verifieras så ska den sparas till UserIdentityHolder för att enkelt kunna återanvändas utan att en ny förfrågan till identity-tjänsten ska behövas.
 
 ---
 
