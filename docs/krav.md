@@ -102,19 +102,22 @@ underliggande ramverk upprepas inte.
 ### FRMM-FR-09 — Informationsaccessdata i GET-svaret
 
 En BFF som visar regelns data ska kunna publicera ett informationsaccess-event enligt
-`rimfrost-service-informationsaccess-asyncapi`. Svaret bär därför den data som BFF:en inte
-själv har (FKPOC-1103).
+`rimfrost-service-informationsaccess-asyncapi`. FK har angett att eventet ska ange
+handläggare, processinstans, uppgiftsinstans, uppgiftsspecifikation, tidpunkt och den data
+som visas i GUI:t. Individerna listas inte separat, eftersom personuppgifterna finns i den
+data som visas. Svaret bär därför den data som BFF:en inte själv har (FKPOC-1103).
 
 - **FRMM-FR-09.1** `GET /{handlaggningId}` ska returnera regelns svar inpackat i ett kuvert,
   med regelns eget svar oförändrat i fältet `data` och informationsaccessdata i fältet
-  `informationsaccess`.
+  `informationsaccess`. Fältet `data` är det som BFF:en lägger i eventets
+  `visadInformation`.
 - **FRMM-FR-09.2** `informationsaccess.uppgiftId` ska vara OUL-uppgiftens id från lagrad
-  korrelationsdata. Om korrelationsdata saknas ska fältet vara `null`.
+  korrelationsdata. Det anger uppgiftsinstansen. Om korrelationsdata saknas ska fältet vara
+  `null`.
 - **FRMM-FR-09.3** `informationsaccess.regelId` och `informationsaccess.regelVersion` ska hämtas
-  från regelns `config.yaml`.
-- **FRMM-FR-09.4** `informationsaccess.individer` ska innehålla individerna på handläggningens
-  yrkande, med `typId` och `varde`.
-- **FRMM-FR-09.5** Kuvertet ska bara returneras när SID-kontrollen har passerat.
+  från regelns `config.yaml`. De anger uppgiftsspecifikationen, alltså vilken regel som
+  utförs.
+- **FRMM-FR-09.4** Kuvertet ska bara returneras när SID-kontrollen har passerat.
 
 ---
 
