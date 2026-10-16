@@ -2,6 +2,7 @@ package se.fk.rimfrost.framework.regel.manuell;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.ws.rs.core.HttpHeaders;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -63,6 +64,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
 
       given()
             .when()
+            .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
             .post(basePath() + "/" + handlaggningId + "/done")
             .then()
             .statusCode(500);
@@ -84,6 +86,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
 
       given()
             .when()
+            .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
             .post(basePath() + "/" + handlaggningId + "/done")
             .then()
             .statusCode(204);
