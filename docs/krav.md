@@ -58,7 +58,7 @@ underliggande ramverk upprepas inte.
   skapats ska ramverket avsluta OUL-uppgiften och skicka ett error-response.
 - **FRMM-FR-06.3** Om lagring av korrelationsdata eller processroutingdata misslyckas ska
   ramverket avsluta OUL-uppgiften och skicka ett error-response.
-- **FRMM-FR-06.4** REST-anrop mot handläggningstjänsten och OUL ska resultera i väldefinierade
+- **FRMM-FR-06.4** REST-anrop mot externa tjänster ska resultera i väldefinierade
   HTTP-statuskoder: 404 vid `NOT_FOUND`, 400 vid `BAD_REQUEST`, 503 vid
   `SERVICE_UNAVAILABLE`, och 500 vid övriga fel.
 - **FRMM-FR-06.5** Okategoriserade exceptions från REST-gränssnittet ska resultera i HTTP 500 med
@@ -80,23 +80,29 @@ underliggande ramverk upprepas inte.
   om någon av handläggningsärendets individer har skyddad identitet via SID-tjänsten.
 - **FRMM-FR-08.2** Individerna hämtas från `handlaggning.yrkande().individYrkandeRoller()` och
   skickas i en `POST /sid/status`-förfrågan till SID-tjänsten.
-- **FRMM-FR-08.3** Om en eller flera individer har skyddad identitet ska ramverket returnera
-  HTTP 403 och `readData()` ska inte anropas.
-- **FRMM-FR-08.4** Fel från SID-tjänsten ska resultera i väldefinierade HTTP-statuskoder på samma
-  sätt som fel mot handläggningstjänsten: 404, 400, 503 respektive 500.
+- **FRMM-FR-08.3** Om en eller flera individer har skyddad identitet och handläggaren saknar
+  SID-rättigheter ska ramverket returnera HTTP 403 och `readData()` ska inte anropas.
 - **FRMM-FR-08.5** SID-kontrollen ska ingå i ramverket och gälla automatiskt för alla
-  regelimplementationer utan kodändringar. Varje regelimplementation måste konfigurera `sid.api.base-url`
-  med adressen till SID-tjänsten.
-- **FRMM-FR-08.6** Om en eller flera individer har skyddad identitet ska ramverket ta bort tilldelningen av OUL-uppgiften
-  innan HTTP 403 returneras, via `tryUnassignOulUppgift` som tillhandahålls av
-  `rimfrost-framework-regel-oul`, så att uppgiften återgår till otilldelat läge och kan tilldelas
-  handläggare med SID-rättigheter.
+  regelimplementationer utan kodändringar.
+- **FRMM-FR-08.6** Om en eller flera individer har skyddad identitet och handläggaren saknar
+  SID-rättigheter ska ramverket ta bort tilldelningen av OUL-uppgiften innan HTTP 403 returneras,
+  via `tryUnassignOulUppgift` som tillhandahålls av `rimfrost-framework-regel-oul`, så att
+  uppgiften återgår till otilldelat läge och kan tilldelas handläggare med SID-rättigheter.
 - **FRMM-FR-08.7** Unassign ska alltid försökas oavsett om uppgiften är tilldelad eller inte —
   OUL-tjänsten förväntas hantera anropet korrekt i båda fallen. Om inget uppgifts-ID finns lagrat
   för handläggningsärendet (t.ex. vid en oväntad timingrelaterad situation) ska unassign-försöket
   hoppas över utan fel — HTTP 403 ska ändå returneras.
 - **FRMM-FR-08.8** Fel vid unassign av OUL-uppgiften ska loggas men ska inte påverka det
   returnerade HTTP 403-svaret. `tryUnassignOulUppgift` hanterar loggning och sväljer felet internt.
+- **FRMM-FR-08.9** Om SID detekteras ska ramverket kontrollera om den inloggade handläggaren har
+  SID-rättigheter via `PermissionsAdapter.hasSidPermission()`. Handläggarens identitet (`idTyp`
+  och `idVarde`) ska hämtas via `IdentityAdapter.getIdentity()`, som anropar identity-tjänsten
+  med det bearer token som medföljer HTTP-anropet.
+- **FRMM-FR-08.10** Om handläggaren har SID-rättigheter ska `readData()` anropas normalt och
+  ärendet hanteras utan begränsning.
+- **FRMM-FR-08.11** *(ej testbar — konfigurationskrav)* Ramverket ska läsa adressen till SID-tjänsten från property `sid.api.base-url`.
+- **FRMM-FR-08.12** *(ej testbar — konfigurationskrav)* Ramverket ska läsa adressen till behörighetstjänsten från property `permissions.api.base-url`.
+- **FRMM-FR-08.13** *(ej testbar — konfigurationskrav)* Ramverket ska läsa adressen till identity-tjänsten från property `quarkus.rest-client.identity-api.url`.
 
 ---
 
@@ -114,8 +120,8 @@ underliggande ramverk upprepas inte.
 
 ### FRMM-NFR-03 — Observerbarhet
 
-- **FRMM-NFR-03.1** Alla fel i integrationer mot OUL, handläggningstjänsten och Kafka-lagringen
-  ska loggas med tillräcklig information för felsökning.
+- **FRMM-NFR-03.1** Alla fel i integrationer mot OUL, handläggningstjänsten, SID-tjänsten,
+  behörighetstjänsten och Kafka-lagringen ska loggas med tillräcklig information för felsökning.
 
 ### FRMM-NFR-04 — Underhållbarhet
 
