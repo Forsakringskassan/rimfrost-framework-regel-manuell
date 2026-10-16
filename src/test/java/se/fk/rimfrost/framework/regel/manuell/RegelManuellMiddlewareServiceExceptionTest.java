@@ -87,7 +87,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
             .id(UUID.randomUUID())
             .version(1)
             .yrkande(mock(Yrkande.class))
-            .processInstansId(UUID.randomUUID())
+            .handlaggningIdTyp("e7f3c5a2-1234-4abc-9876-56789abcdef0")
             .skapadTS(OffsetDateTime.now())
             .avslutadTS(OffsetDateTime.now())
             .handlaggningspecifikationId(UUID.randomUUID())
@@ -113,7 +113,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
             .id(UUID.randomUUID())
             .version(1)
             .yrkande(mock(Yrkande.class))
-            .processInstansId(UUID.randomUUID())
+            .handlaggningIdTyp("e7f3c5a2-1234-4abc-9876-56789abcdef0")
             .skapadTS(OffsetDateTime.now())
             .avslutadTS(OffsetDateTime.now())
             .handlaggningspecifikationId(UUID.randomUUID())
@@ -136,7 +136,6 @@ public class RegelManuellMiddlewareServiceExceptionTest
       var handlaggning = mock(Handlaggning.class);
       when(handlaggning.id()).thenReturn(UUID.randomUUID());
       when(handlaggning.version()).thenReturn(1);
-      when(handlaggning.processInstansId()).thenReturn(UUID.randomUUID());
       when(handlaggning.skapadTS()).thenReturn(OffsetDateTime.now());
       when(handlaggning.handlaggningspecifikationId()).thenReturn(UUID.randomUUID());
       when(handlaggning.yrkande()).thenReturn(mock(Yrkande.class));
