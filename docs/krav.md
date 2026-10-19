@@ -105,7 +105,8 @@ En BFF som visar regelns data ska kunna publicera ett informationsaccess-event e
 `rimfrost-service-informationsaccess-asyncapi`. FK har angett att eventet ska ange
 handläggare, processinstans, uppgiftsinstans, uppgiftsspecifikation, tidpunkt och den data
 som visas i GUI:t. Individerna listas inte separat, eftersom personuppgifterna finns i den
-data som visas. Svaret bär därför den data som BFF:en inte själv har (FKPOC-1103).
+data som visas. Processinstansen anges med `handlaggningId`, som BFF:en redan har, tillsammans
+med `uppgiftId`. Svaret bär därför den data som BFF:en inte själv har (FKPOC-1103).
 
 - **FRMM-FR-09.1** `GET /{handlaggningId}` ska returnera regelns svar inpackat i ett kuvert,
   med regelns eget svar oförändrat i fältet `data` och informationsaccessdata i fältet
@@ -115,8 +116,7 @@ data som visas. Svaret bär därför den data som BFF:en inte själv har (FKPOC-
   korrelationsdata. Det anger uppgiftsinstansen. Om korrelationsdata saknas ska fältet vara
   `null`.
 - **FRMM-FR-09.3** `informationsaccess.regelId` och `informationsaccess.regelVersion` ska hämtas
-  från regelns `config.yaml`. De anger uppgiftsspecifikationen, alltså vilken regel som
-  utförs.
+  från regelns `config.yaml`.
 - **FRMM-FR-09.4** Kuvertet ska bara returneras när SID-kontrollen har passerat.
 
 ---
