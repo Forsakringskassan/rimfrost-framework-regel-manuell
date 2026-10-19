@@ -108,16 +108,16 @@ som visas i GUI:t. Individerna listas inte separat, eftersom personuppgifterna f
 data som visas. Processinstansen anges med `handlaggningId`, som BFF:en redan har, tillsammans
 med `uppgiftId`. Svaret bär därför den data som BFF:en inte själv har (FKPOC-1103).
 
-- **FRMM-FR-09.1** `GET /{handlaggningId}` ska returnera regelns svar inpackat i ett kuvert,
-  med regelns eget svar oförändrat i fältet `data` och informationsaccessdata i fältet
-  `informationsaccess`. Fältet `data` är det som BFF:en lägger i eventets
+- **FRMM-FR-09.1** `GET /{handlaggningId}` ska returnera ett objekt, en container, med två
+  fält: `data` med regelns eget svar oförändrat, och `informationsaccess` med
+  informationsaccessdata. Fältet `data` är det som BFF:en lägger i eventets
   `visadInformation`.
 - **FRMM-FR-09.2** `informationsaccess.uppgiftId` ska vara OUL-uppgiftens id från lagrad
   korrelationsdata. Det anger uppgiftsinstansen. Om korrelationsdata saknas ska fältet vara
   `null`.
 - **FRMM-FR-09.3** `informationsaccess.regelId` och `informationsaccess.regelVersion` ska hämtas
   från regelns `config.yaml`.
-- **FRMM-FR-09.4** Kuvertet ska bara returneras när SID-kontrollen har passerat.
+- **FRMM-FR-09.4** Containern ska bara returneras när SID-kontrollen har passerat.
 
 ---
 
