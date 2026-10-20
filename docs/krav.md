@@ -102,7 +102,7 @@ underliggande ramverk upprepas inte.
 ### FRMM-FR-09 — Informationsaccessdata i GET-svaret
 
 En BFF som visar regelns data ska kunna publicera ett informationsaccess-event enligt
-`rimfrost-service-informationsaccess-asyncapi`. FK har angett att eventet ska ange
+`rimfrost-service-informationsaccess-asyncapi`. Eventet ska ange
 handläggare, processinstans, uppgiftsinstans, uppgiftsspecifikation, tidpunkt och den data
 som visas i GUI:t. Individerna listas inte separat, eftersom personuppgifterna finns i den
 data som visas. Processinstansen anges med `handlaggningId`, som BFF:en redan har, tillsammans
