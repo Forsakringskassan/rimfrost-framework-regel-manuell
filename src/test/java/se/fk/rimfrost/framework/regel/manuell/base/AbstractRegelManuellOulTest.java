@@ -1,5 +1,6 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
+import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -8,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import se.fk.rimfrost.framework.regel.RegelKafkaConnector;
 import se.fk.rimfrost.framework.regel.RegelTestData;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulUppgiftSpec;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -80,5 +82,39 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
       Assertions.assertEquals(testRequest.getKogitoprocversion(), attributes.get("kogitoprocversion"));
       Assertions.assertNotNull(attributes.get("type"));
       Assertions.assertNotNull(attributes.get("source"));
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   @DisplayName("FRMM-FR-10.1: OUL-uppgiften skapas med aktivitetId och processvyUrl från regelanropet")
+   void should_include_aktivitet_id_and_processvy_url_in_oul_spec(String handlaggningId) throws Exception
+   {
+      var payload = RegelTestData.newRegelRequestMessagePayload(handlaggningId, responseTopic);
+      payload.getData().setProcessvyUrl("/process/vah");
+      inMemoryConnector.source(RegelKafkaConnector.regelRequestsChannel).send(payload);
+      var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
+      Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
+      var spec = captor.getValue();
+      assertEquals(UUID.fromString(payload.getData().getAktivitetId()), spec.aktivitetId());
+      assertEquals("/process/vah", spec.processvyUrl());
+   }
+
+   @ParameterizedTest
+   @CsvSource(
+   {
+         "5367f6b8-cc4a-11f0-8de9-199901011234"
+   })
+   @DisplayName("FRMM-FR-10.2: OUL-uppgiften skapas utan processvyUrl när regelanropet saknar den")
+   void should_create_oul_uppgift_without_processvy_url(String handlaggningId) throws Exception
+   {
+      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
+      Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
+      var spec = captor.getValue();
+      Assertions.assertNotNull(spec.aktivitetId());
+      Assertions.assertNull(spec.processvyUrl());
    }
 }
