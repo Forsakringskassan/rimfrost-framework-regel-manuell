@@ -36,13 +36,7 @@ public class RegelManuellTestService extends RegelManuellServiceBase
    public HandlaggningUpdate updateData(Handlaggning handlaggning, String request)
    {
       return ImmutableHandlaggningUpdate.builder()
-            .id(handlaggning.id())
-            .version(handlaggning.version())
-            .yrkande(handlaggning.yrkande())
-            .processInstansId(handlaggning.processInstansId())
-            .skapadTS(handlaggning.skapadTS())
-            .avslutadTS(handlaggning.avslutadTS())
-            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
+            .handlaggning(handlaggning)
             .uppgift(oulUppgiftService.getCorrelationData(handlaggning.id()).uppgift())
             .build();
    }
