@@ -89,7 +89,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
-   @DisplayName("FRMM-FR-10.1: OUL-uppgiften skapas med aktivitetId och processvyUrl från regelanropet")
+   @DisplayName("FRMM-FR-11.1: OUL-uppgiften skapas med aktivitetId och processvyUrl från regelanropet")
    void should_include_aktivitet_id_and_processvy_url_in_oul_spec(String handlaggningId) throws Exception
    {
       var payload = RegelTestData.newRegelRequestMessagePayload(handlaggningId, responseTopic);
@@ -107,7 +107,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
-   @DisplayName("FRMM-FR-10.2: OUL-uppgiften skapas utan processvyUrl när regelanropet saknar den")
+   @DisplayName("FRMM-FR-11.2: OUL-uppgiften skapas utan processvyUrl när regelanropet saknar den")
    void should_create_oul_uppgift_without_processvy_url(String handlaggningId) throws Exception
    {
       regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
