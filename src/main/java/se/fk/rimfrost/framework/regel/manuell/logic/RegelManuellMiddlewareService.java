@@ -12,6 +12,9 @@ import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
+import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
+import se.fk.rimfrost.framework.regel.manuell.logic.dto.Informationsaccess;
+import se.fk.rimfrost.framework.regel.manuell.logic.dto.RegelManuellReadResponse;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import se.fk.rimfrost.framework.sid.exception.SidException;
@@ -39,8 +42,11 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    @Inject
    OulUppgiftService oulUppgiftService;
 
+   @Inject
+   RegelConfigProvider regelConfigProvider;
+
    @Override
-   public T read(UUID handlaggningId)
+   public RegelManuellReadResponse<T> read(UUID handlaggningId)
    {
       var handlaggning = getHandlaggning(handlaggningId);
       if (checkSid(handlaggning))
@@ -48,7 +54,8 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          unassignUppgift(handlaggningId);
          throw new RegelManuellException(Response.Status.FORBIDDEN, "Skyddad identitet");
       }
-      return regelService.readData(handlaggning);
+      var data = regelService.readData(handlaggning);
+      return new RegelManuellReadResponse<>(data, buildInformationsaccess(handlaggning));
    }
 
    @Override
@@ -149,6 +156,20 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          return;
       }
       oulUppgiftService.tryUnassignOulUppgift(oulUppgiftId);
+   }
+
+   /**
+    * Builds the informationsaccess data returned alongside the rule-specific response (FRMM-FR-09).
+    * The uppgift id is {@code null} when no correlation data is stored for the handläggning.
+    */
+   private Informationsaccess buildInformationsaccess(Handlaggning handlaggning)
+   {
+      var correlation = oulUppgiftService.getCorrelationData(handlaggning.id());
+      var regel = regelConfigProvider.getConfig().getRegel();
+      return new Informationsaccess(
+            correlation != null ? correlation.oulUppgiftId() : null,
+            regel.getId(),
+            String.valueOf(regel.getVersion()));
    }
 
    /**
