@@ -72,7 +72,7 @@ automatiskt följande ändpunkter:
 | Ändpunkt | Metod | Beskrivning |
 |---|---|---|
 | `/utokadUppgiftsbeskrivning` | GET | Utökad uppgiftsbeskrivning |
-| `/{handlaggningId}` | GET | Hämta regelspecifikt underlag |
+| `/{handlaggningId}` | GET | Hämta regelspecifikt underlag tillsammans med informationsaccessdata |
 | `/{handlaggningId}` | PATCH | Uppdatera regelspecifikt underlag |
 | `/{handlaggningId}/done` | POST | Markera uppgift som klar |
 
@@ -80,6 +80,11 @@ Vid `GET /{handlaggningId}` kontrollerar ramverket automatiskt om någon av äre
 har skyddad identitet via SID-tjänsten. Om så är fallet returneras HTTP 403 och
 `readData()` anropas inte. Konfigurationsegenskapen `sid.api.base-url` måste sättas i alla
 regelimplementationer.
+
+Svaret från `GET /{handlaggningId}` är en container: `data` innehåller regelns eget svar
+oförändrat, och `informationsaccess` innehåller `uppgiftId`, `regelId` och `regelVersion`, som
+BFF:en behöver för att publicera ett informationsaccess-event (FRMM-FR-09). Saknas lagrad
+korrelationsdata returneras HTTP 500.
 
 Ramverket hanterar även följande Kafka-kanaler:
 

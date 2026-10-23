@@ -4,9 +4,11 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.UUID;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
@@ -20,8 +22,9 @@ import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -43,6 +46,9 @@ public class RegelManuellInformationsaccessTest
    // Values from src/test/resources/config-test.yaml
    private static final UUID REGEL_ID = UUID.fromString("a11f3429-3a6b-4389-ba1c-c2747b0fb45b");
    private static final String REGEL_VERSION = "1";
+
+   @ConfigProperty(name = "regel.manuell.base-path")
+   String basePath;
 
    @Inject
    RegelManuellMiddlewareServiceTest service;
@@ -86,15 +92,34 @@ public class RegelManuellInformationsaccessTest
    }
 
    @Test
-   @DisplayName("FRMM-FR-09.2: uppgiftId är null när ingen korrelationsdata finns")
-   void read_should_return_null_uppgift_id_without_correlation_data() throws Exception
+   @DisplayName("FRMM-FR-09.2: HTTP 500 returneras och readData() anropas inte när korrelationsdata saknas")
+   void read_should_throw_500_without_correlation_data() throws Exception
    {
       var handlaggning = givenHandlaggning();
       when(oulUppgiftService.getCorrelationData(any())).thenReturn(null);
 
-      var result = service.read(handlaggning.id());
+      var ex = assertThrows(RegelManuellException.class, () -> service.read(handlaggning.id()));
 
-      assertNull(result.informationsaccess().uppgiftId());
+      assertEquals(Response.Status.INTERNAL_SERVER_ERROR, ex.getStatus());
+      verify(regelService, never()).readData(any());
+   }
+
+   @Test
+   @DisplayName("FRMM-FR-09.1: GET /{handlaggningId} returnerar data och informationsaccess som JSON")
+   void get_should_return_container_as_json() throws Exception
+   {
+      var oulUppgiftId = UUID.randomUUID();
+      var handlaggning = givenHandlaggning();
+      givenCorrelationData(oulUppgiftId);
+      when(regelService.readData(handlaggning)).thenReturn("expectedResult");
+
+      given().when().get(basePath + "/{handlaggningId}", handlaggning.id())
+            .then()
+            .statusCode(200)
+            .body("data", equalTo("expectedResult"))
+            .body("informationsaccess.uppgiftId", equalTo(oulUppgiftId.toString()))
+            .body("informationsaccess.regelId", equalTo(REGEL_ID.toString()))
+            .body("informationsaccess.regelVersion", equalTo(REGEL_VERSION));
    }
 
    @Test

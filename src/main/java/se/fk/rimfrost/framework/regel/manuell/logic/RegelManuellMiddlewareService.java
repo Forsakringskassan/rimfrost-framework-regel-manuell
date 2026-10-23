@@ -54,8 +54,9 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          unassignUppgift(handlaggningId);
          throw new RegelManuellException(Response.Status.FORBIDDEN, "Skyddad identitet");
       }
+      var informationsaccess = buildInformationsaccess(handlaggning);
       var data = regelService.readData(handlaggning);
-      return new RegelManuellReadResponse<>(data, buildInformationsaccess(handlaggning));
+      return new RegelManuellReadResponse<>(data, informationsaccess);
    }
 
    @Override
@@ -160,14 +161,20 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    /**
     * Builds the informationsaccess data returned alongside the rule-specific response (FRMM-FR-09).
-    * The uppgift id is {@code null} when no correlation data is stored for the handläggning.
+    * Throws HTTP 500 when no correlation data is stored, since the uppgift cannot be identified
+    * without it.
     */
    private Informationsaccess buildInformationsaccess(Handlaggning handlaggning)
    {
       var correlation = oulUppgiftService.getCorrelationData(handlaggning.id());
+      if (correlation == null)
+      {
+         LOGGER.error("Correlation data not found for handlaggningId: {}", handlaggning.id());
+         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Correlation data not found");
+      }
       var regel = regelConfigProvider.getConfig().getRegel();
       return new Informationsaccess(
-            correlation != null ? correlation.oulUppgiftId() : null,
+            correlation.oulUppgiftId(),
             regel.getId(),
             String.valueOf(regel.getVersion()));
    }
