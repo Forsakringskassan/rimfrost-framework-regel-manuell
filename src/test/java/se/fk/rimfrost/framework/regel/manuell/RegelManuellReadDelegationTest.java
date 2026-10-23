@@ -64,7 +64,7 @@ public class RegelManuellReadDelegationTest
 
       var result = service.read(handlaggning.id());
 
-      assertEquals("expectedResult", result);
+      assertEquals("expectedResult", result.data());
       verify(regelService).readData(handlaggning);
    }
 
