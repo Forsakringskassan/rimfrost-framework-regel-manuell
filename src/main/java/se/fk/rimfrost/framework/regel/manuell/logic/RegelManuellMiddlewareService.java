@@ -1,8 +1,6 @@
 package se.fk.rimfrost.framework.regel.manuell.logic;
 
-import java.util.List;
 import java.util.UUID;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -11,14 +9,6 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
-import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
-import se.fk.rimfrost.framework.handlaggning.model.Underlag;
-import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
-import se.fk.rimfrost.framework.regel.logic.RegelUtils;
-import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
-import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
-import se.fk.rimfrost.framework.sid.exception.SidException;
-import se.fk.rimfrost.framework.sid.model.ImmutableIdtyp;
 
 //Middleware that handles the read and update operations to handlaggningService.
 //T is the GET operations response body and Y is the PATCH operations body.
@@ -34,23 +24,13 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    HandlaggningAdapter handlaggningAdapter;
 
    @Inject
-   ObjectMapper objectMapper;
-
-   @Inject
-   SidAdapter sidAdapter;
-
-   @Inject
-   OulUppgiftService oulUppgiftService;
+   RegelAccessGuard regelAccessGuard;
 
    @Override
    public T read(UUID handlaggningId)
    {
       var handlaggning = getHandlaggning(handlaggningId);
-      if (checkSid(handlaggning))
-      {
-         unassignUppgift(handlaggningId);
-         throw new RegelManuellException(Response.Status.FORBIDDEN, "Skyddad identitet");
-      }
+      regelAccessGuard.verifyAccess(handlaggning);
       return regelService.readData(handlaggning);
    }
 
@@ -58,6 +38,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    public void update(UUID handlaggningId, Y request)
    {
       var handlaggning = getHandlaggning(handlaggningId);
+      regelAccessGuard.verifyAccess(handlaggning);
       var handlaggningUpdate = regelService.updateData(handlaggning, request);
       updateHandlaggning(handlaggningUpdate);
    }
@@ -65,27 +46,8 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    @Override
    public void done(UUID handlaggningId)
    {
+      regelAccessGuard.verifyAccess(handlaggningId);
       regelService.done(handlaggningId);
-   }
-
-   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Underlag underlag)
-   {
-      return ImmutableHandlaggningUpdate.builder()
-            .id(handlaggning.id())
-            .processInstansId(handlaggning.processInstansId())
-            .skapadTS(handlaggning.skapadTS())
-            .avslutadTS(handlaggning.avslutadTS())
-            .version(handlaggning.version() + 1)
-            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
-            .yrkande(handlaggning.yrkande())
-            .uppgift(getUppgift(handlaggning.id()))
-            .addUnderlag(underlag)
-            .build();
-   }
-
-   private Uppgift getUppgift(UUID handlaggningId)
-   {
-      return oulUppgiftService.getCorrelationData(handlaggningId).uppgift();
    }
 
    private Handlaggning getHandlaggning(UUID handlaggningId)
@@ -125,70 +87,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       }
    }
 
-   /**
-    * Checks whether any individ on the handläggning has a protected identity (SID).
-    * Returns {@code true} if SID is detected, {@code false} otherwise.
-    * Maps {@link SidException} to an appropriate HTTP status on service errors.
-    */
-   private boolean checkSid(Handlaggning handlaggning)
-   {
-      try
-      {
-         return sidAdapter.containsSid(extractIndivider(handlaggning));
-      }
-      catch (SidException e)
-      {
-         LOGGER.error("Error checking SID for handlaggningsId: {}", handlaggning.id(), e);
-         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
-      }
-   }
-
-   /**
-    * Unassigns the OUL uppgift for the given handläggning so it returns to an unassigned state.
-    * Delegates to {@link OulUppgiftService#tryUnassignOulUppgift}, which logs and swallows any
-    * failure so it never affects the HTTP response (FRMM-FR-08.8).
-    */
-   private void unassignUppgift(UUID handlaggningId)
-   {
-      var commonData = oulUppgiftService.getCorrelationData(handlaggningId);
-      if (commonData == null)
-      {
-         LOGGER.warn("No common data found for handlaggningId: {}, skipping unassign", handlaggningId);
-         return;
-      }
-      var oulUppgiftId = commonData.oulUppgiftId();
-      if (oulUppgiftId == null)
-      {
-         LOGGER.warn("No oulUppgiftId found for handlaggningId: {}, skipping unassign", handlaggningId);
-         return;
-      }
-      oulUppgiftService.tryUnassignOulUppgift(oulUppgiftId);
-   }
-
-   /**
-    * Extracts individer from the handläggning's yrkande and maps them to the SID adapter's
-    * {@link se.fk.rimfrost.framework.sid.model.Idtyp} type.
-    */
-   private List<se.fk.rimfrost.framework.sid.model.Idtyp> extractIndivider(Handlaggning handlaggning)
-   {
-      return handlaggning.yrkande().individYrkandeRoller()
-            .stream().<se.fk.rimfrost.framework.sid.model.Idtyp> map(roll -> ImmutableIdtyp.builder()
-                  .typId(roll.individ().typId())
-                  .varde(roll.individ().varde())
-                  .build())
-            .toList();
-   }
-
    private static Response.Status toHttpStatus(HandlaggningException e) {
-      return switch (e.getErrorType()) {
-         case NOT_FOUND -> Response.Status.NOT_FOUND;
-         case BAD_REQUEST -> Response.Status.BAD_REQUEST;
-         case SERVICE_UNAVAILABLE -> Response.Status.SERVICE_UNAVAILABLE;
-         default -> Response.Status.INTERNAL_SERVER_ERROR;
-      };
-   }
-
-   private static Response.Status toHttpStatus(SidException e) {
       return switch (e.getErrorType()) {
          case NOT_FOUND -> Response.Status.NOT_FOUND;
          case BAD_REQUEST -> Response.Status.BAD_REQUEST;
