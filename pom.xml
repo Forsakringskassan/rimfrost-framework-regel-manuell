@@ -94,7 +94,7 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.referensdata</groupId>
       <artifactId>rimfrost-framework-referensdata-interface</artifactId>
-      <version>0.0.1</version>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.sid</groupId>
