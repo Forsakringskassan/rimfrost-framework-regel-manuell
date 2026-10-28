@@ -72,7 +72,7 @@ automatiskt följande ändpunkter:
 | Ändpunkt | Metod | Beskrivning |
 |---|---|---|
 | `/utokadUppgiftsbeskrivning` | GET | Utökad uppgiftsbeskrivning |
-| `/{handlaggningId}` | GET | Hämta regelspecifikt underlag |
+| `/{handlaggningId}` | GET | Hämta regelspecifikt underlag tillsammans med informationsaccessdata |
 | `/{handlaggningId}` | PATCH | Uppdatera regelspecifikt underlag |
 | `/{handlaggningId}/done` | POST | Markera uppgift som klar |
 
@@ -93,6 +93,11 @@ användarens identitet inte kan avgöras och HTTP 403 returneras ifall användar
 `RegelAccessGuard` verifierar även att användaren har rättighet att se ärendet om någon av ärendets individer har
 skyddad identitet. Kontrollen av detta görs via anrop till
 Permission och SID-tjänsterna. HTTP 403 returneras om rättigheter att utföra operationen saknas.
+
+Svaret från `GET /{handlaggningId}` är en container: `data` innehåller regelns eget svar
+oförändrat, och `informationsaccess` innehåller `uppgiftId`, `regelId` och `regelVersion`, som
+BFF:en behöver för att publicera ett informationsaccess-event (FRMM-FR-09). Saknas lagrad
+korrelationsdata returneras HTTP 500.
 
 ### 3. Kafka
 
