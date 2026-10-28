@@ -95,9 +95,9 @@ skyddad identitet. Kontrollen av detta görs via anrop till
 Permission och SID-tjänsterna. HTTP 403 returneras om rättigheter att utföra operationen saknas.
 
 Svaret från `GET /{handlaggningId}` är en container: `data` innehåller regelns eget svar
-oförändrat, och `informationsaccess` innehåller `uppgiftId`, `regelId` och `regelVersion`, som
-BFF:en behöver för att publicera ett informationsaccess-event (FRMM-FR-09). Saknas lagrad
-korrelationsdata returneras HTTP 500.
+oförändrat, och `informationsaccess` innehåller `uppgiftId`, `regelId`, `regelVersion` och
+`anvandare` (den inloggade handläggarens identitet), som BFF:en behöver för att publicera ett
+informationsaccess-event (FRMM-FR-09). Saknas lagrad korrelationsdata returneras HTTP 500.
 
 ### 3. Kafka
 

@@ -9,5 +9,6 @@ import java.util.UUID;
  * @param uppgiftId the OUL uppgift the handläggning is read through
  * @param regelId the rule's id from {@code config.yaml}
  * @param regelVersion the rule's version from {@code config.yaml}
+ * @param anvandare the inloggad handläggare's identity
  */
-public record Informationsaccess(UUID uppgiftId,UUID regelId,String regelVersion){}
+public record Informationsaccess(UUID uppgiftId,UUID regelId,String regelVersion,Anvandare anvandare){}

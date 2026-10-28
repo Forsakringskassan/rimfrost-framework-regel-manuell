@@ -22,6 +22,7 @@ import se.fk.rimfrost.framework.regel.manuell.logic.RegelAccessGuard;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
+import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import static io.restassured.RestAssured.given;
@@ -65,6 +66,9 @@ public class RegelManuellInformationsaccessTest
 
    @InjectMock
    IdentityAdapter identityAdapter;
+
+   @Inject
+   UserIdentityHolder userIdentityHolder;
 
    @InjectMock
    OulUppgiftService oulUppgiftService;
@@ -126,7 +130,9 @@ public class RegelManuellInformationsaccessTest
             .body("data", equalTo("expectedResult"))
             .body("informationsaccess.uppgiftId", equalTo(oulUppgiftId.toString()))
             .body("informationsaccess.regelId", equalTo(REGEL_ID.toString()))
-            .body("informationsaccess.regelVersion", equalTo(REGEL_VERSION));
+            .body("informationsaccess.regelVersion", equalTo(REGEL_VERSION))
+            .body("informationsaccess.anvandare.typId", equalTo(ID_TYP))
+            .body("informationsaccess.anvandare.varde", equalTo(ID_VARDE));
    }
 
    @Test
@@ -142,6 +148,19 @@ public class RegelManuellInformationsaccessTest
       assertEquals(REGEL_VERSION, result.informationsaccess().regelVersion());
    }
 
+   @Test
+   @DisplayName("FRMM-FR-09.5: anvandare är den inloggade handläggarens identitet")
+   void read_should_return_handlaggare_identity_as_anvandare() throws Exception
+   {
+      var handlaggning = givenHandlaggning();
+      givenCorrelationData(UUID.randomUUID());
+
+      var result = service.read(handlaggning.id());
+
+      assertEquals(ID_TYP, result.informationsaccess().anvandare().typId());
+      assertEquals(ID_VARDE, result.informationsaccess().anvandare().varde());
+   }
+
    private Handlaggning givenHandlaggning() throws Exception
    {
       var yrkande = mock(Yrkande.class);
@@ -154,6 +173,8 @@ public class RegelManuellInformationsaccessTest
       when(handlaggning.yrkande()).thenReturn(yrkande);
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(identityAdapter.getIdentity(any())).thenReturn(ImmutableIdtyp.builder().typId(ID_TYP).varde(ID_VARDE).build());
+      userIdentityHolder.setIdentity(
+            se.fk.rimfrost.framework.regel.manuell.logic.entity.ImmutableIdtyp.builder().typId(ID_TYP).varde(ID_VARDE).build());
       return handlaggning;
    }
 

@@ -10,8 +10,10 @@ import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
 import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
+import se.fk.rimfrost.framework.regel.manuell.logic.dto.Anvandare;
 import se.fk.rimfrost.framework.regel.manuell.logic.dto.Informationsaccess;
 import se.fk.rimfrost.framework.regel.manuell.logic.dto.RegelManuellReadResponse;
+import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 
 //Middleware that handles the read and update operations to handlaggningService.
@@ -35,6 +37,9 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
 
    @Inject
    OulUppgiftService oulUppgiftService;
+
+   @Inject
+   UserIdentityHolder userIdentityHolder;
 
    @Override
    public RegelManuellReadResponse<T> read(UUID handlaggningId)
@@ -112,11 +117,13 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          LOGGER.error("Correlation data not found for handlaggningId: {}", handlaggning.id());
          throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Correlation data not found");
       }
+      var identity = userIdentityHolder.getIdentity();
       var regel = regelConfigProvider.getConfig().getRegel();
       return new Informationsaccess(
             correlation.oulUppgiftId(),
             regel.getId(),
-            String.valueOf(regel.getVersion()));
+            String.valueOf(regel.getVersion()),
+            new Anvandare(identity.typId(), identity.varde()));
    }
 
    private static Response.Status toHttpStatus(HandlaggningException e) {

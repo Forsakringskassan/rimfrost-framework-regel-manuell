@@ -16,6 +16,8 @@ import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelAccessGuard;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
+import se.fk.rimfrost.framework.regel.manuell.logic.entity.ImmutableIdtyp;
+import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,6 +51,9 @@ public class RegelManuellReadDelegationTest
    @InjectMock
    OulUppgiftService oulUppgiftService;
 
+   @Inject
+   UserIdentityHolder userIdentityHolder;
+
    @Test
    @DisplayName("FRMM-FR-04.2: read() delegerar till readData() och returnerar regelimplementationens svar")
    void read_should_delegate_to_readData_and_return_its_result() throws Exception
@@ -57,6 +62,7 @@ public class RegelManuellReadDelegationTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(regelService.readData(handlaggning)).thenReturn("expectedResult");
       givenCorrelationData();
+      userIdentityHolder.setIdentity(ImmutableIdtyp.builder().typId("PERSONNR").varde("19901010-1234").build());
 
       var result = service.read(handlaggning.id());
 
