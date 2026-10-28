@@ -109,12 +109,12 @@
     <dependency>
       <groupId>se.fk.rimfrost.adapter.permissions</groupId>
       <artifactId>rimfrost-adapter-permissions</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>0.0.1</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.adapter.identity</groupId>
       <artifactId>rimfrost-adapter-identity</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>0.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>

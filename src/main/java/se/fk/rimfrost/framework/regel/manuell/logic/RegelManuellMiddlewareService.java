@@ -9,6 +9,12 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
+import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProvider;
+import se.fk.rimfrost.framework.regel.manuell.logic.dto.Anvandare;
+import se.fk.rimfrost.framework.regel.manuell.logic.dto.Informationsaccess;
+import se.fk.rimfrost.framework.regel.manuell.logic.dto.RegelManuellReadResponse;
+import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 
 //Middleware that handles the read and update operations to handlaggningService.
 //T is the GET operations response body and Y is the PATCH operations body.
@@ -26,12 +32,23 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
    @Inject
    RegelAccessGuard regelAccessGuard;
 
+   @Inject
+   RegelConfigProvider regelConfigProvider;
+
+   @Inject
+   OulUppgiftService oulUppgiftService;
+
+   @Inject
+   UserIdentityHolder userIdentityHolder;
+
    @Override
-   public T read(UUID handlaggningId)
+   public RegelManuellReadResponse<T> read(UUID handlaggningId)
    {
       var handlaggning = getHandlaggning(handlaggningId);
       regelAccessGuard.verifyAccess(handlaggning);
-      return regelService.readData(handlaggning);
+      var informationsaccess = buildInformationsaccess(handlaggning);
+      var data = regelService.readData(handlaggning);
+      return new RegelManuellReadResponse<>(data, informationsaccess);
    }
 
    @Override
@@ -85,6 +102,28 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          LOGGER.error("Error in update for handlaggningsId: {}", handlaggningUpdate.id(), e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
+   }
+
+   /**
+    * Builds the informationsaccess data returned alongside the rule-specific response (FRMM-FR-09).
+    * Throws HTTP 500 when no correlation data is stored, since the uppgift cannot be identified
+    * without it.
+    */
+   private Informationsaccess buildInformationsaccess(Handlaggning handlaggning)
+   {
+      var correlation = oulUppgiftService.getCorrelationData(handlaggning.id());
+      if (correlation == null)
+      {
+         LOGGER.error("Correlation data not found for handlaggningId: {}", handlaggning.id());
+         throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR, "Correlation data not found");
+      }
+      var identity = userIdentityHolder.getIdentity();
+      var regel = regelConfigProvider.getConfig().getRegel();
+      return new Informationsaccess(
+            correlation.oulUppgiftId(),
+            regel.getId(),
+            String.valueOf(regel.getVersion()),
+            new Anvandare(identity.typId(), identity.varde()));
    }
 
    private static Response.Status toHttpStatus(HandlaggningException e) {

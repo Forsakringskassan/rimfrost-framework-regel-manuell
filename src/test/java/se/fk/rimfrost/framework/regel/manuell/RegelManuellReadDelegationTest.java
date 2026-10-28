@@ -16,6 +16,10 @@ import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelAccessGuard;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellMiddlewareServiceTest;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
+import se.fk.rimfrost.framework.regel.manuell.logic.entity.ImmutableIdtyp;
+import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
+import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
+import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -44,6 +48,12 @@ public class RegelManuellReadDelegationTest
    @InjectMock
    RegelAccessGuard regelAccessGuard;
 
+   @InjectMock
+   OulUppgiftService oulUppgiftService;
+
+   @Inject
+   UserIdentityHolder userIdentityHolder;
+
    @Test
    @DisplayName("FRMM-FR-04.2: read() delegerar till readData() och returnerar regelimplementationens svar")
    void read_should_delegate_to_readData_and_return_its_result() throws Exception
@@ -51,10 +61,12 @@ public class RegelManuellReadDelegationTest
       var handlaggning = buildHandlaggning();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(regelService.readData(handlaggning)).thenReturn("expectedResult");
+      givenCorrelationData();
+      userIdentityHolder.setIdentity(ImmutableIdtyp.builder().typId("PERSONNR").varde("19901010-1234").build());
 
       var result = service.read(handlaggning.id());
 
-      assertEquals("expectedResult", result);
+      assertEquals("expectedResult", result.data());
       verify(regelAccessGuard).verifyAccess(handlaggning);
       verify(regelService).readData(handlaggning);
    }
@@ -71,5 +83,12 @@ public class RegelManuellReadDelegationTest
       when(handlaggning.handlaggningspecifikationId()).thenReturn(UUID.randomUUID());
       when(handlaggning.yrkande()).thenReturn(yrkande);
       return handlaggning;
+   }
+
+   private void givenCorrelationData()
+   {
+      var correlationData = mock(OulCorrelationData.class);
+      when(correlationData.oulUppgiftId()).thenReturn(UUID.randomUUID());
+      when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
    }
 }
