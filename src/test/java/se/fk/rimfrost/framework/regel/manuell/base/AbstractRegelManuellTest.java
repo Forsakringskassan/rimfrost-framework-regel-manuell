@@ -5,12 +5,15 @@ import io.quarkus.test.InjectMock;
 import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+
+import jakarta.ws.rs.core.HttpHeaders;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.mockito.Mockito;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
+import se.fk.rimfrost.framework.handlaggning.model.ImmutableIdtyp;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgiftSpecifikation;
 import se.fk.rimfrost.framework.regel.RegelTestBase;
@@ -77,6 +80,9 @@ import static org.mockito.ArgumentMatchers.any;
 @Disabled("Base test class - not executable")
 public abstract class AbstractRegelManuellTest extends RegelTestBase
 {
+   protected static final String ID_TYP = "ID_TYP";
+   protected static final String ID_VARDE = "ID_VARDE";
+   protected static final String AUTHORIZATION_HEADER_VALUE = "Bearer " + ID_TYP + ":" + ID_VARDE;
 
    @ConfigProperty(name = "regel.manuell.base-path")
    String basePath;
@@ -169,6 +175,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
             .fSSAinformation("")
             .uppgiftSpecifikation(uppgiftSpecifikation)
             .uppgiftStatus(RegelManuellTestStatus.PLANERAD.name())
+            .utforarId(ImmutableIdtyp.builder().typId(ID_TYP).varde(ID_VARDE).build())
             .build();
       return ImmutableOulCorrelationData.builder()
             .oulUppgiftId(UUID.fromString(WireMockRegelManuell.DEFAULT_UPPGIFT_ID))
@@ -206,7 +213,8 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
     */
    protected void waitForRegelManuellReady(String handlaggningId)
    {
-      await().until(() -> given().when().get(basePath() + "/{handlaggningId}", handlaggningId)
+      await().until(() -> given().when().header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
+            .get(basePath() + "/{handlaggningId}", handlaggningId)
             .getStatusCode() == 200);
    }
 
@@ -219,6 +227,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    {
       given()
             .when()
+            .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
             .post(this.basePath() + "/" + handlaggningId + "/done")
             .then()
             .statusCode(204);
@@ -231,7 +240,9 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
     */
    protected GetUtokadUppgiftsbeskrivningResponse sendGetUtokadUppgiftsbeskrivning()
    {
-      return given().when().get(basePath() + "/utokadUppgiftsbeskrivning").then().statusCode(200).extract()
+      return given().when().header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
+            .get(basePath() + "/utokadUppgiftsbeskrivning")
+            .then().statusCode(200).extract()
             .as(GetUtokadUppgiftsbeskrivningResponse.class);
    }
 
