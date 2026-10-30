@@ -55,6 +55,6 @@ public abstract class AbstractRegelManuellHandlaggningTest extends AbstractRegel
       waitForRegelRequestProcessed(handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = se.fk.rimfrost.framework.regel.WireMockHandlaggning.getUppgiftFromLastPutHandlaggning(handlaggningId);
-      Assertions.assertNotNull(uppgift.getUtfordTs());
+      Assertions.assertNotNull(uppgift.getUtfordTS());
    }
 }
