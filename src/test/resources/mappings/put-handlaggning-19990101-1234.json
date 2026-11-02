@@ -36,7 +36,7 @@
             {
               "id": "bc6e5150-29be-4758-a2ee-e241f1d7ccf7",
               "objektTypId": "ersattning",
-              "data": "{\"belopp\":40000,\"berakningsgrund\":100,\"ersattningstyp\":{\"id\":\"361779e2-cc93-471a-815b-50bad66cd427\",\"namn\":\"HUNDBIDRAG\"},\"omfattningProcent\":100,\"beslutsutfall\":\"FU\"}"
+              "data": "{\"id\":\"bc6e5150-29be-4758-a2ee-e241f1d7ccf7\",\"version\":1,\"ersattningstyp\":{\"id\":\"361779e2-cc93-471a-815b-50bad66cd427\",\"namn\":\"HUNDBIDRAG\"},\"omfattningProcent\":100,\"belopp\":40000,\"berakningsgrund\":100,\"beslutsutfall\":\"FU\",\"from\":\"2026-01-01\",\"tom\":\"2026-12-31\",\"avslagsanledning\":null}"
             }
           ],
           "beslut": []
