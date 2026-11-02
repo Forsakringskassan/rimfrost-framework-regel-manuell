@@ -71,11 +71,10 @@ public class RegelManuellReadDelegationTest
    private Handlaggning buildHandlaggning()
    {
       var yrkande = mock(Yrkande.class);
-      when(yrkande.individYrkandeRoller()).thenReturn(Collections.emptyList());
+      when(yrkande.rollerIYrkande()).thenReturn(Collections.emptyList());
       var handlaggning = mock(Handlaggning.class);
       when(handlaggning.id()).thenReturn(UUID.randomUUID());
       when(handlaggning.version()).thenReturn(1);
-      when(handlaggning.processInstansId()).thenReturn(UUID.randomUUID());
       when(handlaggning.skapadTS()).thenReturn(OffsetDateTime.now());
       when(handlaggning.handlaggningspecifikationId()).thenReturn(UUID.randomUUID());
       when(handlaggning.yrkande()).thenReturn(yrkande);
