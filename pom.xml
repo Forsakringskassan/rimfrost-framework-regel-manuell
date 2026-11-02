@@ -44,6 +44,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit-component</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.immutables</groupId>
       <artifactId>value</artifactId>
       <version>2.12.3</version>
@@ -61,17 +66,17 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel.oul</groupId>
       <artifactId>rimfrost-framework-regel-oul-openapi-jaxrs-spec</artifactId>
-      <version>0.0.3</version>
+      <version>0.0.4</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.4.6</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel</groupId>
       <artifactId>rimfrost-framework-regel</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.4.6</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -89,16 +94,26 @@
     <dependency>
       <groupId>se.fk.rimfrost.framework.regel.oul</groupId>
       <artifactId>rimfrost-framework-regel-oul</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>0.2.0</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.referensdata</groupId>
       <artifactId>rimfrost-framework-referensdata-interface</artifactId>
-      <version>0.0.1</version>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>se.fk.rimfrost.framework.sid</groupId>
       <artifactId>rimfrost-framework-sid-adapter</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.adapter.permissions</groupId>
+      <artifactId>rimfrost-adapter-permissions</artifactId>
+      <version>0.0.3</version>
+    </dependency>
+    <dependency>
+      <groupId>se.fk.rimfrost.adapter.identity</groupId>
+      <artifactId>rimfrost-adapter-identity</artifactId>
       <version>0.0.1</version>
     </dependency>
     <dependency>
