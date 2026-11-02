@@ -11,10 +11,6 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
-import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
-import se.fk.rimfrost.framework.handlaggning.model.Underlag;
-import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
-import se.fk.rimfrost.framework.regel.logic.RegelUtils;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import se.fk.rimfrost.framework.sid.exception.SidException;
@@ -68,26 +64,6 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       regelService.done(handlaggningId);
    }
 
-   private HandlaggningUpdate createHandlaggningUpdate(Handlaggning handlaggning, Underlag underlag)
-   {
-      return ImmutableHandlaggningUpdate.builder()
-            .id(handlaggning.id())
-            .processInstansId(handlaggning.processInstansId())
-            .skapadTS(handlaggning.skapadTS())
-            .avslutadTS(handlaggning.avslutadTS())
-            .version(handlaggning.version() + 1)
-            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
-            .yrkande(handlaggning.yrkande())
-            .uppgift(getUppgift(handlaggning.id()))
-            .addUnderlag(underlag)
-            .build();
-   }
-
-   private Uppgift getUppgift(UUID handlaggningId)
-   {
-      return oulUppgiftService.getCorrelationData(handlaggningId).uppgift();
-   }
-
    private Handlaggning getHandlaggning(UUID handlaggningId)
    {
       try
@@ -113,14 +89,14 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          {
             LOGGER.error(
                   "Version conflict while attempting to update handlaggning with id: {}. Programming fault in regel service?",
-                  handlaggningUpdate.id(), e);
+                  handlaggningUpdate.handlaggning().id(), e);
             throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR,
-                  "Version conflict while attempting to update handlaggning with id: " + handlaggningUpdate.id()
+                  "Version conflict while attempting to update handlaggning with id: " + handlaggningUpdate.handlaggning().id()
                         + ". Programming fault in regel service?",
                   e);
          }
 
-         LOGGER.error("Error in update for handlaggningsId: {}", handlaggningUpdate.id(), e);
+         LOGGER.error("Error in update for handlaggningsId: {}", handlaggningUpdate.handlaggning().id(), e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
    }
@@ -171,7 +147,7 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
     */
    private List<se.fk.rimfrost.framework.sid.model.Idtyp> extractIndivider(Handlaggning handlaggning)
    {
-      return handlaggning.yrkande().individYrkandeRoller()
+      return handlaggning.yrkande().rollerIYrkande()
             .stream().<se.fk.rimfrost.framework.sid.model.Idtyp> map(roll -> ImmutableIdtyp.builder()
                   .typId(roll.individ().typId())
                   .varde(roll.individ().varde())

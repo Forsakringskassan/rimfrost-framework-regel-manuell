@@ -164,7 +164,7 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       var uppgift = ImmutableUppgift.builder()
             .id(UUID.fromString(WireMockRegelManuell.DEFAULT_UPPGIFT_ID))
             .version(1)
-            .skapadTs(OffsetDateTime.now())
+            .skapadTS(OffsetDateTime.now())
             .aktivitetId(UUID.randomUUID())
             .fSSAinformation("")
             .uppgiftSpecifikation(uppgiftSpecifikation)

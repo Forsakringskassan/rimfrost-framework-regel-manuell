@@ -79,7 +79,7 @@ underliggande ramverk upprepas inte.
 
 - **FRMM-FR-08.1** Innan `readData()` anropas vid `GET /{handlaggningId}` ska ramverket kontrollera
   om någon av handläggningsärendets individer har skyddad identitet via SID-tjänsten.
-- **FRMM-FR-08.2** Individerna hämtas från `handlaggning.yrkande().individYrkandeRoller()` och
+- **FRMM-FR-08.2** Individerna hämtas från `handlaggning.yrkande().rollerIYrkande()` och
   skickas i en `POST /sid/status`-förfrågan till SID-tjänsten.
 - **FRMM-FR-08.3** Om en eller flera individer har skyddad identitet ska ramverket returnera
   HTTP 403 och `readData()` ska inte anropas.
