@@ -117,6 +117,7 @@ public class RegelManuellRequestHandler
                .aktivitetId(request.aktivitetId())
                .uppgiftSpecifikationId(regelConfig.getSpecifikation().getId())
                .uppgiftSpecifikationVersion(regelConfig.getSpecifikation().getVersion())
+               .assignable(true)
                .build();
 
          oulUppgiftService.createOulUppgift(spec);
