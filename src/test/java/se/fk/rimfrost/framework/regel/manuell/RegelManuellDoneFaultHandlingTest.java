@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.ws.rs.core.HttpHeaders;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,6 +51,7 @@ public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
       {
          given()
                .when()
+               .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
                .post(basePath() + "/" + handlaggningId + "/done")
                .then()
                .statusCode(expectedDoneStatus);
@@ -83,6 +85,7 @@ public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
       {
          given()
                .when()
+               .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
                .post(basePath() + "/" + handlaggningId + "/done")
                .then()
                .statusCode(204);
