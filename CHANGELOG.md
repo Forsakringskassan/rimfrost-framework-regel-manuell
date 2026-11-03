@@ -2,6 +2,67 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.5.0 (2026-11-03)
+
+### Features
+
+-  Add access control to provided uppgift endpoints ([41a96](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/41a961bf3341eed) Lars Persson)  
+-  returnera handläggarens identitet i informationsaccess (FKPOC-1103) ([a3cad](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a3cad3477cb57b6) julolsso)  
+-  returnera informationsaccessdata tillsammans med regelns svar i GET-svaret (FKPOC-1103) ([42102](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/42102637582d2b6) julolsso)  
+-  Add access control to provided uppgift endpoints ([1b12e](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/1b12ee0fb197ae4) Lars Persson)  
+-  send optional processvyUrl from regelanropet to OUL uppgift (FKPOC-1162) ([b3e46](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b3e465569287c4c) LisaWedin_Ductus)  
+
+### Bug Fixes
+
+-  update pom ([29c36](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/29c36a8f916ef63) Nils Elveros)  
+-  update data object in test mappings ([5b3ae](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5b3ae443c8000a2) Nils Elveros)  
+-  set assignable ([61e4b](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/61e4bf5a89cfbcb) Nils Elveros)  
+-  update pom ([f811f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/f811f8eb0745204) Nils Elveros)  
+-  **deps**  update dependency se.fk.rimfrost.framework.regel.oul:rimfrost-framework-regel-oul-openapi-jaxrs-spec to v0.0.4 ([a59b9](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a59b9d4c53bf074) renovate[bot])  
+-  Remove unused quarkus-rest-client-jackson dependency ([5bcfa](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5bcfaa31f828d9c) Ulf Slunga)  
+-  Allow SID-permitted handläggare to access SID-protected cases ([0a750](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/0a750b6ef8acbcd) Ulf Slunga)  
+-  **deps**  update dependency org.immutables:value to v2.12.3 ([9fec9](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/9fec94aeec90c4a) renovate[bot])  
+-  update to new framework version ([ab3b6](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/ab3b6e871e929b6) Nils Elveros)  
+-  Persist regelutfall i handläggningsärende on POST /done (FKPOC-1134) ([fd8ba](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/fd8baf0ee8f07f5) Ulf Slunga)  
+-  **deps**  update dependency org.yaml:snakeyaml to v2.7 ([c68d1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c68d1a81de317da) renovate[bot])  
+
+### Dependency updates
+
+- update forsakringskassan/.github digest to 625efb1 ([59506](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/59506da016d4a33) renovate[bot])  
+- update dependency org.immutables:value-processor to v2.12.3 ([b40f9](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b40f95f762d9015) renovate[bot])  
+- update forsakringskassan/.github digest to cbd74f1 ([d6d39](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/d6d3987279391bc) renovate[bot])  
+- pin forsakringskassan/.github action to bfb01f7 ([f17e3](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/f17e3d0307347c4) renovate[bot])  
+### Other changes
+
+**Merge branch 'main' into docs/FKPOC-1103-krav-handlaggarens-identitet**
+
+
+[5b1fd](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5b1fd892c2003b4) Nils Elveros *2026-11-03 09:56:43*
+
+**Merge branch 'main' into fix/FKPOC-1134-persist-utfall-handlaggning**
+
+
+[66f46](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/66f4612d7a6da1f) Nils Elveros *2026-11-03 07:52:25*
+
+**Merge branch 'main' into feat/FKPOC-1162-processvy-url**
+
+
+[da727](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/da727c2aff659e6) Nils Elveros *2026-11-02 14:43:58*
+
+**Merge branch 'main' into fix/FKPOC-1111-sid-kontroll**
+
+
+[7f9f3](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/7f9f3f2b8320f6d) Nils Elveros *2026-11-02 10:32:03*
+
+**Merge feat/FKPOC-1142-check-uppgift-assignment-on-rest-request into docs/FKPOC-1103-krav-handlaggarens-identitet**
+
+* Co-Authored-By: Claude Opus 5.5 &lt;noreply@anthropic.com&gt; 
+
+[c67f1](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/c67f17aa17d0553) julolsso *2026-10-28 14:26:22*
+
+
+## rimfrost-1_2 (2026-09-23)
+
 ## 1.4.5 (2026-09-23)
 
 ### Bug Fixes
@@ -11,8 +72,6 @@ Changelog of rimfrost-framework-regel-manuell.
 ### Dependency updates
 
 - update dependency org.apache.maven.plugins:maven-compiler-plugin to v3.16.0 ([b9b04](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b9b04e3bb252f2d) renovate[bot])  
-## rimfrost-1_2 (2026-09-18)
-
 ## 1.4.4 (2026-09-18)
 
 ### Bug Fixes
