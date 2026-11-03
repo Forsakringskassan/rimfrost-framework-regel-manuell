@@ -126,6 +126,24 @@ med `uppgiftId`. Svaret bär därför den data som BFF:en inte själv har (FKPOC
 - **FRMM-FR-09.3** `informationsaccess.regelId` och `informationsaccess.regelVersion` ska hämtas
   från regelns `config.yaml`.
 - **FRMM-FR-09.4** Containern ska bara returneras när SID-kontrollen har passerat.
+- **FRMM-FR-09.5** `informationsaccess.anvandare` ska vara den inloggade handläggarens
+  identitet (`typId` och `varde`), som ramverket hämtar ur anropets token. Då behöver
+  BFF:en inte själv tolka token.
+
+### FRMM-FR-10 — Utility för kontroll av access till uppgift
+
+- **FRMM-FR-10.1** Ramverket ska definiera en utility som kan användas vid förfrågan till
+  REST-endpoints för att kontrollera att handläggare har rätt att arbeta med en uppgift.
+  Om handläggaren inte har rätt att jobba med uppgiften så ska HTTP 403 returneras som svar.
+- **FRMM-FR-10.2** Kontrollen ska verifiera att handläggaren är tilldelad som ansvarig för uppgiften.
+- **FRMM-FR-10.3** SID kontroll enligt FRMM-FR-08 ska utföras som del av kontrollen för att säkerställa att handläggaren har rätt att se uppgiften.
+- **FRMM-FR-10.4** Kontrollen ska returnera så snabbt som möjligt. Om kontroll av tilldelning misslyckas ska inte kontroll av SID göras.
+- **FRMM-FR-10.5** Om handläggarens identitet saknas i UserIdentityHolder eller om UserIdentityHolder inte är tillgänglig så ska HTTP 401 returneras.
+
+### FRMM-FR-11 — Kontroll av identitet vid REST förfrågan
+
+- **FRMM-FR-11.1** Användarens identitet ska verifieras vid REST förfrågan via `IdentityAdapter.getIdentity()`. Om identity-tjänsten svarar med 401 så ska HTTP 401 returneras. Övriga fel ska hanteras enligt FRMM-FR-06.4.
+- **FRMM-FR-11.2** Om användarens identitet kunde verifieras så ska den sparas till UserIdentityHolder för att enkelt kunna återanvändas utan att en ny förfrågan till identity-tjänsten ska behövas.
 
 ### FRMM-FR-10 — Utility för kontroll av access till uppgift
 
