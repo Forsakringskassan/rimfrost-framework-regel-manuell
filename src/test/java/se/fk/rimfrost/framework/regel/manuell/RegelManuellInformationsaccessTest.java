@@ -164,7 +164,7 @@ public class RegelManuellInformationsaccessTest
    private Handlaggning givenHandlaggning() throws Exception
    {
       var yrkande = mock(Yrkande.class);
-      when(yrkande.individYrkandeRoller()).thenReturn(Collections.emptyList());
+      when(yrkande.rollerIYrkande()).thenReturn(Collections.emptyList());
       var handlaggning = mock(Handlaggning.class);
       when(handlaggning.id()).thenReturn(UUID.randomUUID());
       when(handlaggning.version()).thenReturn(1);

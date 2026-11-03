@@ -26,23 +26,27 @@ public class RegelManuellTestService extends RegelManuellServiceBase
       return "read";
    }
 
+   private Utfall nextUtfall = Utfall.JA;
+
+   /** Sets the utfall that will be sent on the next {@link #done} call. Defaults to {@link Utfall#JA}. */
+   public void setNextUtfall(Utfall utfall)
+   {
+      this.nextUtfall = utfall;
+   }
+
+   /** Sends a regel response using the configured {@link #nextUtfall}, then resets it to {@link Utfall#JA}. */
    @Override
    public void done(UUID handlaggningId)
    {
-      sendRegelResponse(handlaggningId, Utfall.JA);
+      sendRegelResponse(handlaggningId, nextUtfall);
    }
 
+   /** Builds a {@link HandlaggningUpdate} from current correlation data for test use. */
    @Override
    public HandlaggningUpdate updateData(Handlaggning handlaggning, String request)
    {
       return ImmutableHandlaggningUpdate.builder()
-            .id(handlaggning.id())
-            .version(handlaggning.version())
-            .yrkande(handlaggning.yrkande())
-            .processInstansId(handlaggning.processInstansId())
-            .skapadTS(handlaggning.skapadTS())
-            .avslutadTS(handlaggning.avslutadTS())
-            .handlaggningspecifikationId(handlaggning.handlaggningspecifikationId())
+            .handlaggning(handlaggning)
             .uppgift(oulUppgiftService.getCorrelationData(handlaggning.id()).uppgift())
             .build();
    }

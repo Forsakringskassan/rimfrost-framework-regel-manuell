@@ -80,6 +80,10 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       }
    }
 
+   /**
+    * Delegates the handläggning update to {@link HandlaggningAdapter} and maps
+    * {@link HandlaggningException} to an appropriate HTTP status.
+    */
    private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate)
    {
       try
@@ -92,14 +96,14 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
          {
             LOGGER.error(
                   "Version conflict while attempting to update handlaggning with id: {}. Programming fault in regel service?",
-                  handlaggningUpdate.id(), e);
+                  handlaggningUpdate.handlaggning().id(), e);
             throw new RegelManuellException(Response.Status.INTERNAL_SERVER_ERROR,
-                  "Version conflict while attempting to update handlaggning with id: " + handlaggningUpdate.id()
+                  "Version conflict while attempting to update handlaggning with id: " + handlaggningUpdate.handlaggning().id()
                         + ". Programming fault in regel service?",
                   e);
          }
 
-         LOGGER.error("Error in update for handlaggningsId: {}", handlaggningUpdate.id(), e);
+         LOGGER.error("Error in update for handlaggningsId: {}", handlaggningUpdate.handlaggning().id(), e);
          throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
       }
    }

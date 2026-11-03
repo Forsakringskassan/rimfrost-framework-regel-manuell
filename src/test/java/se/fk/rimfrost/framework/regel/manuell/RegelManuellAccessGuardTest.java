@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import se.fk.rimfrost.adapter.permissions.adapter.PermissionsAdapter;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
-import se.fk.rimfrost.framework.handlaggning.model.IndividYrkandeRoll;
+import se.fk.rimfrost.framework.handlaggning.model.RollIYrkande;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelAccessGuard;
@@ -162,7 +162,7 @@ public class RegelManuellAccessGuardTest
       var handlaggning = handlaggningWithIndivider();
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
       var uppgift = mock(Uppgift.class);
-      when(uppgift.utforarId()).thenReturn(null);
+      when(uppgift.utforare()).thenReturn(null);
       givenCorrelationData(UUID.randomUUID(), uppgift);
 
       var ex = assertThrows(RegelManuellException.class, () -> guard.verifyAccess(handlaggning));
@@ -210,8 +210,8 @@ public class RegelManuellAccessGuardTest
    void verifyAccess_should_pass_mapped_individer_to_sid_adapter() throws Exception
    {
       var handlaggning = buildHandlaggning(List.of(
-            individYrkandeRoll("PERSONNR", "19800101-1111"),
-            individYrkandeRoll("SAMORDNINGSNR", "19800161-2222")));
+            rollIYrkande("PERSONNR", "19800101-1111"),
+            rollIYrkande("SAMORDNINGSNR", "19800161-2222")));
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
       givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
 
@@ -224,15 +224,15 @@ public class RegelManuellAccessGuardTest
 
    private Handlaggning handlaggningWithIndivider()
    {
-      return buildHandlaggning(List.of(individYrkandeRoll("some-type-id", "19800101-1111")));
+      return buildHandlaggning(List.of(rollIYrkande("some-type-id", "19800101-1111")));
    }
 
-   private IndividYrkandeRoll individYrkandeRoll(String typId, String varde)
+   private RollIYrkande rollIYrkande(String typId, String varde)
    {
       var individ = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
       when(individ.typId()).thenReturn(typId);
       when(individ.varde()).thenReturn(varde);
-      var roll = mock(IndividYrkandeRoll.class);
+      var roll = mock(RollIYrkande.class);
       when(roll.individ()).thenReturn(individ);
       return roll;
    }
@@ -242,10 +242,10 @@ public class RegelManuellAccessGuardTest
       return se.fk.rimfrost.framework.sid.model.ImmutableIdtyp.builder().typId(typId).varde(varde).build();
    }
 
-   private Handlaggning buildHandlaggning(List<IndividYrkandeRoll> roller)
+   private Handlaggning buildHandlaggning(List<RollIYrkande> roller)
    {
       var yrkande = mock(Yrkande.class);
-      when(yrkande.individYrkandeRoller()).thenReturn(roller);
+      when(yrkande.rollerIYrkande()).thenReturn(roller);
       var handlaggning = mock(Handlaggning.class);
       when(handlaggning.id()).thenReturn(UUID.randomUUID());
       when(handlaggning.yrkande()).thenReturn(yrkande);
@@ -254,11 +254,11 @@ public class RegelManuellAccessGuardTest
 
    private Uppgift buildTilldeladUppgift(String typId, String varde)
    {
-      var utforarId = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
-      when(utforarId.typId()).thenReturn(typId);
-      when(utforarId.varde()).thenReturn(varde);
+      var utforare = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
+      when(utforare.typId()).thenReturn(typId);
+      when(utforare.varde()).thenReturn(varde);
       var uppgift = mock(Uppgift.class);
-      when(uppgift.utforarId()).thenReturn(utforarId);
+      when(uppgift.utforare()).thenReturn(utforare);
       return uppgift;
    }
 

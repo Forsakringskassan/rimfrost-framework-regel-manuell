@@ -81,7 +81,7 @@ public class RegelAccessGuard
       var correlationData = getCorrelationData(handlaggning.id());
       var uppgift = correlationData.uppgift();
 
-      if (uppgift == null || !isAssignedToUppgift(uppgift.utforarId(), handlaggareId))
+      if (uppgift == null || !isAssignedToUppgift(uppgift.utforare(), handlaggareId))
       {
          LOGGER.info("Handläggare is not assigned to uppgift for handläggning with id: {}", handlaggning.id());
          throw new RegelManuellException(Response.Status.FORBIDDEN, "Handläggare is not assigned to uppgift");
@@ -169,7 +169,7 @@ public class RegelAccessGuard
     */
    private List<Idtyp> extractIndivider(Handlaggning handlaggning)
    {
-      return handlaggning.yrkande().individYrkandeRoller()
+      return handlaggning.yrkande().rollerIYrkande()
             .stream().<se.fk.rimfrost.framework.sid.model.Idtyp> map(roll -> ImmutableIdtyp.builder()
                   .typId(roll.individ().typId())
                   .varde(roll.individ().varde())

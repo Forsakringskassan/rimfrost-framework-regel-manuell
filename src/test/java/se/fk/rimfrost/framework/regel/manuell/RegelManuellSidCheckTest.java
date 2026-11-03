@@ -14,7 +14,7 @@ import se.fk.rimfrost.adapter.permissions.adapter.PermissionsException;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
-import se.fk.rimfrost.framework.handlaggning.model.IndividYrkandeRoll;
+import se.fk.rimfrost.framework.handlaggning.model.RollIYrkande;
 import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.UppgiftSpecifikation;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
@@ -253,7 +253,7 @@ public class RegelManuellSidCheckTest
 
    @Test
    @DisplayName("FRMM-FR-08.2: SID-kontrollen hanterar tom individlista i yrkande utan fel")
-   void read_should_proceed_when_individYrkandeRoller_is_empty() throws Exception
+   void read_should_proceed_when_rollerIYrkande_is_empty() throws Exception
    {
       var handlaggning = handlaggningWithoutIndivider();
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
@@ -270,7 +270,7 @@ public class RegelManuellSidCheckTest
       var individ = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
       when(individ.typId()).thenReturn("some-type-id");
       when(individ.varde()).thenReturn("19901010-1234");
-      var roll = mock(IndividYrkandeRoll.class);
+      var roll = mock(RollIYrkande.class);
       when(roll.individ()).thenReturn(individ);
       return buildHandlaggning(List.of(roll));
    }
@@ -280,14 +280,13 @@ public class RegelManuellSidCheckTest
       return buildHandlaggning(Collections.emptyList());
    }
 
-   private Handlaggning buildHandlaggning(List<IndividYrkandeRoll> roller)
+   private Handlaggning buildHandlaggning(List<RollIYrkande> roller)
    {
       var yrkande = mock(Yrkande.class);
-      when(yrkande.individYrkandeRoller()).thenReturn(roller);
+      when(yrkande.rollerIYrkande()).thenReturn(roller);
       var handlaggning = mock(Handlaggning.class);
       when(handlaggning.id()).thenReturn(UUID.randomUUID());
       when(handlaggning.version()).thenReturn(1);
-      when(handlaggning.processInstansId()).thenReturn(UUID.randomUUID());
       when(handlaggning.skapadTS()).thenReturn(OffsetDateTime.now());
       when(handlaggning.handlaggningspecifikationId()).thenReturn(UUID.randomUUID());
       when(handlaggning.yrkande()).thenReturn(yrkande);
@@ -296,12 +295,12 @@ public class RegelManuellSidCheckTest
 
    private Uppgift buildTilldeladUppgift(String typId, String varde)
    {
-      se.fk.rimfrost.framework.handlaggning.model.Idtyp utforarId = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
-      when(utforarId.typId()).thenReturn(typId);
-      when(utforarId.varde()).thenReturn(varde);
+      se.fk.rimfrost.framework.handlaggning.model.Idtyp utforare = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
+      when(utforare.typId()).thenReturn(typId);
+      when(utforare.varde()).thenReturn(varde);
 
       var uppgift = buildUppgift();
-      when(uppgift.utforarId()).thenReturn(utforarId);
+      when(uppgift.utforare()).thenReturn(utforare);
 
       return uppgift;
    }
@@ -313,10 +312,10 @@ public class RegelManuellSidCheckTest
       var uppgift = mock(Uppgift.class);
       when(uppgift.id()).thenReturn(UUID.randomUUID());
       when(uppgift.version()).thenReturn(1);
-      when(uppgift.skapadTs()).thenReturn(OffsetDateTime.now());
-      when(uppgift.utfordTs()).thenReturn(null);
-      when(uppgift.planeradTs()).thenReturn(null);
-      when(uppgift.utforarId()).thenReturn(null);
+      when(uppgift.skapadTS()).thenReturn(OffsetDateTime.now());
+      when(uppgift.utfordTS()).thenReturn(null);
+      when(uppgift.planeradTillTS()).thenReturn(null);
+      when(uppgift.utforare()).thenReturn(null);
       when(uppgift.uppgiftStatus()).thenReturn("Planerad");
       when(uppgift.aktivitetId()).thenReturn(UUID.randomUUID());
       when(uppgift.fSSAinformation()).thenReturn(UUID.randomUUID().toString());

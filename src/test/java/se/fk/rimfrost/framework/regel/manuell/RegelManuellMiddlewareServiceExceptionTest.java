@@ -95,7 +95,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
             .id(UUID.randomUUID())
             .version(1)
             .yrkande(mock(Yrkande.class))
-            .processInstansId(UUID.randomUUID())
+            .handlaggningIdTyp("e7f3c5a2-1234-4abc-9876-56789abcdef0")
             .skapadTS(OffsetDateTime.now())
             .avslutadTS(OffsetDateTime.now())
             .handlaggningspecifikationId(UUID.randomUUID())
@@ -121,7 +121,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
             .id(UUID.randomUUID())
             .version(1)
             .yrkande(mock(Yrkande.class))
-            .processInstansId(UUID.randomUUID())
+            .handlaggningIdTyp("e7f3c5a2-1234-4abc-9876-56789abcdef0")
             .skapadTS(OffsetDateTime.now())
             .avslutadTS(OffsetDateTime.now())
             .handlaggningspecifikationId(UUID.randomUUID())
@@ -142,11 +142,11 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    private void givenSuccessfulCorrelationData()
    {
-      var utforarId = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
-      when(utforarId.typId()).thenReturn(ID_TYP);
-      when(utforarId.varde()).thenReturn(ID_VARDE);
+      var utforare = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
+      when(utforare.typId()).thenReturn(ID_TYP);
+      when(utforare.varde()).thenReturn(ID_VARDE);
       var uppgift = mock(Uppgift.class);
-      when(uppgift.utforarId()).thenReturn(utforarId);
+      when(uppgift.utforare()).thenReturn(utforare);
       var correlationData = mock(OulCorrelationData.class);
       when(correlationData.uppgift()).thenReturn(uppgift);
       when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
