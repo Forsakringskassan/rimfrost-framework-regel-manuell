@@ -11,6 +11,7 @@
     "jsonBody": {
       "handlaggning": {
         "id": "5367f6b8-cc4a-11f0-8de9-199901015555",
+        "version": 1,
         "yrkande": {
           "id": "81234d56-7890-4abc-1234-56789abcdef0",
           "version": 1,
@@ -22,7 +23,7 @@
           "avsikt": "NY",
           "rollerIYrkande": [
             {
-              "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "id": "3c1a9d2e-6f4b-4e8a-9b7c-1d2e3f4a5b6c",
               "individ": {
                 "typId": "123456789",
                 "varde": "19901010-5555"
@@ -31,11 +32,17 @@
               "avserYrkande": "81234d56-7890-4abc-1234-56789abcdef0"
             }
           ],
-          "sakfragorStallningstaganden": [],
+          "sakfragorStallningstaganden": [
+            {
+              "id": "bc6e5150-29be-4758-a2ee-e241f1d7ccf7",
+              "objektTypId": "ersattning",
+              "data": "{\"id\":\"bc6e5150-29be-4758-a2ee-e241f1d7ccf7\",\"version\":1,\"ersattningstyp\":{\"id\":\"361779e2-cc93-471a-815b-50bad66cd427\",\"namn\":\"HUNDBIDRAG\"},\"omfattningProcent\":100,\"belopp\":40000,\"berakningsgrund\":100,\"beslutsutfall\":\"FU\",\"from\":\"2026-01-01\",\"tom\":\"2026-12-31\",\"avslagsanledning\":null}"
+            }
+          ],
           "beslut": []
         },
-        "handlaggningIdTyp": "TEST",
-        "version": 1,
+        "handlaggningIdTyp": "e7f3c5a2-1234-4abc-9876-56789abcdef0",
+        "handlaggningIdVarde": null,
         "skapadTS": "2026-01-22T13:31:00.8742683+01:00",
         "avslutadTS": null,
         "handlaggningspecifikationId": "71234567-89ab-4cde-9012-3456789abcde"

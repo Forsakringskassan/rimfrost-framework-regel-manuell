@@ -1,5 +1,7 @@
 package se.fk.rimfrost.framework.regel.manuell;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -35,10 +37,22 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
    @DisplayName("FRMM-FR-06.1: Felrespons skickas via Kafka när läsning av handläggningsärende misslyckas vid start")
    void should_send_error_response_on_initial_handlaggning_read_failure(String handlaggningId, Utfall expectedUtfall)
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var regelResponse = regelKafkaConnector.waitForRegelResponse();
-      assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
-      assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
+      var server = WireMockRegelManuell.getWireMockServer();
+      StubMapping failureStub = server.stubFor(
+            WireMock.get(WireMock.urlPathMatching("/handlaggning/.*" + handlaggningId + ".*"))
+                  .atPriority(1)
+                  .willReturn(WireMock.serverError()));
+      try
+      {
+         regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+         var regelResponse = regelKafkaConnector.waitForRegelResponse();
+         assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
+         assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
+      }
+      finally
+      {
+         server.removeStub(failureStub);
+      }
    }
 
    @ParameterizedTest
