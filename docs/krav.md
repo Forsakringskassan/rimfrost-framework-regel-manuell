@@ -139,6 +139,13 @@ med `uppgiftId`. Svaret bär därför den data som BFF:en inte själv har (FKPOC
 - **FRMM-FR-11.1** Användarens identitet ska verifieras vid REST förfrågan via `IdentityAdapter.getIdentity()`. Om identity-tjänsten svarar med 401 så ska HTTP 401 returneras. Övriga fel ska hanteras enligt FRMM-FR-06.4.
 - **FRMM-FR-11.2** Om användarens identitet kunde verifieras så ska den sparas till UserIdentityHolder för att enkelt kunna återanvändas utan att en ny förfrågan till identity-tjänsten ska behövas.
 
+### FRMM-FR-12 — Skicka processvy-länk till OUL
+
+- **FRMM-FR-12.1** När ramverket bygger `OulUppgiftSpec` ska regelanropets `processvyUrl` skickas
+  med, på samma sätt som `aktivitetId` redan skickas med.
+- **FRMM-FR-12.2** `processvyUrl` är valfri. Ett regelanrop utan `processvyUrl` skapar en
+  OUL-uppgift som vanligt, men utan processvy.
+
 ---
 
 ## Icke-funktionella krav
