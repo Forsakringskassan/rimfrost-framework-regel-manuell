@@ -49,8 +49,9 @@
       },
       "uppgift": {
         "id": "f14760e8-b521-4f17-b6ca-13addd313286",
-        "version": 1,
+        "version": 2,
         "skapadTS": "2025-01-10T16:15:50Z",
+        "utfordTS": "2026-01-22T13:31:00.8742683+01:00",
         "aktivitetId": "c922e375-9c94-4718-8cbb-aef6283a2904",
         "uppgiftspecifikation": {
           "id": "98e64c9f-2233-4ce9-beee-aa8956394ecf",

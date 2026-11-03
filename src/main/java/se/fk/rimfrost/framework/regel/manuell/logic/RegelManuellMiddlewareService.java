@@ -9,6 +9,7 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.HandlaggningUpdate;
+import se.fk.rimfrost.framework.sid.model.ImmutableIdtyp;
 
 //Middleware that handles the read and update operations to handlaggningService.
 //T is the GET operations response body and Y is the PATCH operations body.
@@ -63,6 +64,10 @@ public abstract class RegelManuellMiddlewareService<T, Y> implements RegelManuel
       }
    }
 
+   /**
+    * Delegates the handläggning update to {@link HandlaggningAdapter} and maps
+    * {@link HandlaggningException} to an appropriate HTTP status.
+    */
    private void updateHandlaggning(HandlaggningUpdate handlaggningUpdate)
    {
       try

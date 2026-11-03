@@ -14,6 +14,7 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggningUpdate;
+import se.fk.rimfrost.framework.handlaggning.model.ImmutableRegelutfall;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableUppgift;
 import se.fk.rimfrost.framework.referensdata.ErbjudandeReferensdataInterface;
 import se.fk.rimfrost.framework.regel.RegelErrorInformation;
@@ -196,6 +197,7 @@ public class RegelManuellRequestHandler
             .version(uppgift.version() + 1)
             .uppgiftStatus(AVSLUTAD)
             .utfordTS(OffsetDateTime.now())
+            .regelutfall(ImmutableRegelutfall.builder().varde(utfall.getValue()).build())
             .build();
       var handlaggningUpdate = ImmutableHandlaggningUpdate.builder()
             .handlaggning(handlaggning)
