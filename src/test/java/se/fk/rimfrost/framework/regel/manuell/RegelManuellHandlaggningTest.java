@@ -4,7 +4,6 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,19 +21,11 @@ import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellTestService;
 })
 public class RegelManuellHandlaggningTest extends AbstractRegelManuellHandlaggningTest
 {
-   // The test service and this test live here, not in the shipped base class, because
-   // RegelManuellTestService is not part of the tests jar and consumers cannot inject it.
    @Inject
    RegelManuellTestService regelManuellTestService;
 
    @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
    String regelResponseTopic;
-
-   @AfterEach
-   void resetNextUtfall()
-   {
-      regelManuellTestService.setNextUtfall(Utfall.JA);
-   }
 
    @ParameterizedTest
    @EnumSource(value = Utfall.class, names =
