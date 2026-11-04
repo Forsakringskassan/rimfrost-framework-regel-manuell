@@ -2,6 +2,14 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.5.1 (2026-11-04)
+
+### Bug Fixes
+
+-  add aftereach ([78c39](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/78c39fa014daf74) Nils Elveros)  
+-  cleanup ([b898a](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/b898acd4f6c122b) Nils Elveros)  
+-  update tests to work in regler ([2c02c](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2c02ca3683bd30c) Nils Elveros)  
+
 ## 1.5.0 (2026-11-03)
 
 ### Features
