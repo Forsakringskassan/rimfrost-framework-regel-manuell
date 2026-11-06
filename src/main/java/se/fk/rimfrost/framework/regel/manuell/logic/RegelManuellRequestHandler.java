@@ -91,7 +91,7 @@ public class RegelManuellRequestHandler
     * Handles an incoming {@link RegelDataRequest} by reading the handläggning,
     * building an OUL uppgift specification, and delegating creation to
     * {@link OulUppgiftService}. On any failure an error response is sent on the
-    * request's {@code replyTo} topic.
+    * regel response topic.
     */
    @Override
    public void handleRegelRequest(RegelDataRequest request)
@@ -106,7 +106,6 @@ public class RegelManuellRequestHandler
          var spec = ImmutableOulUppgiftSpec.builder()
                .handlaggningId(request.handlaggningId())
                .handlaggning(handlaggning)
-               .replyTo(request.replyTo())
                .cloudEventData(cloudEvent)
                .cloudEventAttributes(CloudEventAttributesMapper.toAttributes(cloudEvent))
                .regel(regelConfig.getSpecifikation().getNamn())
@@ -133,7 +132,7 @@ public class RegelManuellRequestHandler
          {
             regelErrorInformation = ex.getRegelErrorInformation();
          }
-         sendErrorResponse(request.handlaggningId(), cloudEvent, regelErrorInformation, request.replyTo());
+         sendErrorResponse(request.handlaggningId(), cloudEvent, regelErrorInformation);
       }
    }
 
@@ -187,7 +186,7 @@ public class RegelManuellRequestHandler
          }
       }
 
-      sendRegelSuccessResponse(handlaggningId, correlation.cloudEventData(), utfall, correlation.replyTopic());
+      sendRegelSuccessResponse(handlaggningId, correlation.cloudEventData(), utfall);
 
       oulUppgiftService.cleanupCorrelation(handlaggningId);
 
@@ -264,7 +263,7 @@ public class RegelManuellRequestHandler
    }
 
    private void sendErrorResponse(UUID handlaggningId, CloudEventData cloudEventData,
-         RegelErrorInformation regelErrorInformation, String replyTo)
+         RegelErrorInformation regelErrorInformation)
    {
       if (handlaggningId == null || cloudEventData == null || regelErrorInformation == null)
       {
@@ -276,7 +275,7 @@ public class RegelManuellRequestHandler
       try
       {
          var regelResponse = regelMapper.toRegelResponse(handlaggningId, cloudEventData, regelErrorInformation);
-         regelKafkaProducer.sendRegelResponse(regelResponse, Objects.requireNonNull(replyTo));
+         regelKafkaProducer.sendRegelResponse(regelResponse);
       }
       catch (IllegalStateException e)
       {
@@ -287,7 +286,7 @@ public class RegelManuellRequestHandler
 
    private void sendRegelSuccessResponse(UUID handlaggningId,
          CloudEventData cloudEventData,
-         Utfall utfall, String replyTopic)
+         Utfall utfall)
    {
       try
       {
@@ -305,7 +304,7 @@ public class RegelManuellRequestHandler
                .type(cloudEventData.type())
                .source(cloudEventData.source())
                .build();
-         regelKafkaProducer.sendRegelResponse(regelResponse, Objects.requireNonNull(replyTopic));
+         regelKafkaProducer.sendRegelResponse(regelResponse);
       }
       catch (IllegalStateException e)
       {

@@ -41,8 +41,8 @@ underliggande ramverk upprepas inte.
   `sendRegelResponse(handlaggningId, utfall)`.
 - **FRMM-FR-05.2** Ramverket ska avsluta OUL-uppgiften med orsak "Uppgift klar" vid
   avslutning, via `endOperativUppgift` som tillhandahålls av `rimfrost-framework-regel-oul`.
-- **FRMM-FR-05.3** Ramverket ska skicka ett `RegelResponse` med regelns utfall till den
-  `replyTo`-topic som angavs i den ursprungliga regelförfrågan.
+- **FRMM-FR-05.3** Ramverket ska skicka ett `RegelResponse` med regelns utfall till regelns
+  konfigurerade svars-topic.
 - **FRMM-FR-05.4** Ramverket ska rensa samtliga lagrade korrelationsdata, processroutingdata och
   uppgiftsmetadata efter avslutad regelkörning, via rensningsoperationen som tillhandahålls av
   `rimfrost-framework-regel-oul`.

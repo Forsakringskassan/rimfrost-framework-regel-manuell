@@ -3,20 +3,8 @@ name: Bundle Maven Lib Release
 on: [workflow_dispatch]
 
 jobs:
-  call-app-generic-conventional-release:
-    uses: Forsakringskassan/.github/.github/workflows/generic-conventional-release.yaml@625efb1a02018d86c0a2ce616074a8c61af97ae9 # main
-
-  call-maven-release:
-    if: needs.call-app-generic-conventional-release.outputs.is-new-version == 'true'
-    needs: call-app-generic-conventional-release
-    uses: Forsakringskassan/.github/.github/workflows/maven-release.yaml@625efb1a02018d86c0a2ce616074a8c61af97ae9 # main
-    with:
-      version: ${{ needs.call-app-generic-conventional-release.outputs.current-version }}
-    secrets:
-      PACKAGES_RW_ACTOR: ${{ secrets.PACKAGES_RW_ACTOR }}
-      PACKAGES_RW_TOKEN: ${{ secrets.PACKAGES_RW_TOKEN }}
-
-  publish-release:
-    if: needs.call-app-generic-conventional-release.outputs.is-new-version == 'true'
-    needs: [call-app-generic-conventional-release, call-maven-release]
-    uses: Forsakringskassan/.github/.github/workflows/publish-release-on-tag-push.yaml@625efb1a02018d86c0a2ce616074a8c61af97ae9 # main
+  call-workflow:
+    permissions:
+      contents: write
+      packages: read
+    uses: Forsakringskassan/.github/.github/workflows/bundle-maven-lib-release.yaml@7dc0edc0051d2e7b37cfbe45b51841141ee3a835 # main

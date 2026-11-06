@@ -5,7 +5,6 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.core.HttpHeaders;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -24,10 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 })
 public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
 {
-
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
    @ParameterizedTest
    @CsvSource(
    {
@@ -39,7 +34,7 @@ public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
    void done_should_return_mapped_status_when_read_handlaggning_fails(
          String handlaggningId, int handlaggningHttpStatus, int expectedDoneStatus) throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       waitForRegelRequestProcessed(handlaggningId);
 
       var server = WireMockRegelManuell.getWireMockServer();
@@ -73,7 +68,7 @@ public class RegelManuellDoneFaultHandlingTest extends AbstractRegelManuellTest
    void done_should_return_204_and_still_send_regel_response_when_final_update_handlaggning_fails(
          String handlaggningId) throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       waitForRegelRequestProcessed(handlaggningId);
 
       var server = WireMockRegelManuell.getWireMockServer();

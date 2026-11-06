@@ -3,7 +3,6 @@ package se.fk.rimfrost.framework.regel.manuell;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -25,9 +24,6 @@ public class RegelManuellHandlaggningTest extends AbstractRegelManuellHandlaggni
    @Inject
    RegelManuellTestService regelManuellTestService;
 
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String regelResponseTopic;
-
    @AfterEach
    void resetNextUtfall()
    {
@@ -44,7 +40,7 @@ public class RegelManuellHandlaggningTest extends AbstractRegelManuellHandlaggni
    {
       var handlaggningId = "5367f6b8-cc4a-11f0-8de9-199901011234";
       regelManuellTestService.setNextUtfall(utfall);
-      regelKafkaConnector.sendRegelRequest(handlaggningId, regelResponseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       waitForRegelRequestProcessed(handlaggningId);
       sendPostRegelManuellHandlaggningDone(handlaggningId);
       var uppgift = WireMockHandlaggning.getUppgiftFromLastPutHandlaggning(handlaggningId);

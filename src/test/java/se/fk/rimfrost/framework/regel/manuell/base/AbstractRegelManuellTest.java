@@ -47,8 +47,7 @@ import static org.mockito.ArgumentMatchers.any;
  * <p><b>Default stubs (configured before each test):</b>
  * <ul>
  *   <li>{@code createOulUppgift(any())} — returns a pre-built {@code OperativUppgift}</li>
- *   <li>{@code getCorrelationData(any())} — returns a pre-built {@code OulCorrelationData}
- *       with the configured response topic as {@code replyTopic}</li>
+ *   <li>{@code getCorrelationData(any())} — returns a pre-built {@code OulCorrelationData}</li>
  *   <li>{@code endOulUppgift} and {@code cleanupCorrelation} — Mockito void defaults (do nothing)</li>
  * </ul>
  *
@@ -180,7 +179,6 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
       return ImmutableOulCorrelationData.builder()
             .oulUppgiftId(UUID.fromString(WireMockRegelManuell.DEFAULT_UPPGIFT_ID))
             .uppgift(uppgift)
-            .replyTopic(responseTopic)
             .cloudEventData(cloudEventData)
             .build();
    }
