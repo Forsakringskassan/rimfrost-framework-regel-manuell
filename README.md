@@ -106,7 +106,7 @@ Ramverket hanterar även följande Kafka-kanaler:
 | Kanal | Riktning | Beskrivning |
 |---|---|---|
 | `{regel-name}-in` | Inkommande | Regelförfrågan från kundbehovsflödet |
-| `{replyTo}` | Utgående | Regelresultat till kundbehovsflödet |
+| `{regel-name}-out` | Utgående | Regelresultat till kundbehovsflödet |
 
 Fullständiga API-specifikationer definieras i regelimplementationens OpenAPI- och AsyncAPI-repon.
 

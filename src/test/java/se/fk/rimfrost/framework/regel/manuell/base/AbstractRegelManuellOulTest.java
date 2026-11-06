@@ -1,7 +1,6 @@
 package se.fk.rimfrost.framework.regel.manuell.base;
 
 import java.util.UUID;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -17,10 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Disabled("Base test class - not executable")
 public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTest
 {
-
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
    @ParameterizedTest
    @CsvSource(
    {
@@ -29,7 +24,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    @DisplayName("FRMM-FR-02.2, FRMM-FR-02.3: OUL-uppgiften skapas med korrekt regelnamn, beskrivning, affärslogik, roll och URL")
    void should_create_correct_oul_request(String handlaggningId) throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
       Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
       var spec = captor.getValue();
@@ -49,25 +44,11 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    {
          "5367f6b8-cc4a-11f0-8de9-199901011234"
    })
-   @DisplayName("FRMM-FR-02.5: OUL-skapandeanropet innehåller rätt replyTo-topic från regelförfrågan")
-   void should_include_reply_topic_in_oul_spec(String handlaggningId) throws Exception
-   {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
-      var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
-      Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
-      assertEquals(responseTopic, captor.getValue().replyTo());
-   }
-
-   @ParameterizedTest
-   @CsvSource(
-   {
-         "5367f6b8-cc4a-11f0-8de9-199901011234"
-   })
    @DisplayName("FRMM-FR-02.4: CloudEvent-attributen från regelförfrågan inkluderas i OUL-skapandeanropet")
    void should_include_cloudevent_attributes_in_oul_request(String handlaggningId) throws Exception
    {
-      var testRequest = RegelTestData.newRegelRequestMessagePayload(handlaggningId, responseTopic);
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      var testRequest = RegelTestData.newRegelRequestMessagePayload(handlaggningId);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
       Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
       var attributes = captor.getValue().cloudEventAttributes();
@@ -92,7 +73,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    @DisplayName("FRMM-FR-11.1: OUL-uppgiften skapas med aktivitetId och processvyUrl från regelanropet")
    void should_include_aktivitet_id_and_processvy_url_in_oul_spec(String handlaggningId) throws Exception
    {
-      var payload = RegelTestData.newRegelRequestMessagePayload(handlaggningId, responseTopic);
+      var payload = RegelTestData.newRegelRequestMessagePayload(handlaggningId);
       payload.getData().setProcessvyUrl("/process/vah");
       inMemoryConnector.source(RegelKafkaConnector.regelRequestsChannel).send(payload);
       var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
@@ -110,7 +91,7 @@ public abstract class AbstractRegelManuellOulTest extends AbstractRegelManuellTe
    @DisplayName("FRMM-FR-11.2: OUL-uppgiften skapas utan processvyUrl när regelanropet saknar den")
    void should_create_oul_uppgift_without_processvy_url(String handlaggningId) throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
       Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
       var spec = captor.getValue();

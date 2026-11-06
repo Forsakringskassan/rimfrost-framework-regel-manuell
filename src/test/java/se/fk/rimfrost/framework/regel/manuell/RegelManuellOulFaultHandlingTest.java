@@ -3,7 +3,6 @@ package se.fk.rimfrost.framework.regel.manuell;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.core.HttpHeaders;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -25,10 +24,6 @@ import static org.mockito.ArgumentMatchers.any;
 })
 public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
 {
-
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
    @ParameterizedTest
    @CsvSource(
    {
@@ -41,7 +36,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
       Mockito.doThrow(new OulServiceException(OulServiceException.ErrorType.SERVICE_UNAVAILABLE, "OUL is down"))
             .when(oulUppgiftService).createOulUppgift(any());
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
 
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
@@ -59,7 +54,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
       Mockito.doThrow(new OulServiceException(OulServiceException.ErrorType.UNEXPECTED_ERROR, "OUL is broken"))
             .when(oulUppgiftService).endOulUppgift(any(), any());
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       waitForRegelRequestProcessed(handlaggningId);
 
       given()
@@ -81,7 +76,7 @@ public class RegelManuellOulFaultHandlingTest extends AbstractRegelManuellTest
       Mockito.doThrow(new OulServiceException(OulServiceException.ErrorType.NOT_FOUND, "OUL id not found"))
             .when(oulUppgiftService).endOulUppgift(any(), any());
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       waitForRegelRequestProcessed(handlaggningId);
 
       given()

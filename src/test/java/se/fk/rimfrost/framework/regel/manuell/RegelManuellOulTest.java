@@ -2,7 +2,6 @@ package se.fk.rimfrost.framework.regel.manuell;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,10 +20,6 @@ import se.fk.rimfrost.framework.regel.oul.logic.entity.OulUppgiftSpec;
 })
 public class RegelManuellOulTest extends AbstractRegelManuellOulTest
 {
-
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
    @ParameterizedTest
    @CsvSource(
    {
@@ -33,7 +28,7 @@ public class RegelManuellOulTest extends AbstractRegelManuellOulTest
    @DisplayName("FRMM-FR-01.3, FRMM-FR-02.1: Erbjudandenamn slås upp från referensdata och inkluderas i OUL-skapandeanropet")
    public void should_send_correct_erbjudande_values_with_oul_create_request(String handlaggningId) throws Exception
    {
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var captor = ArgumentCaptor.forClass(OulUppgiftSpec.class);
       Mockito.verify(oulUppgiftService, Mockito.timeout(5000)).createOulUppgift(captor.capture());
       var spec = captor.getValue();

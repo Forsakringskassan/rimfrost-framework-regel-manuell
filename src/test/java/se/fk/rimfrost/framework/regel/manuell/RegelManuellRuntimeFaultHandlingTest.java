@@ -4,7 +4,6 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import java.util.UUID;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,16 +26,13 @@ public class RegelManuellRuntimeFaultHandlingTest extends AbstractRegelManuellTe
    @InjectMock
    HandlaggningAdapter handlaggningAdapter;
 
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
    @Test
    @DisplayName("FRMM-FR-06.5: Felrespons skickas vid oväntad exception under initial uppdatering av handläggningsärende")
    public void should_send_error_response_on_unexpected_exception_during_initial_handlaggning_update() throws Exception
    {
       var handlaggningId = UUID.randomUUID();
       Mockito.doThrow(new RuntimeException()).when(handlaggningAdapter).updateHandlaggning(Mockito.any());
-      regelKafkaConnector.sendRegelRequest(handlaggningId.toString(), responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId.toString());
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(Utfall.ERROR, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_OTHER, regelResponse.getData().getError().getFelkod());

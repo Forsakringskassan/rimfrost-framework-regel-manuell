@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -25,10 +24,6 @@ import static org.mockito.ArgumentMatchers.any;
 })
 public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
 {
-
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
    @ParameterizedTest
    @CsvSource(
    {
@@ -44,7 +39,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
                   .willReturn(WireMock.serverError()));
       try
       {
-         regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+         regelKafkaConnector.sendRegelRequest(handlaggningId);
          var regelResponse = regelKafkaConnector.waitForRegelResponse();
          assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
          assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_READ_FAILURE, regelResponse.getData().getError().getFelkod());
@@ -70,7 +65,7 @@ public class RegelManuellFaultHandlingTest extends AbstractRegelManuellTest
       Mockito.doThrow(new RegelCancelledException(info, "Handlaggning update failed", null)).when(oulUppgiftService)
             .createOulUppgift(any());
 
-      regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+      regelKafkaConnector.sendRegelRequest(handlaggningId);
       var regelResponse = regelKafkaConnector.waitForRegelResponse();
       assertEquals(expectedUtfall, regelResponse.getData().getUtfall());
       assertEquals(RegelFelkod.RIMFROST_HANDLAGGNING_WRITE_FAILURE, regelResponse.getData().getError().getFelkod());

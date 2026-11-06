@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.core.HttpHeaders;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -22,10 +21,6 @@ import static org.mockito.ArgumentMatchers.any;
 })
 public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTest
 {
-
-   @ConfigProperty(name = "mp.messaging.outgoing.regel-responses.topic")
-   String responseTopic;
-
    @ParameterizedTest
    @CsvSource(
    {
@@ -41,7 +36,7 @@ public class RegelManuellStorageFaultHandlingTest extends AbstractRegelManuellTe
                   .willReturn(WireMock.serverError()));
       try
       {
-         regelKafkaConnector.sendRegelRequest(handlaggningId, responseTopic);
+         regelKafkaConnector.sendRegelRequest(handlaggningId);
          regelKafkaConnector.waitForRegelResponse();
 
          Mockito.verify(oulUppgiftService, Mockito.never()).endOulUppgift(any(), any());
