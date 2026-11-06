@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.6.0 (2026-11-06)
+
+### Features
+
+-  Remove replyTo and bump dependencies ([2da13](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/2da13001bbacbd9) Lars Persson)  
+
 ## 1.5.1 (2026-11-04)
 
 ### Bug Fixes
