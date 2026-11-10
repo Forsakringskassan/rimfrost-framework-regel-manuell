@@ -5,7 +5,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -22,6 +21,7 @@ import se.fk.rimfrost.framework.regel.Utfall;
 import se.fk.rimfrost.framework.regel.error.RegelFelkod;
 import se.fk.rimfrost.framework.regel.integration.config.RegelConfigProviderYaml;
 import se.fk.rimfrost.framework.regel.integration.kafka.RegelKafkaProducer;
+import se.fk.rimfrost.framework.regel.integration.kafka.RegelResponseException;
 import se.fk.rimfrost.framework.regel.integration.kafka.dto.ImmutableRegelResponse;
 import se.fk.rimfrost.framework.regel.oul.logic.CloudEventAttributesMapper;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.Erbjudande;
@@ -277,7 +277,7 @@ public class RegelManuellRequestHandler
          var regelResponse = regelMapper.toRegelResponse(handlaggningId, cloudEventData, regelErrorInformation);
          regelKafkaProducer.sendRegelResponse(regelResponse);
       }
-      catch (IllegalStateException e)
+      catch (Exception e)
       {
          LOGGER.error("Failed to send error response for handlaggning. handlaggningId: {}, regelErrorInformation: {}",
                handlaggningId, regelErrorInformation, e);
@@ -306,7 +306,7 @@ public class RegelManuellRequestHandler
                .build();
          regelKafkaProducer.sendRegelResponse(regelResponse);
       }
-      catch (IllegalStateException e)
+      catch (RegelResponseException e)
       {
          LOGGER.error("Failed to send regel response for handlaggning. handlaggningId: {}, utfall: {}",
                handlaggningId, utfall, e);
