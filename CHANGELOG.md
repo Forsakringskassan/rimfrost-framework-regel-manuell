@@ -2,6 +2,15 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.6.1 (2026-11-10)
+
+### Bug Fixes
+
+-  Handle kafka send faults after rimfrost-framework-regel 1.6.1 change ([9649f](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/9649f3244ffa75c) Lars Persson)  
+
+### Dependency updates
+
+- update forsakringskassan/.github digest to cbc0db8 ([51881](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/5188172a0801566) renovate[bot])  
 ## 1.6.0 (2026-11-06)
 
 ### Features
