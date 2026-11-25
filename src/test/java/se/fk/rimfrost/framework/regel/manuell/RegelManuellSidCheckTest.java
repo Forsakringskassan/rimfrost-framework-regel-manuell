@@ -15,8 +15,6 @@ import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.RollIYrkande;
-import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
-import se.fk.rimfrost.framework.handlaggning.model.UppgiftSpecifikation;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
@@ -30,6 +28,7 @@ import se.fk.rimfrost.framework.sid.exception.SidException;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -85,7 +84,8 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -103,7 +103,8 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -120,7 +121,8 @@ public class RegelManuellSidCheckTest
       when(sidAdapter.containsSid(any())).thenReturn(false);
       when(regelManuellService.readData(handlaggning)).thenReturn("value");
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID());
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
 
@@ -136,7 +138,8 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
       doNothing().when(oulUppgiftService).tryUnassignOulUppgift(any());
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
@@ -154,7 +157,8 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(null, ID_TYP, ID_VARDE);
+      givenCorrelationData(null);
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -172,7 +176,8 @@ public class RegelManuellSidCheckTest
       when(sidAdapter.containsSid(any())).thenReturn(false);
       when(regelManuellService.readData(handlaggning)).thenReturn("value");
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID());
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
       verify(regelManuellService).readData(handlaggning);
@@ -189,7 +194,8 @@ public class RegelManuellSidCheckTest
       when(permissionsAdapter.hasSidPermission(any(), any())).thenReturn(true);
       when(regelManuellService.readData(handlaggning)).thenReturn("value");
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
 
@@ -207,7 +213,8 @@ public class RegelManuellSidCheckTest
       when(sidAdapter.containsSid(any())).thenReturn(true);
       when(regelManuellService.readData(handlaggning)).thenReturn("value");
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -225,7 +232,8 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(true);
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(oulUppgiftId, ID_TYP, ID_VARDE);
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
       doThrow(new PermissionsException(errorType, "permissions error")).when(permissionsAdapter)
             .hasSidPermission(any(), any());
 
@@ -244,7 +252,8 @@ public class RegelManuellSidCheckTest
       when(handlaggningAdapter.readHandlaggning(any())).thenReturn(handlaggning);
       doThrow(new SidException(errorType, "sid error")).when(sidAdapter).containsSid(any());
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID());
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       var ex = assertThrows(RegelManuellException.class, () -> service.read(UUID.randomUUID()));
 
@@ -260,7 +269,8 @@ public class RegelManuellSidCheckTest
       when(sidAdapter.containsSid(any())).thenReturn(false);
       when(regelManuellService.readData(handlaggning)).thenReturn("value");
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      givenCorrelationData(UUID.randomUUID());
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> service.read(UUID.randomUUID()));
    }
@@ -293,44 +303,17 @@ public class RegelManuellSidCheckTest
       return handlaggning;
    }
 
-   private Uppgift buildTilldeladUppgift(String typId, String varde)
-   {
-      se.fk.rimfrost.framework.handlaggning.model.Idtyp utforare = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
-      when(utforare.typId()).thenReturn(typId);
-      when(utforare.varde()).thenReturn(varde);
-
-      var uppgift = buildUppgift();
-      when(uppgift.utforare()).thenReturn(utforare);
-
-      return uppgift;
-   }
-
-   private Uppgift buildUppgift()
-   {
-      var uppgiftSpecifikation = mock(UppgiftSpecifikation.class);
-
-      var uppgift = mock(Uppgift.class);
-      when(uppgift.id()).thenReturn(UUID.randomUUID());
-      when(uppgift.version()).thenReturn(1);
-      when(uppgift.skapadTS()).thenReturn(OffsetDateTime.now());
-      when(uppgift.utfordTS()).thenReturn(null);
-      when(uppgift.planeradTillTS()).thenReturn(null);
-      when(uppgift.utforare()).thenReturn(null);
-      when(uppgift.uppgiftStatus()).thenReturn("Planerad");
-      when(uppgift.aktivitetId()).thenReturn(UUID.randomUUID());
-      when(uppgift.fSSAinformation()).thenReturn(UUID.randomUUID().toString());
-      when(uppgift.uppgiftSpecifikation()).thenReturn(uppgiftSpecifikation);
-
-      return uppgift;
-   }
-
-   private void givenCorrelationData(UUID oulUppgiftId, String typId, String varde)
+   private void givenCorrelationData(UUID oulUppgiftId)
    {
       var correlationData = mock(OulCorrelationData.class);
-      var uppgift = buildTilldeladUppgift(typId, varde);
       when(correlationData.oulUppgiftId()).thenReturn(oulUppgiftId);
-      when(correlationData.uppgift()).thenReturn(uppgift);
       when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
+   }
+
+   private void givenOulUppgiftUtforare(String typId, String varde) throws Exception
+   {
+      when(oulUppgiftService.getOulUppgiftUtforare(any())).thenReturn(Optional.of(
+            se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableIdtyp.builder().typId(typId).varde(varde).build()));
    }
 
    private void givenHandlaggareIdentity(String idTyp, String idVarde)

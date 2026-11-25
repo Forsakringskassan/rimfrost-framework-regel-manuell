@@ -14,12 +14,14 @@ import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
+import se.fk.rimfrost.framework.regel.oul.logic.exception.OulServiceException;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import se.fk.rimfrost.framework.sid.exception.SidException;
 import se.fk.rimfrost.framework.sid.model.Idtyp;
 import se.fk.rimfrost.framework.sid.model.ImmutableIdtyp;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -79,9 +81,9 @@ public class RegelAccessGuard
       }
 
       var correlationData = getCorrelationData(handlaggning.id());
-      var uppgift = correlationData.uppgift();
+      var oulUppgiftUtforare = getOulUppgiftUtforare(correlationData.oulUppgiftId());
 
-      if (uppgift == null || !isAssignedToUppgift(uppgift.utforare(), handlaggareId))
+      if (oulUppgiftUtforare.isEmpty() || !isAssignedToUppgift(oulUppgiftUtforare.get(), handlaggareId))
       {
          LOGGER.info("Handläggare is not assigned to uppgift for handläggning with id: {}", handlaggning.id());
          throw new RegelManuellException(Response.Status.FORBIDDEN, "Handläggare is not assigned to uppgift");
@@ -121,6 +123,19 @@ public class RegelAccessGuard
       }
    }
 
+   private Optional<se.fk.rimfrost.framework.regel.oul.logic.entity.Idtyp> getOulUppgiftUtforare(UUID oulUppgiftId)
+   {
+      try
+      {
+         return oulUppgiftService.getOulUppgiftUtforare(oulUppgiftId);
+      }
+      catch (OulServiceException e)
+      {
+         LOGGER.error("Error reading OUL uppgift utforare for id: {}", oulUppgiftId, e);
+         throw new RegelManuellException(toHttpStatus(e), e.getMessage(), e);
+      }
+   }
+
    /**
     * Resolves the inloggad handläggare's identity via {@link UserIdentityHolder}.
     * @return The user identity stored in {@link UserIdentityHolder} or null if the holder is not available.
@@ -138,7 +153,7 @@ public class RegelAccessGuard
       }
    }
 
-   private boolean isAssignedToUppgift(se.fk.rimfrost.framework.handlaggning.model.Idtyp utforarId,
+   private boolean isAssignedToUppgift(se.fk.rimfrost.framework.regel.oul.logic.entity.Idtyp utforarId,
          se.fk.rimfrost.framework.regel.manuell.logic.entity.Idtyp handlaggareId)
    {
       return utforarId != null && handlaggareId != null && utforarId.typId().equals(handlaggareId.typId())
@@ -222,6 +237,11 @@ public class RegelAccessGuard
    }
 
    private static Response.Status toHttpStatus(HandlaggningException e)
+   {
+      return externalServiceErrorToHttpStatus(e.getErrorType().name());
+   }
+
+   private static Response.Status toHttpStatus(OulServiceException e)
    {
       return externalServiceErrorToHttpStatus(e.getErrorType().name());
    }

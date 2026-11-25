@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod;
 import io.quarkus.test.InjectMock;
 import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.ws.rs.core.HttpHeaders;
@@ -48,6 +49,7 @@ import static org.mockito.ArgumentMatchers.any;
  * <ul>
  *   <li>{@code createOulUppgift(any())} — returns a pre-built {@code OperativUppgift}</li>
  *   <li>{@code getCorrelationData(any())} — returns a pre-built {@code OulCorrelationData}</li>
+ *   <li>{@code getOulUppgiftUtforare(any())} — returns the handläggare identified by {@link #AUTHORIZATION_HEADER_VALUE}</li>
  *   <li>{@code endOulUppgift} and {@code cleanupCorrelation} — Mockito void defaults (do nothing)</li>
  * </ul>
  *
@@ -146,6 +148,11 @@ public abstract class AbstractRegelManuellTest extends RegelTestBase
    {
       Mockito.when(oulUppgiftService.getCorrelationData(any()))
             .thenReturn(defaultOulCorrelationData());
+      Mockito.when(oulUppgiftService.getOulUppgiftUtforare(any()))
+            .thenReturn(Optional.of(se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableIdtyp.builder()
+                  .typId(ID_TYP)
+                  .varde(ID_VARDE)
+                  .build()));
    }
 
    private se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData defaultOulCorrelationData()
