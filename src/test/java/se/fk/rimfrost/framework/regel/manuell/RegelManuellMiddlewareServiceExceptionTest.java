@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.exception.HandlaggningException;
 import se.fk.rimfrost.framework.handlaggning.model.ImmutableHandlaggning;
-import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.helpers.WireMockRegelManuell;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
@@ -21,8 +20,10 @@ import se.fk.rimfrost.framework.regel.manuell.logic.entity.Idtyp;
 import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
+import se.fk.rimfrost.framework.regel.oul.logic.exception.OulServiceException;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -87,7 +88,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
    @EnumSource(HandlaggningException.ErrorType.class)
    @DisplayName("FRMM-FR-06.4: HandlaggningException vid uppdatering av handläggningsärende under PATCH mappas till väldefinierad HTTP-statuskod")
    void update_should_throw_with_mapped_status_when_updateHandlaggning_throws(HandlaggningException.ErrorType errorType)
-         throws HandlaggningException
+         throws HandlaggningException, OulServiceException
    {
       givenUserIdentity();
 
@@ -103,6 +104,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
       when(handlaggningAdapter.readHandlaggning(handlaggning.id())).thenReturn(handlaggning);
       givenSuccessfulCorrelationData();
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
       doThrow(new HandlaggningException(errorType, "error"))
             .when(handlaggningAdapter).updateHandlaggning(any());
 
@@ -114,7 +116,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
    @Test
    @DisplayName("FRMM-FR-06.4: HandlaggningException med CONFLICT feltyp vid uppdatering av handläggningsärende under PATCH mappas till väldefinierad HTTP-statuskod")
    void update_should_throw_with_internal_server_error_when_updateHandlaggning_throws_conflict_exception()
-         throws HandlaggningException
+         throws HandlaggningException, OulServiceException
    {
       var errorType = HandlaggningException.ErrorType.CONFLICT;
       var handlaggning = ImmutableHandlaggning.builder()
@@ -130,6 +132,7 @@ public class RegelManuellMiddlewareServiceExceptionTest
       when(handlaggningAdapter.readHandlaggning(handlaggning.id())).thenReturn(handlaggning);
       givenUserIdentity();
       givenSuccessfulCorrelationData();
+      givenOulUppgiftUtforare(ID_TYP, ID_VARDE);
       doThrow(new HandlaggningException(errorType, "error"))
             .when(handlaggningAdapter).updateHandlaggning(any());
 
@@ -142,14 +145,15 @@ public class RegelManuellMiddlewareServiceExceptionTest
 
    private void givenSuccessfulCorrelationData()
    {
-      var utforare = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
-      when(utforare.typId()).thenReturn(ID_TYP);
-      when(utforare.varde()).thenReturn(ID_VARDE);
-      var uppgift = mock(Uppgift.class);
-      when(uppgift.utforare()).thenReturn(utforare);
       var correlationData = mock(OulCorrelationData.class);
-      when(correlationData.uppgift()).thenReturn(uppgift);
+      when(correlationData.oulUppgiftId()).thenReturn(UUID.randomUUID());
       when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
+   }
+
+   private void givenOulUppgiftUtforare(String typId, String varde) throws OulServiceException
+   {
+      when(oulUppgiftService.getOulUppgiftUtforare(any())).thenReturn(Optional.of(
+            se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableIdtyp.builder().typId(typId).varde(varde).build()));
    }
 
    private void givenUserIdentity()

@@ -10,11 +10,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import se.fk.rimfrost.adapter.permissions.adapter.PermissionsAdapter;
 import se.fk.rimfrost.framework.handlaggning.adapter.HandlaggningAdapter;
 import se.fk.rimfrost.framework.handlaggning.model.Handlaggning;
 import se.fk.rimfrost.framework.handlaggning.model.RollIYrkande;
-import se.fk.rimfrost.framework.handlaggning.model.Uppgift;
 import se.fk.rimfrost.framework.handlaggning.model.Yrkande;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelAccessGuard;
 import se.fk.rimfrost.framework.regel.manuell.logic.RegelManuellException;
@@ -22,8 +22,10 @@ import se.fk.rimfrost.framework.regel.manuell.logic.entity.ImmutableIdtyp;
 import se.fk.rimfrost.framework.regel.manuell.logic.identity.UserIdentityHolder;
 import se.fk.rimfrost.framework.regel.oul.logic.OulUppgiftService;
 import se.fk.rimfrost.framework.regel.oul.logic.entity.OulCorrelationData;
+import se.fk.rimfrost.framework.regel.oul.logic.exception.OulServiceException;
 import se.fk.rimfrost.framework.sid.adapter.SidAdapter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -72,7 +74,9 @@ public class RegelManuellAccessGuardTest
       var handlaggning = handlaggningWithIndivider();
       when(sidAdapter.containsSid(any())).thenReturn(false);
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      var oulUppgiftId = UUID.randomUUID();
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(oulUppgiftId, ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> guard.verifyAccess(handlaggning));
    }
@@ -85,7 +89,9 @@ public class RegelManuellAccessGuardTest
       when(handlaggningAdapter.readHandlaggning(handlaggning.id())).thenReturn(handlaggning);
       when(sidAdapter.containsSid(any())).thenReturn(false);
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      var oulUppgiftId = UUID.randomUUID();
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(oulUppgiftId, ID_TYP, ID_VARDE);
 
       assertDoesNotThrow(() -> guard.verifyAccess(handlaggning.id()));
 
@@ -142,33 +148,38 @@ public class RegelManuellAccessGuardTest
    }
 
    @Test
-   @DisplayName("FRMM-FR-10.1/10.2: HTTP 403 returneras när korrelationsdata saknar uppgift")
-   void verifyAccess_should_throw_forbidden_when_uppgift_is_null()
+   @DisplayName("FRMM-FR-10.1/10.2: HTTP 403 returneras när OUL-uppgiften saknar utförare")
+   void verifyAccess_should_throw_forbidden_when_oul_uppgift_has_no_utforare() throws Exception
    {
       var handlaggning = handlaggningWithIndivider();
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), null);
+      var oulUppgiftId = UUID.randomUUID();
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftWithoutUtforare(oulUppgiftId);
 
       var ex = assertThrows(RegelManuellException.class, () -> guard.verifyAccess(handlaggning));
 
       assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
       assertTrue(ex.getMessage().matches(NOT_ASSIGNED_PATTERN));
+      verifyNoInteractions(sidAdapter, permissionsAdapter);
    }
 
-   @Test
-   @DisplayName("FRMM-FR-10.1/10.2: HTTP 403 returneras när uppgiften saknar utförare")
-   void verifyAccess_should_throw_forbidden_when_utforare_is_null()
+   @ParameterizedTest
+   @EnumSource(OulServiceException.ErrorType.class)
+   @DisplayName("FRMM-FR-06.4: Fel från OUL vid hämtning av utförare mappas till väldefinierade HTTP-statuskoder")
+   void verifyAccess_should_throw_with_mapped_status_when_get_utforare_throws(
+         @SkipInject OulServiceException.ErrorType errorType)
+         throws Exception
    {
       var handlaggning = handlaggningWithIndivider();
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      var uppgift = mock(Uppgift.class);
-      when(uppgift.utforare()).thenReturn(null);
-      givenCorrelationData(UUID.randomUUID(), uppgift);
+      givenCorrelationData(UUID.randomUUID());
+      when(oulUppgiftService.getOulUppgiftUtforare(any())).thenThrow(new OulServiceException(errorType, "oul error"));
 
       var ex = assertThrows(RegelManuellException.class, () -> guard.verifyAccess(handlaggning));
 
-      assertEquals(Response.Status.FORBIDDEN, ex.getStatus());
-      assertTrue(ex.getMessage().matches(NOT_ASSIGNED_PATTERN));
+      assertEquals(expectedStatus(errorType), ex.getStatus());
+      verifyNoInteractions(sidAdapter, permissionsAdapter);
    }
 
    @ParameterizedTest
@@ -179,11 +190,13 @@ public class RegelManuellAccessGuardTest
    })
    @DisplayName("FRMM-FR-10.1/10.2: HTTP 403 returneras när uppgiften är tilldelad en annan handläggare (annat värde eller annan id-typ)")
    void verifyAccess_should_throw_forbidden_when_assigned_to_other_handlaggare(@SkipInject String utforarTypId,
-         @SkipInject String utforarVarde)
+         @SkipInject String utforarVarde) throws Exception
    {
       var handlaggning = handlaggningWithIndivider();
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), utforarTypId, utforarVarde);
+      var oulUppgiftId = UUID.randomUUID();
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(oulUppgiftId, utforarTypId, utforarVarde);
 
       var ex = assertThrows(RegelManuellException.class, () -> guard.verifyAccess(handlaggning));
 
@@ -197,7 +210,9 @@ public class RegelManuellAccessGuardTest
    {
       var handlaggning = handlaggningWithIndivider();
       givenHandlaggareIdentity(ID_TYP, "19700101-0000");
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      var oulUppgiftId = UUID.randomUUID();
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(oulUppgiftId, ID_TYP, ID_VARDE);
 
       var ex = assertThrows(RegelManuellException.class, () -> guard.verifyAccess(handlaggning));
 
@@ -213,7 +228,9 @@ public class RegelManuellAccessGuardTest
             rollIYrkande("PERSONNR", "19800101-1111"),
             rollIYrkande("SAMORDNINGSNR", "19800161-2222")));
       givenHandlaggareIdentity(ID_TYP, ID_VARDE);
-      givenCorrelationData(UUID.randomUUID(), ID_TYP, ID_VARDE);
+      var oulUppgiftId = UUID.randomUUID();
+      givenCorrelationData(oulUppgiftId);
+      givenOulUppgiftUtforare(oulUppgiftId, ID_TYP, ID_VARDE);
 
       guard.verifyAccess(handlaggning);
 
@@ -252,31 +269,37 @@ public class RegelManuellAccessGuardTest
       return handlaggning;
    }
 
-   private Uppgift buildTilldeladUppgift(String typId, String varde)
-   {
-      var utforare = mock(se.fk.rimfrost.framework.handlaggning.model.Idtyp.class);
-      when(utforare.typId()).thenReturn(typId);
-      when(utforare.varde()).thenReturn(varde);
-      var uppgift = mock(Uppgift.class);
-      when(uppgift.utforare()).thenReturn(utforare);
-      return uppgift;
-   }
-
-   private void givenCorrelationData(UUID oulUppgiftId, String typId, String varde)
-   {
-      givenCorrelationData(oulUppgiftId, buildTilldeladUppgift(typId, varde));
-   }
-
-   private void givenCorrelationData(UUID oulUppgiftId, Uppgift uppgift)
+   private void givenCorrelationData(UUID oulUppgiftId)
    {
       var correlationData = mock(OulCorrelationData.class);
       when(correlationData.oulUppgiftId()).thenReturn(oulUppgiftId);
-      when(correlationData.uppgift()).thenReturn(uppgift);
       when(oulUppgiftService.getCorrelationData(any())).thenReturn(correlationData);
+   }
+
+   private void givenOulUppgiftUtforare(UUID oulUppgiftId, String typId, String varde) throws OulServiceException
+   {
+      when(oulUppgiftService.getOulUppgiftUtforare(oulUppgiftId)).thenReturn(Optional.of(
+            se.fk.rimfrost.framework.regel.oul.logic.entity.ImmutableIdtyp.builder().typId(typId).varde(varde).build()));
+   }
+
+   private void givenOulUppgiftWithoutUtforare(UUID oulUppgiftId) throws OulServiceException
+   {
+      when(oulUppgiftService.getOulUppgiftUtforare(oulUppgiftId)).thenReturn(Optional.empty());
    }
 
    private void givenHandlaggareIdentity(String idTyp, String idVarde)
    {
       userIdentityHolder.setIdentity(ImmutableIdtyp.builder().typId(idTyp).varde(idVarde).build());
+   }
+
+   private static Response.Status expectedStatus(OulServiceException.ErrorType errorType)
+   {
+      return switch (errorType)
+      {
+         case NOT_FOUND -> Response.Status.NOT_FOUND;
+         case BAD_REQUEST -> Response.Status.BAD_REQUEST;
+         case SERVICE_UNAVAILABLE -> Response.Status.SERVICE_UNAVAILABLE;
+         default -> Response.Status.INTERNAL_SERVER_ERROR;
+      };
    }
 }
