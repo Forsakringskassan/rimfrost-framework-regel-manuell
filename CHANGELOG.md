@@ -2,6 +2,12 @@
 
 Changelog of rimfrost-framework-regel-manuell.
 
+## 1.6.4 (2026-11-25)
+
+### Bug Fixes
+
+-  Use OUL for utforare assignment check ([a52ca](https://github.com/Forsakringskassan/rimfrost-framework-regel-manuell/commit/a52ca790e7a6fd3) Lars Persson)  
+
 ## 1.6.3 (2026-11-20)
 
 ### Bug Fixes
